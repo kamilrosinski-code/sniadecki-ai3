@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gruntowo.pl — Portal z gruntami</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAV — przezroczysty, bez logo w pasku -->
+  <nav class="nav" id="nav">
+    <a href="#" class="nav-logo">
+      <img src="gruntowo-logo.png" alt="Gruntowo.com — Portal z gruntami" class="nav-logo-img" />
+    </a>
+    <ul class="nav-links">
+      <li><a href="#sourcing">Sourcing</a></li>
+      <li><a href="#oferty">Oferty</a></li>
+      <li><a href="#ekosystem">Ekosystem</a></li>
+      <li><a href="#kontakt" class="nav-cta">Porozmawiajmy</a></li>
+    </ul>
+    <button class="nav-burger" id="burger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <ul>
+      <li><a href="#sourcing" class="mm-link">Sourcing</a></li>
+      <li><a href="#oferty" class="mm-link">Oferty</a></li>
+      <li><a href="#ekosystem" class="mm-link">Ekosystem</a></li>
+      <li><a href="#kontakt" class="mm-link">Kontakt</a></li>
+    </ul>
+  </div>
+
+  <!-- HERO — zdjęcie od samej góry -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow" data-cms="hero_eyebrow">Portal z gruntami inwestycyjnymi</p>
+      <h1 class="hero-headline" data-cms="hero_headline">Grunt pod<br /><em>właściwą decyzję</em></h1>
+      <p class="hero-sub" data-cms="hero_sub">Wpisz miejscowość i numer działki — w ciągu 6 godzin<br />otrzymasz pełny raport inwestycyjny na swoją skrzynkę.</p>
+
+      <!-- WYSZUKIWARKA -->
+      <div class="search-box" id="search-box">
+        <div class="search-step" id="step-1">
+          <p class="search-label">Zbadaj nieruchomość</p>
+          <div class="search-row">
+            <div class="search-field">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <input type="text" id="s-miasto" placeholder="Miejscowość, np. Poznań" autocomplete="off" />
+            </div>
+            <div class="search-sep"></div>
+            <div class="search-field">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              <input type="text" id="s-dzialka" placeholder="Nr działki, np. 142/3" autocomplete="off" />
+            </div>
+            <button class="search-btn" id="btn-next" type="button">
+              Wskaż na mapie
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="search-step hidden" id="step-2">
+          <p class="search-label">
+            <button id="btn-back" type="button" aria-label="Wróć">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            Potwierdź lokalizację — podaj e-mail
+          </p>
+          <div class="map-box">
+            <iframe id="map-frame" class="map-frame" style="display:none" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen title="Mapa lokalizacji działki"></iframe>
+            <div class="map-static" id="map-static">
+              <div class="map-grid"></div>
+              <div class="map-pin">
+                <svg width="28" height="36" viewBox="0 0 28 36" fill="none"><path d="M14 0C6.268 0 0 6.268 0 14c0 9 14 22 14 22s14-13 14-22C28 6.268 21.732 0 14 0z" fill="#c9a96e"/><circle cx="14" cy="14" r="5" fill="#0b0c0a"/></svg>
+              </div>
+              <svg class="map-lines" viewBox="0 0 560 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <line x1="0" y1="90" x2="560" y2="78" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="5 8" opacity="0.5"/>
+                <line x1="0" y1="160" x2="560" y2="170" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="5 8" opacity="0.4"/>
+                <line x1="200" y1="0" x2="188" y2="220" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="5 8" opacity="0.5"/>
+                <line x1="380" y1="0" x2="392" y2="220" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="5 8" opacity="0.4"/>
+                <rect x="189" y="79" width="190" height="80" fill="rgba(201,169,110,0.06)" stroke="#c9a96e" stroke-width="1" stroke-dasharray="4 5" opacity="0.6"/>
+              </svg>
+            </div>
+            <div class="map-label" id="map-label"></div>
+          </div>
+          <div class="search-row">
+            <div class="search-field search-field-wide">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" id="s-email" placeholder="Twój e-mail — tam wyślemy raport" autocomplete="email" />
+            </div>
+            <button class="search-btn search-btn-gold" id="btn-submit" type="button">
+              Zbadaj nieruchomość
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </button>
+          </div>
+          <div class="search-row search-row-phone">
+            <div class="search-field search-field-wide">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <input type="tel" id="s-telefon" placeholder="Telefon (opcjonalnie) — oddzwonimy" autocomplete="tel" />
+            </div>
+          </div>
+        </div>
+
+        <div class="search-step hidden" id="step-3">
+          <div class="confirm">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="1.5" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <h3>Raport w drodze!</h3>
+            <p>Otrzymaliśmy Twoje zgłoszenie. Nasz zespół przeanalizuje działkę i wyśle pełny raport inwestycyjny na Twój e-mail <strong>w ciągu 6 godzin</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-partner">
+        <span>Dane gruntów we współpracy z</span>
+        <a href="https://gruntowo.com" target="_blank" rel="noopener">
+          <img src="gruntowo-logo.png" alt="Gruntowo.com" />
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hstat"><span class="hstat-n" data-cms="stat1_num">44 180 m²</span><span class="hstat-l" data-cms="stat1_label">banku ziemi</span></div>
+      <div class="hstat-d"></div>
+      <div class="hstat"><span class="hstat-n" data-cms="stat2_num">24/7</span><span class="hstat-l" data-cms="stat2_label">monitoring rynku</span></div>
+      <div class="hstat-d"></div>
+      <div class="hstat"><span class="hstat-n" data-cms="stat3_num">2 min</span><span class="hstat-l" data-cms="stat3_label">analiza MPZP</span></div>
+      <div class="hstat-d"></div>
+      <div class="hstat"><span class="hstat-n" data-cms="stat4_num">3</span><span class="hstat-l" data-cms="stat4_label">formaty wyjścia</span></div>
+    </div>
+  </section>
+
+  <!-- INTRO ze zdjęciem i miarką geodezyjną -->
+  <section class="section">
+    <div class="container">
+      <div class="intro-grid">
+        <div class="photo-frame">
+          <img src="https://images.unsplash.com/photo-1526958097901-5e6d742d3371?w=900&q=80" alt="Widok z drona na pola i działki" loading="lazy" />
+          <svg class="photo-geo" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="0" y1="110" x2="400" y2="95" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.7"/>
+            <line x1="160" y1="0" x2="145" y2="300" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.7"/>
+            <line x1="270" y1="0" x2="285" y2="300" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.5"/>
+            <circle cx="160" cy="110" r="5" fill="none" stroke="#c9a96e" stroke-width="1.5" opacity="0.9"/>
+            <circle cx="160" cy="110" r="2" fill="#c9a96e"/>
+            <circle cx="270" cy="98" r="4" fill="none" stroke="#c9a96e" stroke-width="1.2" opacity="0.8"/>
+            <circle cx="270" cy="98" r="1.5" fill="#c9a96e"/>
+            <text x="170" y="106" font-size="9" fill="#c9a96e" font-family="Inter,sans-serif" letter-spacing="0.08em" opacity="0.9">DZ. 142/3</text>
+            <text x="280" y="94" font-size="9" fill="#c9a96e" font-family="Inter,sans-serif" letter-spacing="0.08em" opacity="0.8">DZ. 142/4</text>
+            <rect x="146" y="96" width="124" height="90" fill="rgba(201,169,110,0.07)" stroke="#c9a96e" stroke-width="1" stroke-dasharray="4 6" opacity="0.6"/>
+            <!-- Miarka -->
+            <line x1="146" y1="205" x2="270" y2="205" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
+            <line x1="146" y1="200" x2="146" y2="210" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
+            <line x1="270" y1="200" x2="270" y2="210" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
+            <text x="188" y="220" font-size="8" fill="#c9a96e" font-family="Inter,sans-serif" opacity="0.85">48,5 m</text>
+          </svg>
+        </div>
+        <div>
+          <span class="tag" data-cms="intro_tag">Podejście</span>
+          <h2 class="h2" data-cms="intro_title">Trzy filary<br /><em>nowego modelu</em></h2>
+          <p class="lead" data-cms="intro_lead">Łączymy wieloletnie doświadczenie w akwizycji gruntów z nowoczesnymi narzędziami — budując platformę, która zmienia sposób, w jaki deweloperzy identyfikują, oceniają i zamykają transakcje.</p>
+          <div class="pillars">
+            <div class="pillar"><span class="p-dot"></span><div><strong>Sourcing gruntów</strong><span>Monitoring rynku 24/7</span></div></div>
+            <div class="pillar"><span class="p-dot"></span><div><strong>Gotowe oferty</strong><span>Pakiety inwestycyjne dla deweloperów</span></div></div>
+            <div class="pillar"><span class="p-dot"></span><div><strong>Ekosystem 360°</strong><span>Sieć partnerów branżowych</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOURCING -->
+  <section class="section" id="sourcing">
+    <div class="container">
+      <span class="tag" data-cms="sourcing_tag">Filar 01</span>
+      <h2 class="h2" data-cms="sourcing_title">Sourcing<br /><em>gruntów</em></h2>
+      <p class="lead" data-cms="sourcing_lead">Monitorujemy rynek nieprzerwanie — wyławiamy okazje zanim zrobi to konkurencja.</p>
+      <div class="sourcing-layout">
+        <div class="cards">
+          <div class="card"><span class="card-n">01</span><h3>Radar rynku 24/7</h3><p>Monitoring portali, ogłoszeń gmin i rejestrów publicznych. Alert gdy pojawi się grunt spełniający Twoje kryteria.</p></div>
+          <div class="card card-hi"><span class="card-n">02</span><h3>Analiza MPZP w 2 minuty</h3><p>Upload planu miejscowego → automatyczna analiza wskaźników zabudowy, linii, funkcji. Scoring potencjału natychmiast.</p></div>
+          <div class="card"><span class="card-n">03</span><h3>Scoring działek 0–100</h3><p>Każdy grunt oceniany: lokalizacja, infrastruktura, chłonność, ryzyko prawne. Pipeline zawsze posortowany.</p></div>
+          <div class="card"><span class="card-n">04</span><h3>Oferty nabycia na miarę</h3><p>Przygotowujemy propozycję zakupu dopasowaną do profilu właściciela. Mniej zimnych telefonów.</p></div>
+        </div>
+        <div class="photo-frame photo-tall">
+          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80" alt="Teren inwestycyjny z lotu ptaka" loading="lazy" />
+          <svg class="photo-geo" viewBox="0 0 360 480" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="0" y1="180" x2="360" y2="162" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.7"/>
+            <line x1="0" y1="310" x2="360" y2="325" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.6"/>
+            <line x1="140" y1="0" x2="122" y2="480" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.7"/>
+            <line x1="255" y1="0" x2="272" y2="480" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.5"/>
+            <circle cx="140" cy="180" r="6" fill="none" stroke="#c9a96e" stroke-width="1.5" opacity="0.9"/>
+            <circle cx="140" cy="180" r="2.5" fill="#c9a96e"/>
+            <circle cx="255" cy="163" r="5" fill="none" stroke="#c9a96e" stroke-width="1.2" opacity="0.8"/>
+            <circle cx="255" cy="163" r="2" fill="#c9a96e"/>
+            <text x="150" y="176" font-size="10" fill="#c9a96e" font-family="Inter,sans-serif" letter-spacing="0.08em" opacity="0.9">DZ. 88/2</text>
+            <text x="264" y="159" font-size="10" fill="#c9a96e" font-family="Inter,sans-serif" letter-spacing="0.08em" opacity="0.8">DZ. 88/3</text>
+            <rect x="123" y="164" width="132" height="148" fill="rgba(201,169,110,0.06)" stroke="#c9a96e" stroke-width="1" stroke-dasharray="4 6" opacity="0.6"/>
+            <!-- Miarka pozioma -->
+            <line x1="123" y1="345" x2="272" y2="345" stroke="#c9a96e" stroke-width="1" opacity="0.85"/>
+            <line x1="123" y1="339" x2="123" y2="351" stroke="#c9a96e" stroke-width="1" opacity="0.85"/>
+            <line x1="272" y1="339" x2="272" y2="351" stroke="#c9a96e" stroke-width="1" opacity="0.85"/>
+            <text x="180" y="362" font-size="9" fill="#c9a96e" font-family="Inter,sans-serif" opacity="0.9">62,4 m</text>
+            <!-- Panel analizy -->
+            <rect x="20" y="20" width="150" height="98" rx="3" fill="rgba(11,12,10,0.82)" stroke="#c9a96e" stroke-width="0.8" opacity="0.95"/>
+            <text x="32" y="40" font-size="8" fill="#c9a96e" font-family="Inter,sans-serif" letter-spacing="0.14em" opacity="0.9">ANALIZA</text>
+            <line x1="32" y1="47" x2="158" y2="47" stroke="#c9a96e" stroke-width="0.5" opacity="0.4"/>
+            <text x="32" y="63" font-size="9" fill="#f2f0eb" font-family="Inter,sans-serif" opacity="0.85">Scoring: 84/100</text>
+            <text x="32" y="79" font-size="9" fill="#f2f0eb" font-family="Inter,sans-serif" opacity="0.85">Chłonność: MN/MW</text>
+            <text x="32" y="95" font-size="9" fill="#f2f0eb" font-family="Inter,sans-serif" opacity="0.85">Pow.: 4 820 m²</text>
+            <text x="32" y="111" font-size="9" fill="#c9a96e" font-family="Inter,sans-serif" opacity="0.95">▲ Rekomendacja: TAK</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OFERTY -->
+  <section class="section section-dark" id="oferty">
+    <div class="container">
+      <span class="tag tag-light">Filar 02</span>
+      <h2 class="h2 h2-light" data-cms="oferty_title">Gotowe oferty<br /><em>dla deweloperów</em></h2>
+      <div class="formats">
+        <div class="fmt"><span class="fmt-l">Format A</span><h3>JV</h3><p>Grunt + know-how zespołu. Podział zysku z realizacji.</p></div>
+        <div class="fmt fmt-hi"><span class="fmt-l">Format B — najczęściej</span><h3>Sprzedaż z WZ</h3><p>Działka z decyzją WZ lub pozwoleniem. Gotowość do natychmiastowego startu.</p></div>
+        <div class="fmt"><span class="fmt-l">Format C</span><h3>Pakiet inwestycyjny</h3><p>Grunt + projekt + analiza rentowności. Minimum ryzyka.</p></div>
+      </div>
+      <div class="dataroom">
+        <div class="dr-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <p><strong>Kompletny data room</strong> — analiza chłonności, koncepcja podziału, koszty uzbrojenia, porównanie transakcji, mapa ryzyk. Gotowe w jeden dzień.</p>
+        <a href="#kontakt" class="btn-gold btn-sm">Zamów pakiet</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- EKOSYSTEM -->
+  <section class="section" id="ekosystem">
+    <div class="container">
+      <div class="eco-layout">
+        <div>
+          <span class="tag" data-cms="eko_tag">Filar 03</span>
+          <h2 class="h2" data-cms="eko_title">Ekosystem<br /><em>360°</em></h2>
+          <p class="lead" data-cms="eko_lead">gruntowo.pl jako centrum branży — nie tylko uczestnik rynku, ale jego organizator.</p>
+          <div class="eco-list">
+            <div class="eco-node"><div class="eco-dot"></div><div><h4>Pośrednicy i sourcerzy</h4><p>Sieć zewnętrznych partnerów prowizyjnych. System standaryzuje i ocenia każdą ofertę automatycznie.</p></div></div>
+            <div class="eco-node"><div class="eco-dot"></div><div><h4>Architekci i urbaniści</h4><p>Koncepcje zagospodarowania jako element pakietu inwestycyjnego dla kupującego.</p></div></div>
+            <div class="eco-node"><div class="eco-dot"></div><div><h4>Inwestorzy i fundusze</h4><p>Baza z profilami preferencji. System dopasowuje grunt do właściwego kupującego przed wejściem na rynek.</p></div></div>
+            <div class="eco-node"><div class="eco-dot"></div><div><h4>Prawnicy i notariusze</h4><p>Sprawdzona sieć obsługi transakcji. Weryfikacja dokumentów zintegrowana w jeden przepływ.</p></div></div>
+          </div>
+        </div>
+        <div class="eco-photos">
+          <div class="photo-frame">
+            <img src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=700&q=80" alt="Teren inwestycyjny z lotu ptaka" loading="lazy" />
+            <svg class="photo-geo" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <line x1="0" y1="150" x2="300" y2="136" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.7"/>
+              <line x1="120" y1="0" x2="108" y2="400" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.7"/>
+              <circle cx="120" cy="150" r="5" fill="none" stroke="#c9a96e" stroke-width="1.5" opacity="0.9"/>
+              <circle cx="120" cy="150" r="2" fill="#c9a96e"/>
+              <text x="130" y="146" font-size="9" fill="#c9a96e" font-family="Inter,sans-serif" letter-spacing="0.08em" opacity="0.9">DZ. 214/7</text>
+              <line x1="108" y1="290" x2="230" y2="290" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
+              <line x1="108" y1="285" x2="108" y2="295" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
+              <line x1="230" y1="285" x2="230" y2="295" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
+              <text x="150" y="305" font-size="8" fill="#c9a96e" font-family="Inter,sans-serif" opacity="0.85">35,2 m</text>
+            </svg>
+          </div>
+          <div class="photo-frame photo-wide">
+            <img src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80" alt="Działki budowlane z lotu ptaka" loading="lazy" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section class="section section-dark">
+    <div class="container">
+      <span class="tag tag-light">Plan wdrożenia</span>
+      <h2 class="h2 h2-light" data-cms="roadmap_title">Trzy etapy<br /><em>transformacji</em></h2>
+      <div class="roadmap">
+        <div class="rm"><div class="rm-num">1</div><div><span class="rm-time">Teraz</span><h3>Radar gruntów + analiza MPZP</h3><p>Najszybszy zwrot z inwestycji. Implementacja 4–6 tygodni. Zespół przestaje tracić czas na manualny przegląd rynku.</p></div></div>
+        <div class="rm"><div class="rm-num">2</div><div><span class="rm-time">3–6 miesięcy</span><h3>Automatyczny data room i scoring</h3><p>Każda oferta wychodzi profesjonalnie sformatowana — gotowa pozycja doradcy inwestycyjnego.</p></div></div>
+        <div class="rm"><div class="rm-num">3</div><div><span class="rm-time">6–18 miesięcy</span><h3>Pełny ekosystem partnerów</h3><p>Sieć sourcerów, baza deweloperów, content hub. Hub rynku gruntów Wielkopolski.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KONTAKT -->
+  <section class="section" id="kontakt">
+    <div class="container">
+      <div class="contact-grid">
+        <div>
+          <span class="tag" data-cms="kontakt_tag">Kontakt</span>
+          <h2 class="h2" data-cms="kontakt_title">Gotowi<br /><em>na rozmowę?</em></h2>
+          <p class="lead" data-cms="kontakt_lead">Opowiedz nam o gruntach, które szukasz lub chcesz sprzedać.</p>
+          <a href="mailto:kontakt@gruntowo.pl" class="contact-email">kontakt@gruntowo.pl</a>
+          <address>ul. Młyńska 12<br />61-730 Poznań</address>
+        </div>
+        <form id="contact-form" novalidate>
+          <div class="fg"><label>Imię i nazwisko</label><input type="text" id="c-name" placeholder="Jan Kowalski" /></div>
+          <div class="fg"><label>E-mail</label><input type="email" id="c-email" placeholder="jan@firma.pl" /></div>
+          <div class="fg"><label>Temat</label>
+            <select id="c-topic">
+              <option value="">Wybierz…</option>
+              <option>Sourcing gruntów</option>
+              <option>Gotowa oferta dla dewelopera</option>
+              <option>Współpraca JV</option>
+              <option>Dołączenie do ekosystemu</option>
+            </select>
+          </div>
+          <div class="fg"><label>Wiadomość</label><textarea id="c-msg" rows="4" placeholder="Opisz czego szukasz…"></textarea></div>
+          <button type="submit" class="btn-gold">Wyślij wiadomość</button>
+          <p class="form-note">Odpowiadamy w ciągu jednego dnia roboczego.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTNER + FOOTER -->
+  <div class="partner-bar">
+    <div class="container partner-bar-inner">
+      <span>Partner merytoryczny</span>
+      <a href="https://gruntowo.com" target="_blank" rel="noopener">
+        <img src="gruntowo-logo.png" alt="Gruntowo.com" />
+      </a>
+      <span class="partner-desc">Największa baza gruntów inwestycyjnych w Polsce</span>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <a href="#" class="nav-logo"><img src="gruntowo-logo.png" alt="gruntowo.pl" class="ft-logo-img" /></a>
+        <p class="ft-sub">Portal z gruntami</p>
+        <p class="ft-sub">NIP 7831774771 · REGON 369753222</p>
+        <a href="https://gruntowo.com" target="_blank" rel="noopener" class="ft-partner">
+          <img src="gruntowo-logo.png" alt="Gruntowo.com" />
+          <span>Portal z gruntami</span>
+        </a>
+      </div>
+      <nav>
+        <ul class="ft-nav">
+          <li><a href="#sourcing">Sourcing gruntów</a></li>
+          <li><a href="#oferty">Gotowe oferty</a></li>
+          <li><a href="#ekosystem">Ekosystem</a></li>
+          <li><a href="#kontakt">Kontakt</a></li>
+        </ul>
+      </nav>
+      <div class="ft-legal">
+        <p>© gruntowo.pl. Wszelkie prawa zastrzeżone.</p>
+        <a href="#">Polityka prywatności</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
