@@ -1,0 +1,99 @@
+/*
+ * gruntowo.pl — WYDRUK / ZAPIS DO PDF (raport darmowy i rozszerzony)
+ *
+ * Przycisk "Pobierz PDF" otwiera okno drukowania przegladarki -> "Zapisz jako PDF".
+ * Nic nie jest pobierane ponownie: do PDF trafia dokladnie to, co jest na stronie
+ * (mapy, obrysy, wyniki), tylko w jasnym ukladzie A4.
+ */
+@media print {
+  @page { size: A4; margin: 13mm 12mm 15mm; }
+  @page { @bottom-left { content: "gruntowo.pl"; font: 7pt Inter, Arial, sans-serif; color: #999; }
+          @bottom-right { content: "strona " counter(page) " z " counter(pages); font: 7pt Inter, Arial, sans-serif; color: #999; } }
+
+  /* jasna paleta zamiast ciemnej */
+  :root {
+    --bg: #ffffff; --panel: #f7f4ed; --panel2: #f2eee4;
+    --cream: #17191a; --cream2: #34383a; --sage: #6a716d;
+    --line: #e4dccb; --gold: #a98434; --goldl: #a98434;
+  }
+  html, body { background: #fff !important; color: #17191a; font-size: 10pt; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-shadow: none !important; text-shadow: none !important; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ukryj elementy interfejsu */
+  .topbar, .bg-grid, .start, .loading-overlay, .bramka, .premium-banner, .premium-zone, .premium-cta,
+  .spis, .pdf-pasek, .btn-ponow, .tx-wiecej, .typ-btn, .haslo-box-rap, .pdf-toast, #pickmap, .legenda-linki,
+  .werdykt-postep .kropka { display: none !important; }
+  .report { display: block !important; }
+  .wrap { max-width: none; padding: 0; }
+
+  /* OKLADKA */
+  .rep-hero { margin: 0 0 5mm; padding: 7mm 7mm 6mm; border: 1px solid #e4dccb; border-radius: 3mm; background: #fbf9f4 !important; }
+  .rep-hero-grid { display: none; }
+  .rep-title { font-size: 26pt; color: #14181a; }
+  .rep-sub { color: #555; }
+  .rstat-v.gold { color: #a98434; }
+  .notice { background: #f7f4ed !important; border-left-color: #a98434; color: #34383a; font-size: 8pt; padding: 2.5mm 3.5mm; margin-bottom: 3mm; }
+  .podsumowanie { background: #fbf9f4 !important; border-color: #e4dccb; break-inside: avoid; }
+  .pods-uwaga { background: #f2eee4 !important; }
+  .pods-cena { color: #a98434; }
+
+  /* WERDYKT */
+  .werdykt { background: #fbf9f4 !important; border-color: #d9c9a3; }
+  .werdykt-glowa { break-inside: avoid; }
+  .wk li { break-inside: avoid; }
+  .werdykt-dol { break-before: page; margin-top: 0; }
+  .werdykt-kolumny { break-inside: auto; }
+  .wk-uwaga { background: #f5f1e8 !important; }
+  .wk li { font-size: 9pt; }
+  .wk li small { color: #5c625f; }
+  .g-tlo { stroke: #ece6d8; }
+  .werdykt-liczba span { color: #14181a; }
+  .werdykt-rekomendacja { color: #34383a; }
+
+  /* SEKCJE — naglowek + mapa zawsze razem */
+  .sec { margin: 5mm 0; }
+  .sec-head { break-after: avoid; margin-bottom: 2.5mm; }
+  .sec-title { font-size: 15pt; color: #14181a; }
+  .tag { background: #f7f4ed; }
+  .mapbox, .zdj-mapbox { break-inside: avoid; border-color: #d9d2c2; }
+  .mapbox { aspect-ratio: 16 / 8.5; }
+  .mapbox-cap { font-size: 7pt; }
+  .czesc-naglowek { break-before: page; margin-top: 0; padding-top: 0; border-top: 0; }
+  .czesc-naglowek h2 { color: #14181a; }
+
+  /* karty, tabele, oceny */
+  .scard, .ocena, .stat-item, .ot-item, .lista-kontrolna li { background: #fbf9f4 !important; break-inside: avoid; }
+  .sec-roz .scard, .sec-premium .scard { background: #fbf9f4 !important; }
+  .ocena-plus { background: #eef6f0 !important; border-color: #bcd9c6; }
+  .ocena-minus { background: #fbefe9 !important; border-color: #ecc4b1; }
+  .ocena-uwaga { background: #faf5ea !important; border-color: #e4d3a8; }
+  .ocena strong, .lista-kontrolna strong, .scard-v, .prow .v, .tx-addr, .tx-perm2 { color: #17191a; }
+  .params, .tx-table, .media-tabela, .stat-grid, .otoczenie-grid { border-color: #e4dccb; background: #e4dccb; }
+  .prow, .tx-row { border-color: #ece6d8; background: #fff; }
+  .tx-head { background: #f7f4ed !important; }
+  .tx-row { break-inside: avoid; }
+  .mpzp-legenda, .pog-legenda, .wymiary-box, .cena-szac-box, .typ-porownania, .uzbr-legenda { background: #fbf9f4 !important; border-color: #e4dccb; break-inside: avoid; }
+  .zdjecia-grid { gap: 3mm; }
+  .zdj-item { break-inside: avoid; }
+
+  /* znak wodny na mapie — czytelny na wydruku */
+  .znak-wodny { background: rgba(255,255,255,.88) !important; border-color: #bbb; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .zw-tytul { color: #222 !important; }
+  .zw-pod { color: #555 !important; }
+
+  /* lista kontrolna na nowej stronie */
+  #sec-lista { break-before: page; }
+  .lista-kontrolna li { border-color: #e4dccb; }
+  .lista-kontrolna li.wazne { background: #faf5ea !important; border-color: #e4d3a8; }
+
+  .footer-rep { break-inside: avoid; font-size: 7pt; color: #777; border-top-color: #e4dccb; margin: 6mm 0 0; }
+}
+
+@media print {
+  /* overflow:hidden blokuje dzielenie blokow na strony — w druku wylaczamy */
+  .werdykt, .podsumowanie, .rep-hero, .premium-banner, .tx-table, .params { overflow: visible !important; }
+  .rep-hero { break-inside: avoid; }
+  /* nadpisanie starszych regul z raport-rozszerzony.css, ktore trzymaly cale bloki w jednym kawalku */
+  .werdykt, .sec-roz, .media-tabela { break-inside: auto !important; }
+}
