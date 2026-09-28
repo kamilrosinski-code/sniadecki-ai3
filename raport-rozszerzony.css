@@ -1,0 +1,155 @@
+/* ===== RAPORT ROZSZERZONY — style dodatkowe (na bazie raport-style.css) ===== */
+:root{ --plus:#6fae8a; --minus:#e08a6a; --uwaga:#c9a961; }
+
+/* BRAMKA HASŁA */
+.bramka{position:fixed;inset:0;z-index:1100;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:rgba(11,12,10,.97);}
+.bramka.ukryta{display:none;}
+.bramka-box{max-width:520px;width:100%;padding:2.25rem 2rem;border:1px solid rgba(176,141,62,.4);border-radius:14px;background:linear-gradient(160deg,rgba(176,141,62,.10),rgba(20,24,26,.9));}
+.bramka-logo{height:34px;width:auto;display:block;margin-bottom:1.5rem;}
+.bramka-tytul{font-family:var(--ff-d);font-size:1.9rem;font-weight:500;line-height:1.12;margin-bottom:.75rem;}
+.bramka-sub{font-size:.88rem;color:var(--sage);line-height:1.65;margin-bottom:1.4rem;}
+.bramka-alt{font-size:.8rem;color:var(--sage);margin-top:1.1rem;}
+.bramka-alt a{color:var(--gold);text-decoration:underline;text-underline-offset:2px;}
+body.zablokowane .start,body.zablokowane .report{display:none!important;}
+
+/* WERDYKT */
+.werdykt{margin:0 0 2rem;border:1px solid rgba(176,141,62,.45);border-radius:14px;overflow:hidden;background:linear-gradient(145deg,rgba(176,141,62,.12),rgba(20,24,26,.55));}
+.werdykt-dol{margin-top:3rem;}
+.werdykt-glowa{display:grid;grid-template-columns:auto 1fr;gap:1.75rem;align-items:center;padding:1.75rem 2rem;}
+.werdykt-gauge{position:relative;width:132px;height:132px;}
+.werdykt-gauge svg{width:100%;height:100%;transform:rotate(-90deg);}
+.g-tlo{fill:none;stroke:rgba(243,239,230,.08);stroke-width:10;}
+.g-pasek{fill:none;stroke:var(--goldl);stroke-width:10;stroke-linecap:round;stroke-dasharray:0 327;transition:stroke-dasharray .8s ease,stroke .4s;}
+.werdykt-liczba{position:absolute;inset:0;display:flex;align-items:baseline;justify-content:center;padding-top:44px;font-family:var(--ff-d);}
+.werdykt-liczba span{font-size:2.6rem;font-weight:600;color:var(--cream);line-height:1;}
+.werdykt-liczba small{font-family:var(--ff-m);font-size:.7rem;color:var(--sage);margin-left:.15rem;}
+.werdykt-eyebrow{font-family:var(--ff-m);font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;color:var(--goldl);margin-bottom:.4rem;}
+.werdykt-eyebrow .sec-num{margin-right:.4rem;}
+.werdykt-tytul{font-family:var(--ff-d);font-size:clamp(1.5rem,3.2vw,2.1rem);font-weight:500;line-height:1.12;margin-bottom:.55rem;}
+.werdykt-lead{font-size:.9rem;color:var(--cream2);line-height:1.65;}
+.werdykt-postep{font-family:var(--ff-m);font-size:.7rem;color:var(--sage);margin-top:.6rem;letter-spacing:.04em;}
+.werdykt-postep .kropka{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--goldl);margin-right:.45rem;animation:pulsuj 1.4s ease-in-out infinite;}
+.werdykt[data-poziom="wysoki"] .g-pasek{stroke:var(--plus);}
+.werdykt[data-poziom="sredni"] .g-pasek{stroke:var(--goldl);}
+.werdykt[data-poziom="niski"] .g-pasek{stroke:#d9a35a;}
+.werdykt[data-poziom="ryzyko"] .g-pasek{stroke:var(--minus);}
+
+.werdykt-kolumny{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);}
+.wk{padding:1.25rem 1.75rem 1.4rem;}
+.wk-plus{border-right:1px solid var(--line);}
+.wk-uwaga{border-top:1px solid var(--line);background:rgba(11,12,10,.25);}
+.wk-tytul{display:flex;align-items:center;gap:.55rem;font-family:var(--ff-m);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cream2);margin-bottom:.85rem;}
+.wk-ikona{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-family:var(--ff-b);font-size:.95rem;font-weight:600;line-height:1;}
+.wk-plus .wk-ikona{background:rgba(111,174,138,.18);color:var(--plus);}
+.wk-minus .wk-ikona{background:rgba(224,138,106,.18);color:var(--minus);}
+.wk-uwaga .wk-ikona{background:rgba(201,169,97,.18);color:var(--uwaga);}
+.wk ul{list-style:none;display:flex;flex-direction:column;gap:.7rem;}
+.wk li{position:relative;padding-left:1.1rem;font-size:.86rem;line-height:1.5;color:var(--cream);}
+.wk li::before{content:'';position:absolute;left:0;top:.55em;width:6px;height:6px;border-radius:50%;}
+.wk-plus li::before{background:var(--plus);}
+.wk-minus li::before{background:var(--minus);}
+.wk-uwaga li::before{background:var(--uwaga);}
+.wk li strong{font-weight:500;}
+.wk li small{display:block;color:var(--sage);font-size:.78rem;margin-top:.15rem;}
+.wk li .zr{font-family:var(--ff-m);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--sage);opacity:.8;margin-left:.35rem;}
+.wk li.wk-pusto{color:var(--sage);font-style:italic;padding-left:0;}
+.wk li.wk-pusto::before{display:none;}
+.werdykt-rekomendacja{padding:1.25rem 1.75rem 1.5rem;border-top:1px solid var(--line);font-size:.9rem;line-height:1.7;color:var(--cream2);}
+.werdykt-rekomendacja:empty{display:none;}
+.werdykt-rekomendacja strong{color:var(--goldl);font-weight:500;}
+.werdykt-rekomendacja ol{margin:.5rem 0 0 1.2rem;}
+.werdykt-rekomendacja li{margin:.25rem 0;}
+
+.spis{display:flex;flex-wrap:wrap;gap:.45rem;padding:1rem 1.75rem 1.25rem;border-top:1px solid var(--line);}
+.spis a{font-family:var(--ff-m);font-size:.7rem;padding:.35rem .7rem;border:1px solid var(--line);border-radius:20px;color:var(--cream2);text-decoration:none;transition:.15s;}
+.spis a:hover{border-color:var(--gold);color:var(--goldl);}
+
+/* CZĘŚĆ B */
+.czesc-naglowek{margin:3.5rem 0 1rem;padding-top:2rem;border-top:1px solid rgba(176,141,62,.35);}
+.czesc-eyebrow{font-family:var(--ff-m);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);}
+.czesc-naglowek h2{font-family:var(--ff-d);font-size:2rem;font-weight:500;margin:.25rem 0 .4rem;}
+.czesc-naglowek p{font-size:.9rem;color:var(--sage);max-width:640px;}
+.sec-roz{scroll-margin-top:80px;}
+#werdykt-dol,#werdykt-gora{scroll-margin-top:80px;}
+.roz-intro{font-size:.88rem;color:var(--cream2);line-height:1.65;margin-bottom:1rem;}
+.roz-intro strong{color:var(--goldl);font-weight:500;}
+.roz-lad{display:block;font-family:var(--ff-m);font-size:.78rem;color:var(--sage);padding:1rem 0;}
+.roz-lad::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--goldl);margin-right:.55rem;animation:pulsuj 1.4s ease-in-out infinite;}
+.roz-wynik{margin-top:1rem;}
+.roz-szczegoly{margin-top:1rem;}
+.roz-szczegoly:empty{display:none;}
+
+/* wynik jako "werdyktowa" belka */
+.ocena{display:flex;gap:.9rem;align-items:flex-start;padding:1rem 1.2rem;border-radius:8px;border:1px solid var(--line);background:var(--panel);font-size:.88rem;line-height:1.6;}
+.ocena + .ocena{margin-top:.6rem;}
+.ocena-ikona{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.95rem;}
+.ocena-plus{border-color:rgba(111,174,138,.35);background:rgba(111,174,138,.07);}
+.ocena-plus .ocena-ikona{background:rgba(111,174,138,.2);color:var(--plus);}
+.ocena-minus{border-color:rgba(224,138,106,.35);background:rgba(224,138,106,.07);}
+.ocena-minus .ocena-ikona{background:rgba(224,138,106,.2);color:var(--minus);}
+.ocena-uwaga{border-color:rgba(201,169,97,.35);background:rgba(201,169,97,.06);}
+.ocena-uwaga .ocena-ikona{background:rgba(201,169,97,.2);color:var(--uwaga);}
+.ocena strong{font-weight:500;color:var(--cream);}
+.ocena small{display:block;color:var(--sage);font-size:.8rem;margin-top:.2rem;}
+
+.pill-plus{background:rgba(111,174,138,.18);color:var(--plus);}
+.pill-minus{background:rgba(224,138,106,.18);color:var(--minus);}
+
+/* tabela mediów */
+.media-tabela{border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+.media-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.6fr;gap:.75rem;padding:.8rem 1.1rem;border-bottom:1px solid var(--line);font-size:.84rem;align-items:center;}
+.media-row:last-child{border-bottom:none;}
+.media-head{background:var(--panel);font-family:var(--ff-m);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--sage);}
+.media-nazwa{display:flex;align-items:center;gap:.55rem;color:var(--cream);}
+.media-kolor{width:18px;height:4px;border-radius:2px;flex-shrink:0;}
+.media-val{font-family:var(--ff-m);font-size:.8rem;color:var(--cream2);}
+.media-ocena{font-size:.8rem;}
+.media-ocena.plus{color:var(--plus);} .media-ocena.minus{color:var(--minus);} .media-ocena.uwaga{color:var(--uwaga);} .media-ocena.brak{color:var(--sage);}
+.media-tabela > .roz-lad{padding:1rem 1.1rem;}
+
+/* otoczenie */
+.otoczenie-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:1rem;}
+.otoczenie-grid:empty{display:none;}
+.ot-item{background:var(--panel);padding:1rem 1.1rem;}
+.ot-k{font-family:var(--ff-m);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--sage);margin-bottom:.3rem;}
+.ot-v{font-family:var(--ff-d);font-size:1.35rem;color:var(--cream);line-height:1.15;}
+.ot-n{font-size:.75rem;color:var(--sage);margin-top:.15rem;}
+
+/* lista kontrolna */
+.lista-kontrolna{list-style:none;display:flex;flex-direction:column;gap:.6rem;}
+.lista-kontrolna li{display:grid;grid-template-columns:22px 1fr;gap:.75rem;padding:.9rem 1.1rem;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:.86rem;line-height:1.55;}
+.lista-kontrolna li::before{content:'';width:16px;height:16px;margin-top:.15rem;border:1.5px solid var(--gold);border-radius:4px;}
+.lista-kontrolna li.wazne{border-color:rgba(201,169,97,.45);background:rgba(201,169,97,.06);}
+.lista-kontrolna strong{font-weight:500;color:var(--cream);}
+.lista-kontrolna small{display:block;color:var(--sage);font-size:.78rem;margin-top:.15rem;}
+
+.warianty-jeden{grid-template-columns:minmax(0,520px);justify-content:center;}
+
+@media(max-width:720px){
+  .werdykt-glowa{grid-template-columns:1fr;justify-items:center;text-align:center;padding:1.5rem 1.25rem;}
+  .werdykt-kolumny{grid-template-columns:1fr;}
+  .wk-plus{border-right:none;border-bottom:1px solid var(--line);}
+  .wk{padding:1.1rem 1.25rem;}
+  .spis{padding:1rem 1.25rem;}
+  .media-row{grid-template-columns:1fr 1fr;}
+  .media-head{display:none;}
+  .media-nazwa{grid-column:1 / -1;}
+  .media-ocena{grid-column:1 / -1;}
+}
+@media print{
+  .bramka,.spis,.premium-cta{display:none!important;}
+  .werdykt,.sec-roz,.ocena,.media-tabela,.lista-kontrolna li{break-inside:avoid;}
+}
+
+/* Wynik analizy sieci pod mapa 07 */
+#media-wynik{margin-top:1rem;}
+.media-naglowek{font-family:var(--ff-m);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;}
+
+/* Pobieranie listy kontrolnej (PDF) */
+.pdf-pasek{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:1.1rem;}
+.pdf-btn{padding:.8rem 1.4rem;font-size:.85rem;}
+.pdf-btn:disabled{opacity:.6;cursor:wait;}
+.pdf-info{font-size:.8rem;color:var(--sage);}
+.pdf-pasek-werdykt{margin:0;padding:1rem 1.75rem 1.4rem;border-top:1px solid var(--line);}
+.pdf-link{color:var(--goldl);font-size:.88rem;text-decoration:underline;text-underline-offset:3px;}
+@media print{.pdf-pasek{display:none!important;}}
