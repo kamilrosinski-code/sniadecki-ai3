@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Raport rozszerzony — gruntowo.pl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="raport-style.css?v=20261001a" />
+<link rel="stylesheet" href="raport-rozszerzony.css?v=20261001a" />
+<link rel="stylesheet" href="raport-druk.css?v=20260929" />
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<!-- BRAMKA — raport rozszerzony wymaga hasla (haslo.js). Po odblokowaniu raport-rozszerzony.js laduje raport.js -->
+<div class="bramka" id="bramka">
+  <form class="bramka-box" id="bramka-form" data-haslo data-haslo-reczne novalidate>
+    <img src="gruntowo-logo.png" alt="gruntowo.pl" class="bramka-logo" />
+    <p class="eyebrow">Raport rozszerzony</p>
+    <h1 class="bramka-tytul">Wklej hasło, aby otworzyć raport rozszerzony</h1>
+    <p class="bramka-sub">Raport rozszerzony zawiera werdykt inwestycyjny, plusy i minusy działki, analizę zagrożeń powodziowych, form ochrony przyrody, mediów przy działce, ukształtowania terenu, klas gruntów i dostępu do drogi.</p>
+    <div class="haslo-row-rap">
+      <input class="id-input" type="password" data-haslo-pole placeholder="Wklej hasło" autocomplete="off" aria-label="Hasło" />
+      <button type="submit" class="btn btn-gold">Otwórz raport</button>
+    </div>
+    <div class="haslo-msg" data-haslo-msg role="status" aria-live="polite"></div>
+    <p class="bramka-alt">Nie masz hasła? <a href="raport.html">Wygeneruj raport bezpłatny</a> albo <a href="index.html#kontakt">zamów raport rozszerzony</a>.</p>
+  </form>
+</div>
+
+<!-- POCZEKALNIA — ekran ladowania raportu -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-box">
+    <div class="loading-logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="56" height="56">
+        <g transform="translate(50 48)">
+          <circle r="20" fill="none" stroke="#c9a961" stroke-width="3" stroke-dasharray="106 20" transform="rotate(118.6)"/>
+          <path d="M0 0V28" stroke="#c9a961" stroke-width="3"/>
+          <circle r="5" fill="#c9a961"/>
+        </g>
+      </svg>
+    </div>
+    <div class="loading-title">Przygotowujemy raport rozszerzony</div>
+    <div class="loading-krok" id="loading-krok">Pobieramy dane dzialki z rejestru GUGiK...</div>
+    <div class="loading-bar"><div class="loading-bar-fill" id="loading-bar-fill"></div></div>
+    <div class="loading-sub">Zaciagamy warstwy z Geoportalu — to moze potrwac kilkadziesiat sekund. Prosimy o cierpliwosc, raport buduje sie na biezaco.</div>
+  </div>
+</div>
+
+<div class="topbar">
+  <a href="index.html"><img src="gruntowo-logo.png" alt="gruntowo.pl" class="brand-logo" /></a>
+  <div class="topbtns">
+    <button class="btn" id="btn-nowa" style="display:none;">Nowa działka</button>
+    <button class="btn btn-gold" id="btn-pdf" style="display:none;">Pobierz PDF</button>
+  </div>
+</div>
+
+<section class="start" id="start">
+  <div class="wrap">
+    <p class="eyebrow">Raport rozszerzony · analiza inwestycyjna</p>
+    <h1>Pokaż nam swój grunt,<br />a My powiemy, co możesz<br />z nim zrobić</h1>
+    <p class="lead">Wpisz identyfikator działki z ewidencji gruntów. Pobierzemy geometrię, powierzchnię i lokalizację z rejestru GUGiK, dołożymy podgląd MPZP i cen transakcyjnych z okolicy.</p>
+    <label class="field-label" for="id-input">Identyfikator działki</label>
+    <div class="id-row">
+      <input class="id-input" id="id-input" placeholder="np. 300501_2.0003.640/2" autocomplete="off" />
+    </div>
+    <div class="contact-fields">
+      <div class="cf-row">
+        <div class="cf-field">
+          <label class="field-label" for="r-email">Adres e-mail <span class="req">wymagane</span></label>
+          <input class="id-input" id="r-email" type="email" placeholder="jan@firma.pl" autocomplete="email" />
+        </div>
+        <div class="cf-field">
+          <label class="field-label" for="r-tel">Telefon <span class="opt">opcjonalnie</span></label>
+          <input class="id-input" id="r-tel" type="tel" placeholder="600 700 800" autocomplete="tel" />
+        </div>
+      </div>
+      <button class="btn btn-gold" id="btn-generuj" style="padding:.9rem 1.9rem;margin-top:.5rem;">Generuj raport</button>
+      <p class="cf-note">Podając dane akceptujesz przetwarzanie ich zgodnie z <a href="klauzula.html" target="_blank" rel="noopener">klauzulą informacyjną</a>.</p>
+    </div>
+    <div style="margin-top:1rem;">
+      <button class="btn" id="btn-pokazmape" style="font-size:.75rem;">Nie znasz identyfikatora? Wskaz dzialke na mapie</button>
+    </div>
+    <div id="pickmap"></div>
+    <div class="examples">
+      <p class="ex-label">Przyklady do wyprobowania</p>
+      <div class="ex-chips">
+        <button class="chip" data-id="300501_2.0003.640/2">300501_2.0003.640/2</button>
+        <button class="chip" data-id="146516_8.0552.17/4">146516_8.0552.17/4</button>
+        <button class="chip" data-id="141801_4.0202.91/5">141801_4.0202.91/5</button>
+      </div>
+    </div>
+    <p class="hint">Identyfikator znajdziesz w wypisie z rejestru gruntow lub na <a href="https://mapy.geoportal.gov.pl/imap/Imgp_2.html?locale=pl&gpmap=gp0" target="_blank" rel="noopener">geoportalu</a> po klikni&#281;ciu w dzialke.</p>
+  </div>
+</section>
+
+<section class="report" id="report">
+  <div class="wrap">
+    <div class="rep-hero">
+      <div class="rep-hero-grid"></div>
+      <div class="rep-hero-top">
+        <img src="gruntowo-logo.png" alt="gruntowo.pl" style="height:32px;width:auto;" />
+        <div class="rep-meta">Raport rozszerzony<br /><span id="rep-date"></span></div>
+      </div>
+      <h1 class="rep-title" id="rep-title">Dzialka —</h1>
+      <p class="rep-sub" id="rep-sub">—</p>
+      <div class="rep-stats">
+        <div><div class="rstat-l">Identyfikator</div><div class="rstat-v mono" id="rep-id">—</div></div>
+        <div><div class="rstat-l">Powierzchnia</div><div class="rstat-v mono" id="rep-area">—</div></div>
+        <div><div class="rstat-l">Wspolrzedne</div><div class="rstat-v mono" id="rep-coords">—</div></div>
+        <div><div class="rstat-l">Wojewodztwo</div><div class="rstat-v mono gold" id="rep-loc">—</div></div>
+      </div>
+    </div>
+
+    <div class="notice" id="rep-notice"></div>
+
+    <!-- WERDYKT (POCZATEK) — wypelnia raport-rozszerzony.js -->
+    <div class="werdykt" id="werdykt-gora">
+      <div class="werdykt-glowa">
+        <div class="werdykt-wynik">
+          <div class="werdykt-gauge" data-w="gauge"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="g-tlo"/><circle cx="60" cy="60" r="52" class="g-pasek" data-w="pasek"/></svg><div class="werdykt-liczba"><span data-w="punkty">—</span><small>/100</small></div></div>
+        </div>
+        <div class="werdykt-opis">
+          <div class="werdykt-eyebrow">Werdykt modelu analitycznego</div>
+          <h2 class="werdykt-tytul" data-w="tytul">Analizujemy działkę…</h2>
+          <p class="werdykt-lead" data-w="lead">Sprawdzamy plan miejscowy, plan ogólny, zagrożenia, media, ukształtowanie terenu i rynek w okolicy. Werdykt uzupełnia się na bieżąco.</p>
+          <div class="werdykt-postep" data-w="postep"></div>
+        </div>
+      </div>
+      <div class="werdykt-kolumny">
+        <div class="wk wk-plus"><div class="wk-tytul"><span class="wk-ikona">+</span>Plusy</div><ul data-w="plusy"><li class="wk-pusto">zbieramy dane…</li></ul></div>
+        <div class="wk wk-minus"><div class="wk-tytul"><span class="wk-ikona">−</span>Minusy i ryzyka</div><ul data-w="minusy"><li class="wk-pusto">zbieramy dane…</li></ul></div>
+      </div>
+      <div class="wk wk-uwaga"><div class="wk-tytul"><span class="wk-ikona">!</span>Do sprawdzenia przed decyzją</div><ul data-w="uwagi"><li class="wk-pusto">zbieramy dane…</li></ul></div>
+      <nav class="spis" aria-label="Spis sekcji">
+        <a href="#sec-planowanie">Planowanie</a><a href="#sec-przyroda">Ochrona przyrody</a><a href="#sec-powodz">Powódź</a><a href="#sec-media">Media</a><a href="#sec-teren">Teren</a><a href="#sec-uzytki">Użytki i klasy</a><a href="#sec-otoczenie">Droga i otoczenie</a><a href="#sec-lista">Lista kontrolna</a><a href="#werdykt-dol">Werdykt końcowy</a>
+      </nav>
+    </div>
+
+    <!-- STRESZCZENIE: werdykt wizualny + cena -->
+    <div class="podsumowanie" id="podsumowanie">
+      <div class="pods-glowna">
+        <div class="pods-blok">
+          <div class="pods-label">Orientacyjna wartosc dzialki</div>
+          <div class="pods-cena" id="pods-cena">—</div>
+          <div class="pods-cena-sub" id="pods-cena-sub">na podstawie mediany transakcji w okolicy</div>
+        </div>
+        <div class="pods-blok pods-blok-prawy">
+          <div class="pods-label">Podsumowanie</div>
+          <div class="pods-parametry" id="pods-parametry">
+            <div class="pods-param"><span>Powierzchnia</span><strong id="pods-pow">—</strong></div>
+            <div class="pods-param"><span>Przeznaczenie MPZP</span><strong id="pods-mpzp">do sprawdzenia</strong></div>
+            <div class="pods-param"><span>Lokalizacja</span><strong id="pods-lok">—</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="pods-uwaga">Streszczenie i werdykt opieraja sie na danych automatycznych z rejestrow publicznych. Indywidualna ocena eksperta — w wariancie z konsultacja (499 zl).</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">00</span><span class="sec-title">Zaznaczenie dzialki</span><span class="tag tag-real">ULDK &middot; GUGiK</span></div>
+      <div class="mapbox"><img id="map-zaznaczenie" alt="Dzialka zaznaczona na mapie" /></div>
+      <p class="mapbox-cap">Granice dzialki bedacej przedmiotem analizy — na podkladzie ortofotomapy. Na mapie gabaryty (dlugosc x szerokosc).</p>
+      <div class="wymiary-box" id="sec-wymiary" style="display:none;">
+        <div class="wymiary-title">Wymiary dzialki</div>
+        <div class="wymiary-dane" id="wymiary-dane"></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">01</span><span class="sec-title">Polozenie nieruchomosci</span><span class="tag tag-real">ortofoto + EGiB &middot; GUGiK</span></div>
+      <div class="mapbox"><img id="map-orto" alt="Ortofotomapa z granicami dzialki" /></div>
+      <p class="mapbox-cap">Ortofotomapa + ewidencja gruntow &middot; mapy.geoportal.gov.pl</p>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">02</span><span class="sec-title">Parametry dzialki</span><span class="tag tag-real">rejestr GUGiK &middot; ULDK</span></div>
+      <div class="params">
+        <div class="prow"><span class="k">Identyfikator</span><span class="v" id="p-id">—</span></div>
+        <div class="prow"><span class="k">Obreb ewidencyjny</span><span class="v" id="p-obreb">—</span></div>
+        <div class="prow"><span class="k">Powierzchnia</span><span class="v" id="p-area">—</span></div>
+        <div class="prow"><span class="k">Gmina</span><span class="v" id="p-gmina">—</span></div>
+        <div class="prow"><span class="k">Powiat</span><span class="v" id="p-powiat">—</span></div>
+        <div class="prow"><span class="k">Wojewodztwo</span><span class="v" id="p-woj">—</span></div>
+      </div>
+    </div>
+
+    <!-- PLANY OGOLNE GMIN (POG) -->
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">03</span><span class="sec-title">Plan ogolny gminy (POG)</span><span class="tag tag-real">warstwa WMS &middot; GUGiK</span></div>
+      <div class="mapbox"><img id="map-pog" alt="Dzialka na tle planu ogolnego gminy" /></div>
+      <p class="mapbox-cap">Plan ogolny gminy — strefy planistyczne (uchwalone i projektowane). Nowy dokument, ktory od 2026 zastepuje studium.</p>
+      <div class="pog-legenda" id="pog-legenda" style="display:none;"></div>
+      <div class="notice" style="margin-top:1rem;"><strong>Plan ogolny (POG)</strong> okresla strefy planistyczne dla calej gminy i decyduje, gdzie mozna wydac warunki zabudowy (WZ). Gminy musza go uchwalic do 2026. Kolorowe obszary to strefy; brak koloru = gmina jeszcze nie ma POG w usludze krajowej (sprawdz projekt lub BIP gminy).</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">04</span><span class="sec-title">Plany zagospodarowania (MPZP)</span><span class="tag tag-real">warstwa WMS &middot; KIMP</span></div>
+      <div class="mapbox"><img id="map-mpzp" alt="Dzialka na tle warstwy MPZP" /></div>
+      <p class="mapbox-cap">Krajowa Integracja MPZP (GUGiK) — zasieg obowiazujacych planow</p>
+      <div class="mpzp-legenda" id="mpzp-legenda" style="display:none;"></div>
+      <div class="notice" style="margin-top:1rem;"><strong>Jak czytac:</strong> kolorowe obszary to tereny objete planem przekazanym do integracji. <strong>Brak koloru nie oznacza braku planu</strong> — warstwa obejmuje ~1400 z 2477 gmin. Interpretacje planu dla tej dzialki znajdziesz w sekcji <a href="#sec-planowanie">09 · Planowanie</a>.</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">05</span><span class="sec-title">Ceny transakcyjne w promieniu 1,5 km</span><span class="tag tag-real">RCN &middot; baza wlasna</span></div>
+      <div class="mapbox"><img id="map-ceny" alt="Mapa cen transakcyjnych wokol dzialki" /></div>
+      <p class="mapbox-cap">Krajowa Integracja Cen Nieruchomosci — rzeczywiste transakcje z aktow notarialnych. Punkty na mapie: kolor wg ceny za m2 (zielony tanio &rarr; czerwony drogo).</p>
+      <div class="typ-porownania" id="typ-porownania" style="display:none;"></div>
+      <div class="cena-szac-box" id="cena-szac-box" style="display:none;">
+        <div class="cena-szac-label">Szacunkowa wartosc dzialki</div>
+        <div class="cena-szac-val" id="cena-szac-val">—</div>
+        <div class="cena-szac-sub" id="cena-szac-sub"></div>
+      </div>
+      <div style="margin-top:1.25rem;">
+        <div class="tx-table" id="tx-table">
+          <div class="tx-row tx-head"><span>Adres / identyfikator</span><span style="text-align:right;">Cena</span><span style="text-align:right;">zl/m2</span><span style="text-align:right;">Data</span></div>
+          <div class="tx-empty" id="tx-empty">Brak odczytanych transakcji w promieniu 1 km. Zobacz punkty cenowe na mapie powyzej — dane RCN obejmuja ok. 360 powiatow. Werdykt uwzglednia liczbe transakcji w okolicy.</div>
+        </div>
+      </div>
+      <div class="notice" style="margin-top:1rem;"><strong>Dane z wlasnej bazy transakcji</strong> — ceny z aktow notarialnych (rejestr RCN), transakcje z ostatnich lat w promieniu 1,5 km od dzialki. Wartosc orientacyjna liczona jako mediana ceny za m2 x powierzchnia. <strong>To nie jest operat szacunkowy</strong> — pelna wycena wymaga analizy rzeczoznawcy.</div>
+    </div>
+
+    <!-- STATYSTYKI GMINY (z Google Drive) -->
+    <div class="sec" id="sec-statystyki" style="display:none;">
+      <div class="sec-head"><span class="sec-num">06</span><span class="sec-title">Statystyki gminy</span><span class="tag tag-real">baza wlasna &middot; Google Drive</span></div>
+      <div id="stat-gmina-body"></div>
+    </div>
+
+    <!-- LINIE WYSOKIEGO NAPIECIA (WMS) -->
+    <div class="sec sec-roz" id="sec-media">
+      <div class="sec-head"><span class="sec-num">07</span><span class="sec-title">Uzbrojenie terenu (sieci)</span><span class="tag tag-real">KIUT &middot; GESUT GUGiK</span></div>
+      <div class="mapbox"><img id="map-energia" alt="Sieci uzbrojenia terenu wokol dzialki" /></div>
+      <p class="mapbox-cap">Woda, kanalizacja, prad, gaz, cieplo, telekomunikacja (Krajowa Integracja Uzbrojenia Terenu)</p>
+      <div class="uzbr-legenda">
+        <span class="uzbr-item"><span class="uzbr-kolor" style="background:#2020a0"></span>wodociagowa</span>
+        <span class="uzbr-item"><span class="uzbr-kolor" style="background:#8b4513"></span>kanalizacyjna</span>
+        <span class="uzbr-item"><span class="uzbr-kolor" style="background:#e03030"></span>elektroenergetyczna</span>
+        <span class="uzbr-item"><span class="uzbr-kolor" style="background:#e0a020"></span>gazowa</span>
+        <span class="uzbr-item"><span class="uzbr-kolor" style="background:#d02080"></span>cieplownicza</span>
+        <span class="uzbr-item"><span class="uzbr-kolor" style="background:#20a020"></span>telekomunikacyjna</span>
+      </div>
+      <div class="notice" style="margin-top:1rem;">Podglad przebiegu sieci. <strong>Brak linii nie zawsze oznacza brak sieci</strong> — warstwa uzbrojenia widoczna jest tylko przy duzym przyblizeniu i nie wszystkie powiaty przekazuja komplet danych GESUT. Ponizej — automatyczna analiza: czy siec przechodzi przez dzialke, biegnie przy jej granicy (strefy ochronne) i jak daleko jest do przylacza.</div>
+      <div class="roz-wynik" id="media-wynik"><span class="roz-lad">Analizujemy przebieg sieci wzgledem granic dzialki…</span></div>
+    </div>
+
+    <!-- OCHRONA PRZYRODY (WMS GDOS) -->
+    <!-- ZDJECIA HISTORYCZNE -->
+    <div class="sec" id="sec-zdjecia" style="display:none;">
+      <div class="sec-head"><span class="sec-num">08</span><span class="sec-title">Zdjecia lotnicze z roznych lat</span><span class="tag tag-real">archiwum ortofoto &middot; GUGiK</span></div>
+      <p class="mapbox-cap" style="margin-bottom:1rem;">Porownanie jak teren zmienial sie w czasie — zabudowa, roslinnosc, zagospodarowanie</p>
+      <div class="zdjecia-grid" id="zdjecia-historyczne"></div>
+    </div>
+
+    <!-- ===================== CZĘŚĆ ROZSZERZONA (raport-rozszerzony.js) ===================== -->
+    <div class="czesc-naglowek">
+      <span class="czesc-eyebrow">Część B</span>
+      <h2>Analiza rozszerzona</h2>
+      <p>Poniższe sekcje wypełniają się automatycznie danymi z rejestrów publicznych. Każda z nich zasila werdykt na początku i na końcu raportu.</p>
+    </div>
+
+    <!-- 09 PLANOWANIE: MPZP + POG + WZ -->
+    <div class="sec sec-roz" id="sec-planowanie">
+      <div class="sec-head"><span class="sec-num">09</span><span class="sec-title">Przeznaczenie i status planistyczny</span><span class="tag tag-real">KIMPZP &middot; POG &middot; GUGiK</span></div>
+      <div class="status-grid">
+        <div class="scard" id="k-mpzp"><div class="scard-top"><span class="scard-l">Plan miejscowy (MPZP)</span><span class="pill pill-info" data-k="pill">sprawdzamy</span></div><div class="scard-v" data-k="v">—</div><div class="scard-note" data-k="n">odczyt z Krajowej Integracji MPZP</div></div>
+        <div class="scard" id="k-pog"><div class="scard-top"><span class="scard-l">Plan ogólny (POG)</span><span class="pill pill-info" data-k="pill">sprawdzamy</span></div><div class="scard-v" data-k="v">—</div><div class="scard-note" data-k="n">strefa planistyczna</div></div>
+        <div class="scard" id="k-wz"><div class="scard-top"><span class="scard-l">Warunki zabudowy (WZ)</span><span class="pill pill-warn" data-k="pill">do sprawdzenia</span></div><div class="scard-v" data-k="v">Nie do sprawdzenia online</div><div class="scard-note" data-k="n">decyzje WZ nie są publikowane w rejestrach — posiada je właściciel lub urząd gminy</div></div>
+      </div>
+      <div class="roz-szczegoly" id="plan-szczegoly"></div>
+      <div class="plan-ustalenia" id="plan-ustalenia"></div>
+    </div>
+
+    <!-- 10 OCHRONA PRZYRODY -->
+    <div class="sec sec-roz" id="sec-przyroda">
+      <div class="sec-head"><span class="sec-num">10</span><span class="sec-title">Formy ochrony przyrody</span><span class="tag tag-real">GDOŚ</span></div>
+      <div class="mapbox"><img id="map-przyroda" alt="Działka na tle form ochrony przyrody" /></div>
+      <p class="mapbox-cap">Natura 2000, parki narodowe i krajobrazowe, rezerwaty, obszary chronionego krajobrazu, użytki ekologiczne &middot; sdi.gdos.gov.pl</p>
+      <div class="roz-wynik" id="przyroda-wynik"><span class="roz-lad">Sprawdzamy nakładanie się działki z formami ochrony przyrody…</span></div>
+    </div>
+
+    <!-- 11 POWÓDŹ -->
+    <div class="sec sec-roz" id="sec-powodz">
+      <div class="sec-head"><span class="sec-num">11</span><span class="sec-title">Zagrożenie powodziowe</span><span class="tag tag-real">ISOK &middot; Wody Polskie</span></div>
+      <div class="mapbox"><img id="map-powodz" alt="Działka na tle map zagrożenia powodziowego" /></div>
+      <p class="mapbox-cap">Mapy zagrożenia powodziowego (MZP): scenariusze Q 10%, Q 1% i Q 0,2% &middot; wody.isok.gov.pl</p>
+      <div class="roz-wynik" id="powodz-wynik"><span class="roz-lad">Sprawdzamy, czy działka leży w obszarze zagrożenia powodzią…</span></div>
+    </div>
+
+    <!-- 12 TEREN -->
+    <div class="sec sec-roz" id="sec-teren">
+      <div class="sec-head"><span class="sec-num">12</span><span class="sec-title">Ukształtowanie terenu</span><span class="tag tag-real">NMT &middot; GUGiK</span></div>
+      <div class="status-grid" id="teren-karty"><div class="roz-lad">Pobieramy wysokości z numerycznego modelu terenu…</div></div>
+    </div>
+
+    <!-- 13 UŻYTKI -->
+    <div class="sec sec-roz" id="sec-uzytki">
+      <div class="sec-head"><span class="sec-num">13</span><span class="sec-title">Użytki gruntowe i klasy gleb</span><span class="tag tag-real">EGiB &middot; KIEG</span></div>
+      <div class="roz-wynik" id="uzytki-wynik"><span class="roz-lad">Odczytujemy użytki z ewidencji gruntów…</span></div>
+    </div>
+
+    <!-- 14 DROGA I OTOCZENIE -->
+    <div class="sec sec-roz" id="sec-otoczenie">
+      <div class="sec-head"><span class="sec-num">14</span><span class="sec-title">Dostęp do drogi i otoczenie</span><span class="tag tag-real">OpenStreetMap</span></div>
+      <div class="roz-wynik" id="droga-wynik"><span class="roz-lad">Szukamy dróg przy granicy działki…</span></div>
+      <div class="otoczenie-grid" id="otoczenie-grid"></div>
+      <p class="mapbox-cap" style="margin-top:.75rem;">Odległości w linii prostej od środka działki, w promieniu 1,5 km &middot; dane © współtwórcy OpenStreetMap (ODbL)</p>
+    </div>
+
+    <!-- 15 LISTA KONTROLNA -->
+    <div class="sec sec-roz" id="sec-lista">
+      <div class="sec-head"><span class="sec-num">15</span><span class="sec-title">Lista kontrolna przed zakupem</span><span class="tag tag-analiza">do sprawdzenia</span></div>
+      <p class="roz-intro">Tych informacji nie da się sprawdzić automatycznie — warto je potwierdzić u właściciela, w urzędzie gminy lub u notariusza.</p>
+      <ul class="lista-kontrolna" id="lista-kontrolna"></ul>
+      <div class="pdf-pasek">
+        <button type="button" class="btn btn-gold pdf-btn" id="btn-lista-pdf">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Pobierz listę kontrolną (PDF)
+        </button>
+        <span class="pdf-info" id="pdf-info">Lista z danymi tej działki — do wydruku i odhaczania przy zakupie.</span>
+      </div>
+    </div>
+
+    <!-- 16 WERDYKT KOŃCOWY -->
+    <div class="werdykt werdykt-dol" id="werdykt-dol">
+      <div class="werdykt-glowa">
+        <div class="werdykt-wynik">
+          <div class="werdykt-gauge" data-w="gauge"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="g-tlo"/><circle cx="60" cy="60" r="52" class="g-pasek" data-w="pasek"/></svg><div class="werdykt-liczba"><span data-w="punkty">—</span><small>/100</small></div></div>
+        </div>
+        <div class="werdykt-opis">
+          <div class="werdykt-eyebrow"><span class="sec-num">16</span> Werdykt końcowy</div>
+          <h2 class="werdykt-tytul" data-w="tytul">Analizujemy działkę…</h2>
+          <p class="werdykt-lead" data-w="lead"></p>
+          <div class="werdykt-postep" data-w="postep"></div>
+        </div>
+      </div>
+      <div class="werdykt-kolumny">
+        <div class="wk wk-plus"><div class="wk-tytul"><span class="wk-ikona">+</span>Plusy</div><ul data-w="plusy"></ul></div>
+        <div class="wk wk-minus"><div class="wk-tytul"><span class="wk-ikona">−</span>Minusy i ryzyka</div><ul data-w="minusy"></ul></div>
+      </div>
+      <div class="werdykt-rekomendacja" data-w="rekomendacja"></div>
+      <div class="pdf-pasek pdf-pasek-werdykt"><a href="#" class="btn btn-gold pdf-btn" data-pdf-raport>Pobierz cały raport (PDF)</a><a href="#sec-lista" class="pdf-link" data-pdf-lista>Pobierz listę kontrolną (PDF) →</a></div>
+    </div>
+
+    <!-- CTA — konsultacja z ekspertem -->
+    <div class="premium-cta">
+      <h3>Chcesz omówić wynik z ekspertem?</h3>
+      <p>Model analityczny wskazuje plusy i ryzyka. Ekspert oceni, co realnie da się zrobić z tą działką — przeznaczenie, chłonność, formę sprzedaży lub przekształcenia.</p>
+      <div class="warianty warianty-jeden">
+        <div class="wariant wariant-premium">
+          <div class="wariant-badge">★ z ekspertem</div>
+          <div class="wariant-eyebrow">Raport z konsultacją eksperta</div>
+          <div class="wariant-price"><span class="wariant-num">499 zł</span><span class="wariant-unit">jednorazowo</span></div>
+          <ul class="wariant-lista">
+            <li><strong>Ten raport rozszerzony</strong> jako punkt wyjścia</li>
+            <li>Indywidualna ocena potencjału inwestycyjnego gruntu</li>
+            <li>Propozycje formy sprzedaży (podział, sprzedaż całości, JV)</li>
+            <li>Doradztwo w kwestiach projektowych i chłonności</li>
+            <li>Znalezienie kupca w naszej własnej bazie inwestorów</li>
+          </ul>
+          <a href="index.html#kontakt" class="wariant-btn wariant-btn-premium">Umów konsultację z ekspertem</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-rep">
+      Raport prezentuje dane rzeczywiste z rejestrow publicznych GUGiK: geometria, powierzchnia i lokalizacja (ULDK), podglad planow (KIMP) oraz cen transakcyjnych (KICN/RCN). Werdykt, plusy i minusy wyznacza automatyczny model na podstawie danych GUGiK (ULDK, KIMPZP, POG, KIUT, EGiB, NMT), Wod Polskich (ISOK), GDOS i OpenStreetMap — nie zastepuje wypisu i wyrysu z planu, decyzji WZ ani operatu szacunkowego. Dane moga roznic sie od stanu faktycznego — przed decyzja inwestycyjna zweryfikuj je w gminie i wypisie z rejestru gruntow. gruntowo.pl &middot; <span id="rep-date2"></span>
+    </div>
+  </div>
+</section>
+
+<script src="haslo.js?v=20260925"></script>
+<script src="platnosc.js?v=20260930b"></script>
+<script src="raport-rozszerzony.js?v=20261001a"></script>
+</body>
+</html>
