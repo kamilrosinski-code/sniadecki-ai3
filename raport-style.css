@@ -400,3 +400,10 @@ body > .loading-overlay, body > .bramka { position: fixed; z-index: 1100; }
 .pm-blad{padding:2rem;text-align:center;color:var(--sage);}
 #pickmap .leaflet-control-layers{font-size:.75rem;}
 @media (max-width:640px){#pm-mapa{height:380px;}}
+.pasek-przykladu{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:1.5rem 0 0;padding:1rem 1.25rem;border:1px solid rgba(201,169,97,.55);border-radius:10px;background:linear-gradient(135deg,rgba(176,141,62,.18),rgba(20,24,26,.6));}
+.pp-tekst{font-size:.9rem;color:var(--cream2);line-height:1.5;flex:1 1 380px;}
+.pp-tekst strong{color:var(--goldl);font-weight:500;}
+.pp-tekst a{color:var(--goldl);}
+.pp-akcje{display:flex;gap:.5rem;flex-wrap:wrap;}
+@media(max-width:640px){.pp-akcje{width:100%;}.pp-akcje .btn{flex:1;justify-content:center;}}
+@media print{.pasek-przykladu{display:none!important;}}

@@ -136,7 +136,7 @@
     });
   });
 
-  // ===== HERO: najazd kamery + lupa nad dzialka; wyszukiwarka wysuwa sie po chwili ruchu kursorem =====
+  // ===== HERO: najazd kamery za kursorem; wyszukiwarka wysuwa sie po chwili ruchu kursorem =====
   (function () {
     const hero = document.querySelector('.hero');
     const sb = document.getElementById('search-box');
@@ -160,51 +160,56 @@
     }
     if (!mysz || malo || !bg) return;
 
-    // Tlo w osobnej warstwie (do skalowania); lupa z tym samym zdjeciem
-    hero.classList.add('hero-ruch');
-    const lupa = document.createElement('div');
-    lupa.className = 'hero-lupa';
-    lupa.innerHTML = '<svg viewBox="0 0 230 230" aria-hidden="true"><line class="lp-krzyz" x1="115" y1="96" x2="115" y2="106"/><line class="lp-krzyz" x1="115" y1="124" x2="115" y2="134"/>' +
-      '<line class="lp-krzyz" x1="96" y1="115" x2="106" y2="115"/><line class="lp-krzyz" x1="124" y1="115" x2="134" y2="115"/>' +
-      '<polygon class="lp-dz" points="72,92 156,78 168,146 84,160"/>' +
-      '<circle class="lp-pkt" cx="72" cy="92" r="2.6"/><circle class="lp-pkt" cx="156" cy="78" r="2.6"/><circle class="lp-pkt" cx="168" cy="146" r="2.6"/><circle class="lp-pkt" cx="84" cy="160" r="2.6"/>' +
-      '<text class="lp-opis" x="115" y="188">TWOJA DZIAŁKA</text></svg>';
-    hero.insertBefore(lupa, hero.querySelector('.hero-content'));
-    const R = 115, ZOOM = 1.9;
-    let iw = 1800, ih = 1013;
-    const im = new Image(); im.onload = function () { iw = im.naturalWidth; ih = im.naturalHeight; }; im.src = 'hero.jpeg';
+    // Film hero: kamera wjezdza w pole przy przewijaniu w dol, cofa sie przy przewijaniu w gore.
+    // Tylko komputer; telefon, oszczedzanie danych albo blad pobierania = zostaje zdjecie.
+    const film = bg.querySelector('.hero-film');
+    const oszczedza = navigator.connection && navigator.connection.saveData;
+    if (film && window.innerWidth >= 900 && !oszczedza && window.fetch && window.URL) {
+      fetch(film.canPlayType('video/mp4; codecs="avc1.42E01E"') ? 'hero-pole.mp4' : 'hero-pole.webm').then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
+        film.src = URL.createObjectURL(b);
+        film.addEventListener('loadeddata', function () {
+          const dl = film.duration || 5.8;
+          let cel = 0, cur = 0, intro = 0, petla = null, szuka = false;
+          const t0 = performance.now();
+          const postep = function () {
+            const h = hero.offsetHeight || window.innerHeight;
+            return Math.max(0, Math.min(1, window.scrollY / (h * 0.6)));
+          };
+          const krok = function (now) {
+            // Wejscie: kamera sama rusza na poczatek drogi (do 18% filmu), dalej prowadzi scroll
+            const a = Math.min(1, (now - t0) / 2600);
+            intro = 0.18 * (1 - Math.pow(1 - a, 3));
+            cel = Math.max(intro, postep());
+            cur += (cel - cur) * 0.1;
+            if (Math.abs(cel - cur) < 0.0008) cur = cel;
+            const t = Math.min(dl - 0.04, cur * dl);
+            if (!szuka && Math.abs(film.currentTime - t) > 1 / 48) { szuka = true; film.currentTime = t; }
+            // Petla odpoczywa, gdy obraz dogonil scroll i wejscie sie skonczylo
+            if (cur === cel && a >= 1 && !szuka) { petla = null; return; }
+            petla = requestAnimationFrame(krok);
+          };
+          const budz = function () { if (!petla) petla = requestAnimationFrame(krok); };
+          film.addEventListener('seeked', function () { szuka = false; });
+          window.addEventListener('scroll', function () { if (window.scrollY < (hero.offsetHeight || 0) * 1.1) budz(); }, { passive: true });
+          film.currentTime = 0;
+          film.classList.add('gotowy');
+          budz();
+        }, { once: true });
+      }).catch(function () { /* zostaje zdjecie */ });
+    }
 
-    let cel = null, poz = null, ruch = 0, ostatni = null, rafId = 0;
-    const rysuj = function () {
-      rafId = 0;
-      if (!cel) return;
-      poz = poz ? { x: poz.x + (cel.x - poz.x) * 0.22, y: poz.y + (cel.y - poz.y) * 0.22 } : { x: cel.x, y: cel.y };
-      const W = hero.clientWidth, H = hero.clientHeight;
-      // obraz "cover" z pozycja center 40%, dodatkowo przeskalowany najazdem tla
-      const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s, x0 = (W - w) / 2, y0 = (H - h) * 0.4;
-      const zb = 1.06, ox = cel.x, oy = cel.y;                 // skala i srodek najazdu tla
-      const px = ox + (poz.x - ox) / zb, py = oy + (poz.y - oy) / zb;   // punkt zdjecia pod kursorem
-      lupa.style.left = poz.x + 'px'; lupa.style.top = poz.y + 'px';
-      lupa.style.backgroundSize = (w * ZOOM) + 'px ' + (h * ZOOM) + 'px';
-      lupa.style.backgroundPosition = (-((px - x0) * ZOOM - R)) + 'px ' + (-((py - y0) * ZOOM - R)) + 'px';
-      if (Math.abs(cel.x - poz.x) > 0.5 || Math.abs(cel.y - poz.y) > 0.5) rafId = requestAnimationFrame(rysuj);
-    };
+    // Tlo w osobnej warstwie: lekki najazd kamery w strone kursora; wyszukiwarka wysuwa sie po chwili ruchu
+    hero.classList.add('hero-ruch');
+    let ruch = 0, ostatni = null;
     hero.addEventListener('mousemove', function (e) {
       const r = hero.getBoundingClientRect();
-      cel = { x: e.clientX - r.left, y: e.clientY - r.top };
-      bg.style.transformOrigin = (cel.x / r.width * 100).toFixed(1) + '% ' + (cel.y / r.height * 100).toFixed(1) + '%';
-      bg.style.transform = 'scale(1.06)';
-      // lupa tylko nad "polem" - nad formularzem by przeszkadzala
-      const nadFormularzem = e.target.closest && e.target.closest('.search-box, a, button, input, .hero-stats');
-      lupa.classList.toggle('widoczna', !nadFormularzem);
+      bg.style.transformOrigin = ((e.clientX - r.left) / r.width * 100).toFixed(1) + '% ' + ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%';
+      bg.style.transform = 'scale(1.08)';
       if (ostatni) ruch += Math.hypot(e.clientX - ostatni.x, e.clientY - ostatni.y);
       ostatni = { x: e.clientX, y: e.clientY };
-      if (!wysunieta && ruch > 600) setTimeout(wysun, 400);   // "po chwili" przesuwania kursora
-      if (!rafId) rafId = requestAnimationFrame(rysuj);
+      if (!wysunieta && ruch > 600) setTimeout(wysun, 400);
     });
-    hero.addEventListener('mouseleave', function () {
-      lupa.classList.remove('widoczna'); bg.style.transform = 'scale(1)'; ostatni = null;
-    });
+    hero.addEventListener('mouseleave', function () { bg.style.transform = 'scale(1)'; ostatni = null; });
   })();
 
   // Pośrednik ULDK - ustala identyfikator działki z współrzędnych pinezki (ten sam co w raport.js)

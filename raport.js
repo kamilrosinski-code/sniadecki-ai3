@@ -184,6 +184,17 @@
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const ok = params.get('ok');
+    // Przykladowy raport bezplatny (ta sama dzialka co przykladowy rozszerzony) - pasek z wyjasnieniem
+    if (params.get('przyklad') === '1' && id === '302105_2.0009.222/8' && !document.getElementById('werdykt-gora')) {
+      const pasek = document.createElement('div');
+      pasek.className = 'pasek-przykladu';
+      pasek.innerHTML = '<div class="pp-tekst"><strong>To jest przykładowy raport bezpłatny</strong> - dla działki w Trzcielinie (gm. Dopiewo). ' +
+        'Tak samo wygląda raport dla Twojej działki. Pełną analizę z werdyktem 0-100 zobaczysz w przykładowym raporcie rozszerzonym tej samej działki.</div>' +
+        '<div class="pp-akcje"><a href="raport-rozszerzony.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1" class="btn btn-gold">Przykładowy raport rozszerzony</a>' +
+        '<a href="raport.html" class="btn">Sprawdź swoją działkę</a></div>';
+      const hero = document.querySelector('#report .rep-hero');
+      if (hero) hero.parentNode.insertBefore(pasek, hero);
+    }
     if (id) {
       input.value = id;
       if (ok === '1') {

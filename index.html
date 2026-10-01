@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
+  <meta name="robots" content="noindex, nofollow" />
   <meta charset="UTF-8" />
-<meta name="robots" content="noindex, nofollow" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>gruntowo.pl - pokaż nam swój grunt, a my powiemy Ci, co możesz z nim zrobić</title>
   <meta name="description" content="Pokaż nam swój grunt, a my powiemy Ci, co możesz z nim zrobić. Bezpłatny raport o działce: plan miejscowy, ceny transakcyjne z okolicy, media, zdjęcia lotnicze." />
@@ -20,7 +20,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=7" />
+  <link rel="stylesheet" href="style.css?v=9" />
 </head>
 <body>
 
@@ -51,14 +51,14 @@
 
   <!-- HERO - zdjęcie od samej góry -->
   <section class="hero" id="szukaj">
-    <div class="hero-bg"></div>
+    <div class="hero-bg"><video class="hero-film" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video></div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <p class="hero-eyebrow" data-cms="hero_eyebrow">Pokaż nam swój grunt, a my powiemy, co możesz z nim zrobić!</p>
       <h1 class="hero-headline" data-cms="hero_headline">Grunt pod<br /><em>właściwą decyzję</em></h1>
       <p class="hero-sub" data-cms="hero_sub">Masz grunt? Wypełnij formularz i dowiedz się o jego potencjale całkowicie bezpłatnie! W przypadku najciekawszych nieruchomości możesz otrzymać darmową konsultację naszego eksperta.</p>
 
-      <p class="hero-podpowiedz" aria-hidden="true">Przesuń kursor po polu</p>
+      <p class="hero-podpowiedz" aria-hidden="true">Przewiń, aby wejść w pole</p>
 
       <!-- WYSZUKIWARKA - jedna prosta ścieżka -->
       <div class="search-box" id="search-box">
@@ -261,6 +261,7 @@
             <li>Historyczne zdjęcia lotnicze</li>
           </ul>
           <a href="#szukaj" class="ofr-btn" data-do-wyszukiwarki>Sprawdź działkę za darmo</a>
+          <a href="raport.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1" target="_blank" rel="noopener" class="ofr-haslo-link">Zobacz przykładowy raport bezpłatny →</a>
         </div>
 
         <!-- OFERTA 2 - 69 zł -->
@@ -312,9 +313,9 @@
 
       <div class="dataroom">
         <div class="dr-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-        <p data-cms="dataroom_text">Jeśli chcesz, zobacz przykładowy raport dla jednej z działek.</p>
+        <p data-cms="dataroom_text">Zobacz przykładowe raporty dla tej samej działki w Trzcielinie (gm. Dopiewo) - bezpłatny i rozszerzony, żeby porównać ich zakres.</p>
         <div class="dr-btns">
-          <a href="raport.html?id=306401_1.0061.AR_01.3%2F45&ok=1" target="_blank" rel="noopener" class="btn-gold btn-sm">Przykładowy raport bezpłatny →</a>
+          <a href="raport.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1" target="_blank" rel="noopener" class="btn-gold btn-sm">Przykładowy raport bezpłatny →</a>
           <a href="raport-rozszerzony.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1" target="_blank" rel="noopener" class="btn-gold btn-sm">Przykładowy raport rozszerzony →</a>
         </div>
       </div>
@@ -479,6 +480,6 @@
   </footer>
 
   <script src="haslo.js?v=20260925"></script>
-  <script src="main.js?v=27"></script>
+  <script src="main.js?v=30"></script>
 </body>
 </html>

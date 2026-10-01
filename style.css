@@ -70,18 +70,15 @@ address { font-style: normal; }
   );
   z-index: 0;
 }
-/* Hero dynamiczne: lekki najazd kamery za kursorem + lupa przyblizajaca dzialke (main.js) */
+/* Hero dynamiczne: lekki najazd kamery za kursorem (main.js) */
 .hero { overflow: hidden; }
 .hero-bg { position: absolute; inset: 0; z-index: 0; background-image: url('hero.jpeg'); background-size: cover; background-position: center 40%; transform-origin: 50% 50%; will-change: transform; transition: transform 1.6s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
 .hero.hero-ruch { background-image: none; }
+/* Film hero przewijany scrollem (tylko komputer) - zdjecie zostaje pod spodem jako tlo zapasowe */
+.hero-film { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; opacity: 0; transition: opacity .9s ease; pointer-events: none; }
+.hero-film.gotowy { opacity: 1; }
+@media (max-width: 899px), (prefers-reduced-motion: reduce) { .hero-film { display: none; } }
 .hero::before { z-index: 1; }
-.hero-lupa { position: absolute; z-index: 1; width: 230px; height: 230px; margin: -115px 0 0 -115px; border-radius: 50%; pointer-events: none; opacity: 0; transform: scale(.6); transition: opacity .35s ease, transform .35s ease; background-image: url('hero.jpeg'); background-repeat: no-repeat; box-shadow: 0 0 0 1px rgba(201,169,110,.9), 0 0 0 7px rgba(11,12,10,.35), 0 18px 50px rgba(0,0,0,.55); overflow: hidden; }
-.hero-lupa.widoczna { opacity: 1; transform: scale(1); }
-.hero-lupa svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.hero-lupa .lp-dz { fill: rgba(201,169,110,.14); stroke: #e8cf98; stroke-width: 1.6; stroke-dasharray: 6 4; }
-.hero-lupa .lp-pkt { fill: #e8cf98; }
-.hero-lupa .lp-krzyz { stroke: rgba(255,255,255,.55); stroke-width: 1; }
-.hero-lupa .lp-opis { fill: #f2f0eb; font: 600 9px var(--fb, Inter, sans-serif); letter-spacing: .14em; text-anchor: middle; paint-order: stroke; stroke: rgba(0,0,0,.5); stroke-width: 2.5px; }
 .hero-content { z-index: 2; }
 /* Wyszukiwarka czeka, az uzytkownik chwile porusza kursorem (albo do kilku sekund) */
 .hero.hero-czeka .search-box { animation: none; opacity: 0; transform: translateY(40px); pointer-events: none; }
@@ -262,8 +259,7 @@ form { display: flex; flex-direction: column; gap: 1.1rem; }
   .search-btn-gold { border-top-color: transparent; }
   .nav-burger { display: flex; }
 }
-@media (prefers-reduced-motion: reduce) { .hero-bg { transition: none; transform: none !important; } .hero-lupa { display: none; } }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) { .hero-bg { transition: none; transform: none !important; } @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 

@@ -25,7 +25,7 @@
 (function () {
   'use strict';
 
-  var RAPORT_JS = 'raport.js?v=20261002k';
+  var RAPORT_JS = 'raport.js?v=20261002m';
 
   var URL_KIMPZP = 'https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego';
   var URL_POG = 'https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin';
@@ -118,7 +118,7 @@
     var pasek = document.createElement('div');
     pasek.className = 'pasek-przykladu';
     pasek.innerHTML = '<div class="pp-tekst"><strong>To jest przykładowy raport rozszerzony</strong> - dla działki w gminie Dopiewo. ' +
-      'Tak samo wygląda raport dla Twojej działki.</div>' +
+      'Tak samo wygląda raport dla Twojej działki. <a href="raport.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1">Zobacz też raport bezpłatny tej działki</a>, żeby porównać zakres.</div>' +
       '<div class="pp-akcje"><a href="raport.html?kup=1" class="btn btn-gold">Kup raport dla swojej działki - 69 zł</a>' +
       '<a href="index.html#haslo" class="btn">Mam hasło</a></div>';
     var hero = document.querySelector('#report .rep-hero');
@@ -1702,9 +1702,9 @@
           '<div><strong>' + esc(wielka(x.opis || (GRUPY_POZW[g] ? GRUPY_POZW[g].n : 'obiekt budowlany'))) + '</strong>' +
           '<small>' + (GRUPY_POZW[g] ? GRUPY_POZW[g].n : 'inne') + ' · ' + RODZAJ_POZW[x.rodzaj] + ' · ' + dt + (x.kubatura ? ' · ' + m(x.kubatura) + ' m³' : '') + (gdzie ? '<br>' + gdzie : '') + '</small></div></li>';
       };
-      var pierwsze = wazne.slice(0, 10);
+      var pierwsze = wazne.slice(0, 5);   // 5 najblizszych - lista na wysokosc mapy, reszta rozwijana
       h += '<ul class="pozw-lista">' + (pierwsze.length ? pierwsze.map(wiersz).join('') : '<li class="pozw-pusto">brak nowych budynków i rozbudów - tylko przebudowy i roboty wewnątrz budynków</li>') + '</ul>';
-      var dalsze = wazne.slice(10).concat(reszta);
+      var dalsze = wazne.slice(5).concat(reszta);
       if (dalsze.length) h += '<details class="pozw-wiecej"><summary>Pokaż pozostałe (' + dalsze.length + ')' + (reszta.length ? ' - w tym przebudowy i instalacje' : '') + '</summary><ul class="pozw-lista">' + dalsze.map(wiersz).join('') + '</ul></details>';
       h += '</div></div>';
     }
