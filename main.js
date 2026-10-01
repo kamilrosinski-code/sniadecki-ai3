@@ -166,7 +166,7 @@
     const film = bg.querySelector('.hero-film');
     const oszczedza = navigator.connection && navigator.connection.saveData;
     if (film && window.innerWidth >= 900 && !oszczedza && window.fetch && window.URL) {
-      fetch(film.canPlayType('video/mp4; codecs="avc1.42E01E"') ? 'hero-pole.mp4' : 'hero-pole.webm')
+      fetch(film.canPlayType('video/mp4; codecs="avc1.42E01E"') ? 'hero-pole.mp4?v=3' : 'hero-pole.webm?v=3')
         .then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
         film.src = URL.createObjectURL(b);
         film.addEventListener('loadeddata', function () {
@@ -197,6 +197,7 @@
           warstwa.appendChild(film);
           const cien = document.createElement('div'); cien.className = 'hero-cien'; warstwa.appendChild(cien);
           document.body.insertBefore(warstwa, document.body.firstChild);
+          document.body.classList.add('film-aktywny');               // wylacza rozmycia tla nad filmem (oszczedza GPU)
           const sekcja = document.querySelector('.sekcja-film');
           const POLE = 0.5;                                          // pierwsza polowa filmu = lot nad polem (hero stoi)
           if (wysunieta) { wymusPelna = true; }
@@ -218,7 +219,12 @@
             if (y <= z.y1) return Math.max(0, (y - z.y0) / droga) * POLE;
             return POLE + (1 - POLE) * Math.min(1, (y - z.y1) / (z.y2 - z.y1));
           };
+          let ostatniKrok = 0, ostKlatka = -1;
+          const KL = 24;                                             // klatek na sekunde w filmie
           const krok = function (now) {
+            // wygladzanie zalezne od czasu (tak samo plynnie na monitorach 60 Hz i 144 Hz)
+            const dt = ostatniKrok ? Math.min(64, now - ostatniKrok) : 16; ostatniKrok = now;
+            const k = 1 - Math.exp(-dt / 140);
             const a = Math.min(1, (now - t0) / 2600);
             const intro = 0.06 * (1 - Math.pow(1 - a, 3));             // kamera sama lekko rusza na wejsciu
             const p = postep();
@@ -226,7 +232,7 @@
             sw += (ps - sw) * 0.14; if (Math.abs(ps - sw) < 0.0008) sw = ps;
             pokazSzukaj(wymusPelna ? 1 : Math.max(0, Math.min(1, (sw - 0.01) / 0.15)));
             cel = Math.max(intro, p);
-            cur += (cel - cur) * 0.1;
+            cur += (cel - cur) * k;
             if (Math.abs(cel - cur) < 0.0008) cur = cel;
             const t = Math.min(dl - 0.04, cur * dl);
             // pod ziemia tekst lezy na ziarnistej glebie - przyciemniamy film, zeby napisy byly czytelne
@@ -236,8 +242,10 @@
             const ps2 = sekcja ? Math.max(0, Math.min(1, (y + window.innerHeight - sekcja.offsetTop) / (window.innerHeight * 0.8))) : 0;
             cien.style.opacity = Math.max(0.45 * pz, 0.6 * ps2).toFixed(3);
             warstwa.style.opacity = (1 - Math.max(0, Math.min(1, (y - z.y2) / (z.y3 - z.y2)))).toFixed(3);
-            if (!szuka && Math.abs(film.currentTime - t) > 1 / 48) { szuka = true; film.currentTime = t; }
-            if (cur === cel && sw === ps && a >= 1 && !szuka) { petla = null; return; }
+            // przewijamy film tylko, gdy zmienia sie klatka, i nigdy dwa przewiniecia naraz
+            const kl = Math.round(t * KL);
+            if (!szuka && kl !== ostKlatka) { ostKlatka = kl; szuka = true; film.currentTime = kl / KL; }
+            if (cur === cel && sw === ps && a >= 1 && !szuka) { petla = null; ostatniKrok = 0; return; }
             petla = requestAnimationFrame(krok);
           };
           const budz = function () { if (!petla) petla = requestAnimationFrame(krok); };
