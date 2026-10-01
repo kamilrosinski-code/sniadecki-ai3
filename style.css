@@ -606,14 +606,13 @@ form { display: flex; flex-direction: column; gap: 1.1rem; }
 /* Wyszukiwarka sterowana filmem (main.js): bez animacji wejscia, opacity/przesuniecie ustawia przewijanie */
 .hero.hero-sterowane .search-box { animation: none; transition: none; will-change: opacity, transform; }
 .hero.hero-sterowane:not(.szukaj-widac) .hero-podpowiedz { opacity: 1; }
-/* Sekcja "Doswiadczenie zbudowane na nieruchomosciach": tlo z ostatniego kadru filmu hero */
-.sekcja-pole { position: relative; overflow: hidden; isolation: isolate; }
-.sekcja-pole .pole-tlo { position: absolute; inset: -12% 0; z-index: -1; background: url('pole-tlo.jpg') center 60% / cover no-repeat; transform: translate3d(0, var(--py, 0px), 0); will-change: transform; }
-.sekcja-pole .pole-tlo::after { content: ''; position: absolute; inset: 0;
-  background:
-    linear-gradient(to bottom, var(--bg) 0%, rgba(11,12,10,0) 22%, rgba(11,12,10,0) 78%, var(--bg) 100%),
-    linear-gradient(to right, rgba(11,12,10,.45) 0%, rgba(11,12,10,.62) 45%, rgba(11,12,10,.86) 60%, rgba(11,12,10,.9) 100%); }
-@media (max-width: 899px) {
-  .sekcja-pole .pole-tlo { inset: 0; transform: none; }
-  .sekcja-pole .pole-tlo::after { background: linear-gradient(to bottom, var(--bg) 0%, rgba(11,12,10,.72) 18%, rgba(11,12,10,.82) 100%); }
-}
+/* Film jako tlo za hero, liczbami i sekcja "Doswiadczenie..." (main.js, tylko komputer) */
+.film-tlo { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: #0b0c0a; opacity: 0; transition: opacity .9s ease; }
+.film-tlo.widac { transition: none; }
+.film-tlo .hero-film { opacity: 1; }
+.hero-cien { position: absolute; inset: 0; background: #0b0c0a; opacity: 0; pointer-events: none; }
+.hero.film-na-tle { background: none; }
+.hero.film-na-tle .hero-bg { opacity: 0; transition: opacity .9s ease; }
+.hero.film-na-tle::before { background: linear-gradient(to bottom, rgba(11,12,10,.30) 0%, rgba(11,12,10,.15) 20%, rgba(11,12,10,.40) 65%, rgba(11,12,10,.55) 100%); }
+.hero.film-na-tle .hero-stats { background: rgba(11,12,10,.45); }
+.sekcja-film { position: relative; }

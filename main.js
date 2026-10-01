@@ -170,7 +170,7 @@
         .then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
         film.src = URL.createObjectURL(b);
         film.addEventListener('loadeddata', function () {
-          const dl = film.duration || 5.8;
+          const dl = film.duration || 11.7;
           // Scena: hero przyklejone do gory ekranu przez dodatkowy odcinek przewijania
           const scena = document.createElement('div');
           scena.className = 'hero-scena';
@@ -178,7 +178,7 @@
           hero.classList.add('hero-przyklejone');
           let droga = 0, gora = 0;
           const uloz = function () {
-            droga = Math.round(window.innerHeight * 1.1);              // ile przewijania "zjada" film
+            droga = Math.round(window.innerHeight * 1.2);            // ile przewijania hero stoi (lot nad polem)
             const hH = hero.offsetHeight;
             // wyszukiwarka ma byc w calosci widoczna, gdy hero stoi
             const sbDol = sb.getBoundingClientRect().bottom - hero.getBoundingClientRect().top + 24;
@@ -191,6 +191,14 @@
           let cel = 0, cur = 0, petla = null, szuka = false, sw = 0;
           // Od teraz wyszukiwarka wyjezdza plynnie razem z filmem (kolko w dol), chowa sie przy powrocie na sama gore
           filmSteruje = true;
+          // Film przenosimy na stala warstwe pod cala strona: gra za hero, za liczbami i za sekcja "Doswiadczenie...",
+          // a potem warstwa gasnie i zostaje czarne tlo
+          const warstwa = document.createElement('div'); warstwa.className = 'film-tlo'; warstwa.setAttribute('aria-hidden', 'true');
+          warstwa.appendChild(film);
+          const cien = document.createElement('div'); cien.className = 'hero-cien'; warstwa.appendChild(cien);
+          document.body.insertBefore(warstwa, document.body.firstChild);
+          const sekcja = document.querySelector('.sekcja-film');
+          const POLE = 0.5;                                          // pierwsza polowa filmu = lot nad polem (hero stoi)
           if (wysunieta) { wymusPelna = true; }
           hero.classList.remove('hero-czeka'); hero.classList.add('hero-sterowane'); sb.classList.remove('wysuwa');
           const pokazSzukaj = function (o) {
@@ -200,31 +208,46 @@
             hero.classList.toggle('szukaj-widac', o > 0.02);
           };
           const t0 = performance.now();
+          const zakres = function () {
+            const y0 = scena.offsetTop - gora, y1 = y0 + droga;                // hero stoi: y0..y1
+            const y2 = sekcja ? Math.max(y1 + 200, sekcja.offsetTop + sekcja.offsetHeight - window.innerHeight) : y1 + window.innerHeight;
+            return { y0: y0, y1: y1, y2: y2, y3: y2 + window.innerHeight * 0.7 };     // y2..y3: gasniecie do czerni
+          };
           const postep = function () {
-            const y = window.scrollY - (scena.offsetTop - gora);
-            return Math.max(0, Math.min(1, y / droga));
+            const z = zakres(), y = window.scrollY;
+            if (y <= z.y1) return Math.max(0, (y - z.y0) / droga) * POLE;
+            return POLE + (1 - POLE) * Math.min(1, (y - z.y1) / (z.y2 - z.y1));
           };
           const krok = function (now) {
             const a = Math.min(1, (now - t0) / 2600);
-            const intro = 0.12 * (1 - Math.pow(1 - a, 3));             // kamera sama lekko rusza na wejsciu
+            const intro = 0.06 * (1 - Math.pow(1 - a, 3));             // kamera sama lekko rusza na wejsciu
             const p = postep();
             const ps = Math.max(0, Math.min(1, (window.scrollY - scena.offsetTop) / droga));   // od pierwszego ruchu kolkiem
             sw += (ps - sw) * 0.14; if (Math.abs(ps - sw) < 0.0008) sw = ps;
-            pokazSzukaj(wymusPelna ? 1 : Math.max(0, Math.min(1, (sw - 0.02) / 0.3)));
+            pokazSzukaj(wymusPelna ? 1 : Math.max(0, Math.min(1, (sw - 0.01) / 0.15)));
             cel = Math.max(intro, p);
             cur += (cel - cur) * 0.1;
             if (Math.abs(cel - cur) < 0.0008) cur = cel;
             const t = Math.min(dl - 0.04, cur * dl);
+            // pod ziemia tekst lezy na ziarnistej glebie - przyciemniamy film, zeby napisy byly czytelne
+            const pz = Math.max(0, Math.min(1, (cur - 0.55) / 0.25));
+            const z = zakres(), y = window.scrollY;
+            // za tekstem sekcji "Doswiadczenie..." film mocniej przyciemniony
+            const ps2 = sekcja ? Math.max(0, Math.min(1, (y + window.innerHeight - sekcja.offsetTop) / (window.innerHeight * 0.8))) : 0;
+            cien.style.opacity = Math.max(0.45 * pz, 0.6 * ps2).toFixed(3);
+            warstwa.style.opacity = (1 - Math.max(0, Math.min(1, (y - z.y2) / (z.y3 - z.y2)))).toFixed(3);
             if (!szuka && Math.abs(film.currentTime - t) > 1 / 48) { szuka = true; film.currentTime = t; }
             if (cur === cel && sw === ps && a >= 1 && !szuka) { petla = null; return; }
             petla = requestAnimationFrame(krok);
           };
           const budz = function () { if (!petla) petla = requestAnimationFrame(krok); };
           film.addEventListener('seeked', function () { szuka = false; budz(); });
-          window.addEventListener('scroll', function () { if (window.scrollY < scena.offsetTop + scena.offsetHeight) budz(); }, { passive: true });
+          window.addEventListener('scroll', function () { if (window.scrollY < zakres().y3 + window.innerHeight) budz(); }, { passive: true });
           film.currentTime = 0;
           pokazSzukaj(wymusPelna ? 1 : 0);
           film.classList.add('gotowy');
+          requestAnimationFrame(function () { warstwa.style.opacity = '1'; hero.classList.add('film-na-tle');
+            setTimeout(function () { warstwa.classList.add('widac'); }, 950); });
           budz();
         }, { once: true });
       }).catch(function () { /* zostaje zdjecie */ });
@@ -741,21 +764,4 @@
     });
     animujLiczniki();
   }, 2500);
-})();
-
-// Sekcja z tlem pola: delikatna paralaksa tla przy przewijaniu (tylko komputer, bez ograniczonego ruchu)
-(function () {
-  const sek = document.querySelector('.sekcja-pole'); if (!sek) return;
-  const tlo = sek.querySelector('.pole-tlo');
-  if (!tlo || window.innerWidth < 900 || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-  let rys = false;
-  const ustaw = function () {
-    rys = false;
-    const r = sek.getBoundingClientRect();
-    if (r.bottom < 0 || r.top > window.innerHeight) return;
-    const k = (r.top + r.height / 2 - window.innerHeight / 2) / window.innerHeight;   // -1..1 wokol srodka ekranu
-    tlo.style.setProperty('--py', (k * -60).toFixed(1) + 'px');
-  };
-  window.addEventListener('scroll', function () { if (!rys) { rys = true; requestAnimationFrame(ustaw); } }, { passive: true });
-  ustaw();
 })();
