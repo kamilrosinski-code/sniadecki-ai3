@@ -25,7 +25,7 @@
 (function () {
   'use strict';
 
-  var RAPORT_JS = 'raport.js?v=20261002b';
+  var RAPORT_JS = 'raport.js?v=20261002k';
 
   var URL_KIMPZP = 'https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego';
   var URL_POG = 'https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin';
@@ -37,6 +37,8 @@
   // Puste = bez posrednika (dla takich powiatow raport pokaze wskazowke zamiast analizy).
   var URL_KIUT_PROXY = 'https://sniadecki-development.pl/gruntowo-api/kiut.php';
   var URL_USTALENIA = 'https://sniadecki-development.pl/gruntowo-api/plan-ustalenia.php';
+  var URL_POZWOLENIA = 'https://sniadecki-development.pl/gruntowo-api/pozwolenia.php';
+  var URL_RWDZ = 'https://wyszukiwarka.gunb.gov.pl/';
   var URL_KIEG = 'https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow';
   var URL_NMT = 'https://services.gugik.gov.pl/nmt/';
   var URL_OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
@@ -117,7 +119,7 @@
     pasek.className = 'pasek-przykladu';
     pasek.innerHTML = '<div class="pp-tekst"><strong>To jest przykładowy raport rozszerzony</strong> - dla działki w gminie Dopiewo. ' +
       'Tak samo wygląda raport dla Twojej działki.</div>' +
-      '<div class="pp-akcje"><a href="index.html#kontakt" class="btn btn-gold">Zamów raport dla swojej działki</a>' +
+      '<div class="pp-akcje"><a href="raport.html?kup=1" class="btn btn-gold">Kup raport dla swojej działki - 69 zł</a>' +
       '<a href="index.html#haslo" class="btn">Mam hasło</a></div>';
     var hero = document.querySelector('#report .rep-hero');
     if (hero) hero.parentNode.insertBefore(pasek, hero);
@@ -209,14 +211,14 @@
   // =====================================================================
   // 2. STAN + ZDARZENIA Z raport.js
   // =====================================================================
-  var ANALIZY = ['mpzp', 'pog', 'powodz', 'przyroda', 'media', 'teren', 'uzytki', 'otoczenie', 'ceny'];
+  var ANALIZY = ['mpzp', 'pog', 'powodz', 'przyroda', 'media', 'teren', 'uzytki', 'otoczenie', 'pozwolenia', 'ceny'];
   var stan = {};
   var geo = null;           // geometria dzialki (pierscienie lon/lat, 2180, punkty wewnetrzne)
   var przebieg = 0;         // licznik "przebiegu" - po kliknieciu "Nowa dzialka" stare wyniki sa ignorowane
 
   // Zapamietaj poczatkowa zawartosc dynamicznych kontenerow (do resetu przy nowej dzialce)
   var POCZATKOWE = {};
-  ['plan-szczegoly', 'przyroda-wynik', 'powodz-wynik', 'media-wynik', 'teren-karty', 'uzytki-wynik', 'droga-wynik', 'otoczenie-grid', 'k-mpzp', 'k-pog', 'k-wz']
+  ['plan-szczegoly', 'przyroda-wynik', 'powodz-wynik', 'media-wynik', 'teren-karty', 'teren-wizual', 'uzytki-wynik', 'droga-wynik', 'otoczenie-grid', 'pozwolenia-wynik', 'k-mpzp', 'k-pog', 'k-wz']
     .forEach(function (id) { var el = $(id); if (el) POCZATKOWE[id] = el.innerHTML; });
 
   document.addEventListener('gruntowo:dzialka', function (e) {
@@ -251,9 +253,9 @@
 
   function uruchomAnalizy(nr) {
     FUNKCJE = { mpzp: analizaMPZP, pog: analizaPOG, uzytki: analizaUzytki, teren: analizaTeren, otoczenie: analizaOtoczenie,
-      media: analizaMedia, powodz: analizaPowodz, przyroda: analizaPrzyroda };
+      media: analizaMedia, powodz: analizaPowodz, przyroda: analizaPrzyroda, pozwolenia: analizaPozwolenia };
     // Lekkie zapytania od razu, ciezsze obrazy z opoznieniem (raport.js laduje wtedy swoje mapy)
-    var start = { mpzp: 0, pog: 300, uzytki: 600, teren: 900, otoczenie: 1200, media: 2500, powodz: 4000, przyroda: 5500 };
+    var start = { mpzp: 0, pog: 300, uzytki: 600, teren: 900, otoczenie: 1200, pozwolenia: 1800, media: 2500, powodz: 4000, przyroda: 5500 };
     Object.keys(start).forEach(function (k) { setTimeout(function () { wykonajAnalize(k, nr, 0); }, start[k]); });
     // Ceny przychodza z raport.js; jesli backend milczy - po 45 s uznajemy brak danych
     setTimeout(function () { if (nr === przebieg && !stan.ceny) { stan.ceny = { blad: 'brak odpowiedzi' }; przelicz(); } }, 45000);
@@ -499,6 +501,13 @@
       if (w && w.status === 'jest') {
         var z = zbudujMPZP(w.html || '', w.pokrycie);
         // Rejestr Urbanistyczny: tytul planu i data, gdy usluga krajowa ich nie podala
+        // MeSIP (np. Lubon): symbol, przeznaczenie i tekst ustalen terenu prosto z geoportalu gminy
+        if (w.mesip && !z.symbol && w.mesip.tereny && w.mesip.tereny.length) {
+          var t0 = w.mesip.tereny[0], pl = w.mesip.plan || {};
+          z.symbol = t0.symbol; z.funkcja = t0.opis; z.uchwala = z.uchwala || pl.uchwala || t0.uchwala; z.data = z.data || pl.z_dnia;
+          z.nazwa = z.nazwa || pl.nazwa; z.przeznaczenie = klasyfikujPrzeznaczenie(z.symbol, z.funkcja);
+        }
+        if (w.mesip) z.mesip = w.mesip;
         if (w.ru) { z.ru = w.ru; if (!z.nazwa) z.nazwa = w.ru.tytul.replace(/^W sprawie uchwalenia\s+/i, '').replace(/^(miejscowego\s+)?planu\s+zagospodarowania\s+przestrzennego\s+/i, ''); if (!z.stanPlanu && w.ru.od) z.stanPlanu = 'obowiązuje od ' + w.ru.od; }
         return z;
       }
@@ -803,24 +812,55 @@
   function bladNiedostepne() { var e = new Error('serwer powiatu nie pozwala na analizę'); e.niedostepne = true; return e; }
 
   // ---- 4.6 Teren (NMT) - wysokosci w siatce punktow + spadek z plaszczyzny ----
+  // Wysokosci z NMT GUGiK w siatce punktow (dzialka + margines) - do statystyk, mapy wysokosci i przekroju
   function analizaTeren() {
-    var pkt = geo.siatka.slice(0, 40).map(function (xy) { return GruntowoMapy.wgs84Do2180(xy[0], xy[1]); });
-    // NMT GUGiK: x = northing, y = easting
-    var lista = pkt.map(function (p) { return p.y.toFixed(1) + ' ' + p.x.toFixed(1); }).join(',');
-    return pobierzTekst(URL_NMT + '?request=GetHByPointList&list=' + encodeURIComponent(lista), 20000).then(function (t) {
-      var pomiary = t.trim().split(',').map(function (s) {
-        var v = s.trim().split(/\s+/).map(Number);
-        return v.length >= 3 && !isNaN(v[2]) && v[2] > -100 ? { n: v[0], e: v[1], h: v[2] } : null;
-      }).filter(Boolean);
-      if (!pomiary.length) throw new Error('brak wysokości');
-      var hs = pomiary.map(function (p) { return p.h; });
+    var bb = geo.bbox2180;                       // [N min, E min, N max, E max]
+    var dN = bb[2] - bb[0], dE = bb[3] - bb[1];
+    var bok = Math.max(dN, dE, 20) * 1.3;        // kwadrat z marginesem ~15% z kazdej strony
+    var cN = (bb[0] + bb[2]) / 2, cE = (bb[1] + bb[3]) / 2;
+    var K = 15, krok = bok / (K - 1);
+    var siatka = [];
+    for (var r = 0; r < K; r++) for (var c = 0; c < K; c++) {
+      var n = cN + bok / 2 - r * krok, e = cE - bok / 2 + c * krok;
+      siatka.push({ r: r, c: c, n: n, e: e, w: wPoligonie([n, e], geo.p2180) });
+    }
+    var porcje = [];
+    for (var i = 0; i < siatka.length; i += 75) porcje.push(siatka.slice(i, i + 75));
+    // NMT GUGiK: lista "x y" gdzie x = easting, y = northing; odpowiedz "n e h"
+    return Promise.all(porcje.map(function (por) {
+      var lista = por.map(function (p) { return p.e.toFixed(1) + ' ' + p.n.toFixed(1); }).join(',');
+      return pobierzTekst(URL_NMT + '?request=GetHByPointList&list=' + encodeURIComponent(lista), 25000).then(function (t) {
+        var v = t.trim().split(',');
+        por.forEach(function (p, k) {
+          var x = (v[k] || '').trim().split(/\s+/).map(Number);
+          p.h = x.length >= 3 && !isNaN(x[2]) && x[2] > -100 ? x[2] : null;
+        });
+      });
+    })).then(function () {
+      var wew = siatka.filter(function (p) { return p.w && p.h !== null; });
+      if (wew.length < 3) wew = siatka.filter(function (p) { return p.h !== null; });
+      if (!wew.length) throw new Error('brak wysokości');
+      var hs = wew.map(function (p) { return p.h; });
       var min = Math.min.apply(null, hs), max = Math.max.apply(null, hs);
       var sr = hs.reduce(function (a, b) { return a + b; }, 0) / hs.length;
-      var spadek = pomiary.length >= 3 ? spadekPlaszczyzny(pomiary) : null;
-      return { min: min, max: max, sr: sr, roznica: max - min, spadek: spadek, punktow: pomiary.length };
+      var pl = wew.length >= 3 ? plaszczyzna(wew) : null;
+      return { min: min, max: max, sr: sr, roznica: max - min, spadek: pl ? pl.proc : null, kierunek: pl,
+        punktow: wew.length, siatka: siatka, K: K, krok: krok, cN: cN, cE: cE, bok: bok };
     });
   }
-  // Najmniejsze kwadraty: h = a*e + b*n + c  ->  spadek = |grad| w %
+  // Plaszczyzna h = a*e + b*n + c dopasowana do punktow; spadek w % i kierunek spadku (w dol)
+  function plaszczyzna(p) {
+    var n = p.length, me = 0, mn = 0, mh = 0;
+    p.forEach(function (q) { me += q.e; mn += q.n; mh += q.h; });
+    me /= n; mn /= n; mh /= n;
+    var see = 0, snn = 0, sen = 0, seh = 0, snh = 0;
+    p.forEach(function (q) { var e = q.e - me, nn = q.n - mn, h = q.h - mh; see += e * e; snn += nn * nn; sen += e * nn; seh += e * h; snh += nn * h; });
+    var det = see * snn - sen * sen;
+    if (Math.abs(det) < 1e-6) return null;
+    var a = (seh * snn - snh * sen) / det, b = (snh * see - seh * sen) / det;
+    var g = Math.sqrt(a * a + b * b);
+    return { proc: Math.round(g * 1000) / 10, dE: g ? -a / g : 0, dN: g ? -b / g : 0 };
+  }
   function spadekPlaszczyzny(p) {
     var n = p.length, me = 0, mn = 0, mh = 0;
     p.forEach(function (q) { me += q.e; mn += q.n; mh += q.h; });
@@ -837,6 +877,138 @@
   }
 
   // ---- 4.7 Uzytki gruntowe (KIEG) ----
+  // ===== Grafika terenu: mapa wysokosci z warstwicami + przekroj wzdluz spadku =====
+  function kolorH(t) {   // t 0..1: nisko (zielen) -> srodek (piasek) -> wysoko (braz)
+    var st = [[0, [74, 128, 96]], [0.5, [200, 182, 120]], [1, [150, 92, 56]]];
+    for (var i = 1; i < st.length; i++) if (t <= st[i][0]) {
+      var a = st[i - 1], b = st[i], u = (t - a[0]) / (b[0] - a[0]);
+      return 'rgb(' + [0, 1, 2].map(function (k) { return Math.round(a[1][k] + (b[1][k] - a[1][k]) * u); }).join(',') + ')';
+    }
+    return 'rgb(150,92,56)';
+  }
+  function liczbaPL(x, m) { return x.toFixed(m === undefined ? 1 : m).replace('.', ','); }
+  function rysujTeren(w) {
+    var K = w.K, S = w.siatka, H = function (r, c) { var p = S[r * K + c]; return p ? p.h : null; };
+    var wszystkie = S.filter(function (p) { return p.h !== null; }).map(function (p) { return p.h; });
+    if (wszystkie.length < 4) return '';
+    // Skala kolorow i warstwic wg DZIALKI (otoczenie bywa duzo wyzsze/nizsze - np. skarpa obok - i "splaszcza" dzialke)
+    var naDz = S.filter(function (p) { return p.w && p.h !== null; }).map(function (p) { return p.h; });
+    if (naDz.length < 3) naDz = wszystkie;
+    var dMin = Math.min.apply(null, naDz), dMax = Math.max.apply(null, naDz);
+    var pad = Math.max(0.4, (dMax - dMin) * 0.25);
+    var hMin = dMin - pad, hMax = dMax + pad, zakres = Math.max(hMax - hMin, 0.01);
+    var oMin = Math.min.apply(null, wszystkie), oMax = Math.max.apply(null, wszystkie);
+    var tH = function (h) { return Math.max(0, Math.min(1, (h - hMin) / zakres)); };
+    var W = 340, sk = W / w.bok, pol = w.bok / 2;
+    var X = function (e) { return (e - (w.cE - pol)) * sk; }, Y = function (n) { return ((w.cN + pol) - n) * sk; };
+    // kolory: siatka zageszczona 3x (interpolacja dwuliniowa) - gladkie przejscia zamiast kratki
+    var kom = '', G = 3, kr = w.krok * sk / G;
+    for (var gr = 0; gr < (K - 1) * G; gr++) for (var gc = 0; gc < (K - 1) * G; gc++) {
+      var r0 = Math.floor(gr / G), c0i = Math.floor(gc / G), fu = (gc % G + 0.5) / G, fv = (gr % G + 0.5) / G;
+      var q = [H(r0, c0i), H(r0, c0i + 1), H(r0 + 1, c0i), H(r0 + 1, c0i + 1)];
+      if (q.some(function (x) { return x === null; })) continue;
+      var hv = q[0] * (1 - fu) * (1 - fv) + q[1] * fu * (1 - fv) + q[2] * (1 - fu) * fv + q[3] * fu * fv;
+      var p0 = S[r0 * K + c0i];
+      kom += '<rect x="' + (X(p0.e) + (gc % G) * kr).toFixed(1) + '" y="' + (Y(p0.n) + (gr % G) * kr).toFixed(1) + '" width="' + (kr + 0.5).toFixed(1) + '" height="' + (kr + 0.5).toFixed(1) + '" fill="' + kolorH(tH(hv)) + '"/>';
+    }
+    // warstwice (marching squares) co "co" metrow
+    var kroki = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10], co = kroki[kroki.length - 1];
+    for (var i = 0; i < kroki.length; i++) if (zakres / kroki[i] <= 8) { co = kroki[i]; break; }
+    var linie = '';
+    for (var lv = Math.ceil(hMin / co) * co; lv < hMax; lv += co) {
+      var d = '';
+      for (var r = 0; r < K - 1; r++) for (var c = 0; c < K - 1; c++) {
+        var v = [H(r, c), H(r, c + 1), H(r + 1, c + 1), H(r + 1, c)];
+        if (v.some(function (x) { return x === null; })) continue;
+        var pts = [S[r * K + c], S[r * K + c + 1], S[(r + 1) * K + c + 1], S[(r + 1) * K + c]];
+        var cut = [];
+        for (var k = 0; k < 4; k++) {
+          var a = v[k], b = v[(k + 1) % 4];
+          if ((a < lv) !== (b < lv)) {
+            var u = (lv - a) / (b - a), pa = pts[k], pb = pts[(k + 1) % 4];
+            cut.push([X(pa.e + (pb.e - pa.e) * u), Y(pa.n + (pb.n - pa.n) * u)]);
+          }
+        }
+        if (cut.length >= 2) d += 'M' + cut[0][0].toFixed(1) + ',' + cut[0][1].toFixed(1) + 'L' + cut[1][0].toFixed(1) + ',' + cut[1][1].toFixed(1);
+        if (cut.length === 4) d += 'M' + cut[2][0].toFixed(1) + ',' + cut[2][1].toFixed(1) + 'L' + cut[3][0].toFixed(1) + ',' + cut[3][1].toFixed(1);
+      }
+      if (d) linie += '<path class="tr-warstwica' + (Math.abs(lv / (co * 5) - Math.round(lv / (co * 5))) < 1e-6 ? ' tr-gruba' : '') + '" d="' + d + '"/>';
+    }
+    // obrys dzialki
+    var obrys = geo.p2180.map(function (r) { return 'M' + r.map(function (p) { return X(p[1]).toFixed(1) + ',' + Y(p[0]).toFixed(1); }).join('L') + 'Z'; }).join('');
+    // strzalka spadku od srodka dzialki
+    var strz = '', kier = w.kierunek, sN = 0, sE = 0, n0 = 0;
+    S.forEach(function (p) { if (p.w) { sN += p.n; sE += p.e; n0++; } });
+    var c0 = n0 ? [sE / n0, sN / n0] : [w.cE, w.cN];
+    if (kier && w.spadek >= 0.5) {
+      var dl = Math.min(w.bok * 0.28, 60 / sk), x1 = X(c0[0] - kier.dE * dl / 2), y1 = Y(c0[1] - kier.dN * dl / 2), x2 = X(c0[0] + kier.dE * dl / 2), y2 = Y(c0[1] + kier.dN * dl / 2);
+      strz = '<line class="tr-strz-tlo" x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>' +
+        '<line class="tr-strz" x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" marker-end="url(#tr-grot)"/>' +
+        '<text class="tr-etyk" x="' + (x1 - kier.dE * 14).toFixed(1) + '" y="' + (y1 + kier.dN * 14 + 4).toFixed(1) + '" text-anchor="middle">' + liczbaPL(w.spadek) + '%</text>';
+    }
+    // podzialka
+    var pd = [5, 10, 20, 25, 50, 100, 200].filter(function (m) { return m * sk <= W * 0.3; }).pop() || 5;
+    var mapa = '<svg class="tr-mapa" viewBox="0 0 ' + W + ' ' + W + '" role="img" aria-label="Mapa wysokości terenu działki">' +
+      '<defs><clipPath id="tr-clip"><path d="' + obrys + '"/></clipPath><marker id="tr-grot" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0L10,5L0,10z" fill="#fff"/></marker></defs>' +
+      '<g class="tr-poza">' + kom + '</g><g clip-path="url(#tr-clip)">' + kom + '</g>' + linie +
+      '<path class="tr-obrys" d="' + obrys + '"/>' + strz +
+      '<g class="tr-pn"><text x="' + (W - 14) + '" y="18">N</text><path d="M' + (W - 14) + ',22l-4,10h8z"/></g>' +
+      '<g class="tr-podz"><rect x="10" y="' + (W - 16) + '" width="' + (pd * sk).toFixed(1) + '" height="4"/><text x="10" y="' + (W - 20) + '">' + pd + ' m</text></g></svg>';
+    var otoczenie = (oMax - dMax > 2 || dMin - oMin > 2) ? ' · w otoczeniu (poza działką) teren od ' + liczbaPL(oMin) + ' do ' + liczbaPL(oMax) + ' m - kolory poza działką są przycięte do skali' : '';
+    var legenda = '<div class="tr-legenda"><span>' + liczbaPL(hMin) + ' m</span><i style="background:linear-gradient(90deg,' + kolorH(0) + ',' + kolorH(0.5) + ',' + kolorH(1) + ')"></i><span>' + liczbaPL(hMax) + ' m n.p.m.</span></div>' +
+      '<p class="mapbox-cap">Warstwice co ' + liczbaPL(co, co < 1 ? 2 : 0).replace(/,?0+$/, '') + ' m' + (kier && w.spadek >= 0.5 ? ' · strzałka: kierunek spadku terenu' : ' · teren praktycznie płaski') + ' · działka w białym obrysie' + otoczenie + '</p>';
+    return '<div class="teren-uklad"><figure class="teren-fig">' + mapa + legenda + '</figure>' + przekroj(w, c0) + '</div>';
+  }
+  // Przekroj terenu przez srodek dzialki wzdluz kierunku spadku (albo dluzszego boku, gdy plasko)
+  function przekroj(w, c0) {
+    var K = w.K, S = w.siatka, kier = w.kierunek;
+    var dE = kier && w.spadek >= 0.5 ? kier.dE : 1, dN = kier && w.spadek >= 0.5 ? kier.dN : 0;
+    var hW = function (e, n) {   // interpolacja dwuliniowa z siatki
+      var c = (e - (w.cE - w.bok / 2)) / w.krok, r = ((w.cN + w.bok / 2) - n) / w.krok;
+      var c1 = Math.floor(c), r1 = Math.floor(r);
+      if (c1 < 0 || r1 < 0 || c1 >= K - 1 || r1 >= K - 1) return null;
+      var g = function (rr, cc) { var p = S[rr * K + cc]; return p ? p.h : null; };
+      var a = g(r1, c1), b = g(r1, c1 + 1), cc2 = g(r1 + 1, c1), d = g(r1 + 1, c1 + 1);
+      if ([a, b, cc2, d].some(function (x) { return x === null; })) return null;
+      var u = c - c1, v = r - r1;
+      return a * (1 - u) * (1 - v) + b * u * (1 - v) + cc2 * (1 - u) * v + d * u * v;
+    };
+    var L = w.bok * 0.48, N = 60, pr = [];
+    for (var i = 0; i <= N; i++) {
+      var t = -L + 2 * L * i / N, e = c0[0] + dE * t, n = c0[1] + dN * t, h = hW(e, n);
+      if (h !== null) pr.push({ t: t + L, h: h, w: wPoligonie([n, e], geo.p2180) });
+    }
+    if (pr.length < 5) return '';
+    // przekroj: dzialka + ok. 30% jej dlugosci z kazdej strony (bez dalekiego otoczenia, ktore zaburza skale)
+    var iw = pr.map(function (p, i) { return p.w ? i : -1; }).filter(function (i) { return i >= 0; });
+    if (iw.length >= 2) {
+      var dl0 = pr[iw[iw.length - 1]].t - pr[iw[0]].t, zap = Math.max(dl0 * 0.3, 8);
+      var tA = pr[iw[0]].t - zap, tB = pr[iw[iw.length - 1]].t + zap;
+      pr = pr.filter(function (p) { return p.t >= tA && p.t <= tB; });
+    }
+    if (pr.length < 5) return '';
+    var t0 = pr[0].t, tMax = pr[pr.length - 1].t - t0;
+    var hs = pr.map(function (p) { return p.h; }), lo = Math.min.apply(null, hs), hi = Math.max.apply(null, hs);
+    var pad2 = Math.max((hi - lo) * 0.25, 0.5); lo -= pad2; hi += pad2;
+    var W = 340, Hh = 200, ml = 44, mr = 10, mt = 14, mb = 30, pw = W - ml - mr, ph = Hh - mt - mb;
+    var X = function (t) { return ml + (t - t0) / tMax * pw; }, Y = function (h) { return mt + (hi - h) / (hi - lo) * ph; };
+    var linia = pr.map(function (p, i) { return (i ? 'L' : 'M') + X(p.t).toFixed(1) + ',' + Y(p.h).toFixed(1); }).join('');
+    var pole = linia + 'L' + X(pr[pr.length - 1].t).toFixed(1) + ',' + (mt + ph) + 'L' + X(pr[0].t).toFixed(1) + ',' + (mt + ph) + 'Z';
+    var wd = pr.filter(function (p) { return p.w; }), dz = '';
+    if (wd.length > 1) dz = '<rect class="tr-p-dz" x="' + X(wd[0].t).toFixed(1) + '" y="' + mt + '" width="' + (X(wd[wd.length - 1].t) - X(wd[0].t)).toFixed(1) + '" height="' + ph + '"/>' +
+      '<text class="tr-p-opis" x="' + ((X(wd[0].t) + X(wd[wd.length - 1].t)) / 2).toFixed(1) + '" y="' + (mt + 11) + '">działka</text>';
+    var osY = '', st = (hi - lo) / 4;
+    for (var k = 0; k <= 4; k++) { var hv = lo + st * k; osY += '<line class="tr-p-siatka" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(hv).toFixed(1) + '" y2="' + Y(hv).toFixed(1) + '"/><text class="tr-p-os" x="' + (ml - 5) + '" y="' + (Y(hv) + 3).toFixed(1) + '" text-anchor="end">' + liczbaPL(hv) + '</text>'; }
+    var osX = '';
+    [0, 0.5, 1].forEach(function (f) { osX += '<text class="tr-p-os" x="' + (ml + f * pw).toFixed(1) + '" y="' + (Hh - 12) + '" text-anchor="' + (f === 0 ? 'start' : f === 1 ? 'end' : 'middle') + '">' + Math.round(f * tMax) + ' m</text>'; });
+    var svg = '<svg class="tr-profil" viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="Przekrój terenu">' + osY + dz +
+      '<path class="tr-p-pole" d="' + pole + '"/><path class="tr-p-linia" d="' + linia + '"/>' + osX +
+      '<text class="tr-p-os" x="' + (W - mr) + '" y="' + (Hh - 1) + '" text-anchor="end">odległość wzdłuż przekroju</text></svg>';
+    var wysP = wd.length > 1 ? Math.abs(wd[0].h - wd[wd.length - 1].h) : null;
+    return '<figure class="teren-fig">' + svg + '<p class="mapbox-cap">Przekrój przez środek działki ' + (kier && w.spadek >= 0.5 ? 'wzdłuż kierunku spadku' : 'z zachodu na wschód') +
+      (wysP !== null ? ' · różnica wysokości na działce wzdłuż przekroju: ' + liczbaPL(wysP) + ' m' : '') + ' · skala pionowa przewyższona</p></figure>';
+  }
+
   function analizaUzytki() {
     var punkty = [geo.srodek];
     if (geo.siatka.length > 2) { punkty.push(geo.siatka[0]); punkty.push(geo.siatka[geo.siatka.length - 1]); }
@@ -972,6 +1144,40 @@
       return { drogi: drogi, poi: poi };
     });
   }
+
+  // Pozwolenia na budowe w promieniu 1 km (rejestr GUNB w naszej bazie, polozenie dzialek z ULDK).
+  // Gdy serwer jeszcze ustala polozenie czesci dzialek (pierwszy raport w okolicy) - pytamy ponownie.
+  function analizaPozwolenia() {
+    var s = geo.srodek, id = stan.dzialka && stan.dzialka.id;
+    var url = URL_POZWOLENIA + '?id=' + encodeURIComponent(id || '') + '&lon=' + s[0].toFixed(6) + '&lat=' + s[1].toFixed(6);
+    var nr = przebieg;
+    var pytaj = function (proba) {
+      return pobierz(url, null, 45000).then(function (r) { return r.json(); }).then(function (d) {
+        if (d && d.stan === 'ok' && !d.kompletne && proba < 4 && nr === przebieg) {
+          return new Promise(function (ok) { setTimeout(ok, 1500); }).then(function () { return pytaj(proba + 1); });
+        }
+        return d;
+      });
+    };
+    return pytaj(0).then(function (d) {
+      if (!d || d.stan === 'blad') throw new Error((d && d.blad) || 'brak odpowiedzi');
+      return d;
+    });
+  }
+  var GRUPY_POZW = {
+    dom: { n: 'dom jednorodzinny', k: ['I'] },
+    mieszk: { n: 'budynek wielorodzinny', k: ['XIII'] },
+    uslugi: { n: 'usługi / handel', k: ['V', 'IX', 'X', 'XI', 'XII', 'XIV', 'XV', 'XVI', 'XVII', 'XX'] },
+    przem: { n: 'przemysł / magazyn', k: ['XVIII', 'XIX', 'XXII'] },
+    infra: { n: 'infrastruktura', k: ['IV', 'VII', 'VIII', 'XXI', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII', 'XXVIII', 'XXIX', 'XXX'] }
+  };
+  function grupaPozw(kat) {
+    for (var g in GRUPY_POZW) if (GRUPY_POZW[g].k.indexOf(kat) >= 0) return g;
+    return 'inne';
+  }
+  var RODZAJ_POZW = ['budowa', 'rozbudowa', 'nadbudowa', 'odbudowa', 'rozbiórka', 'inne roboty'];
+  function wielka(t) { t = String(t || '').trim(); return t.charAt(0).toUpperCase() + t.slice(1); }
+  function dataPL(d) { return d ? d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) : ''; }
 
   // =====================================================================
   // 5. CZYNNIKI -> WERDYKT
@@ -1123,6 +1329,23 @@
       else dod('minus', -5, 'Mało transakcji gruntami w okolicy', 'Najbliższe porównania dopiero w promieniu ' + String(km).replace('.', ',') + ' km - wycena mniej pewna, sprzedaż może trwać dłużej.', 'RCN');
     }
 
+    // --- Pozwolenia na budowe w okolicy ---
+    var pb = stan.pozwolenia;
+    if (pb && pb.stan === 'ok' && pb.lista) {
+      var nowe = pb.lista.filter(function (x) { return x.rodzaj === 0 && !x.wlasna; });
+      var mieszk = nowe.filter(function (x) { return x.kategoria === 'I' || x.kategoria === 'XIII'; });
+      var wielo = mieszk.filter(function (x) { return x.kategoria === 'XIII'; }).length;
+      var opisM = mieszk.length + ' pozwoleń na nowe budynki mieszkalne w promieniu 1 km w ostatnich 3 latach' + (wielo ? ' (w tym wielorodzinne: ' + wielo + ')' : '') + '.';
+      if (mieszk.length >= 10) dod('plus', 5, 'Okolica aktywnie się zabudowuje', opisM + ' Popyt na grunty budowlane w tym miejscu jest potwierdzony.', 'GUNB');
+      else if (mieszk.length >= 3) dod('plus', 3, 'Nowe budynki mieszkalne w okolicy', opisM, 'GUNB');
+      var przem = nowe.filter(function (x) { return grupaPozw(x.kategoria) === 'przem' && x.odl <= 500; });
+      if (przem.length) dod('uwaga', 0, 'Planowana inwestycja przemysłowa lub magazynowa w pobliżu (' + odl(przem[0].odl) + ')', wielka(przem[0].opis) + (przem.length > 1 ? ' · takich pozwoleń w promieniu 500 m: ' + przem.length : '') + '. Sprawdź, czy nie wpłynie na komfort zamieszkania (ruch ciężarówek, hałas).', 'GUNB');
+      var maszt = nowe.filter(function (x) { return x.kategoria === 'XXIX' && x.odl <= 300; });
+      if (maszt.length) dod('uwaga', 0, 'Planowany maszt lub wolnostojący komin w pobliżu (' + odl(maszt[0].odl) + ')', wielka(maszt[0].opis), 'GUNB');
+      var wlasne = pb.lista.filter(function (x) { return x.wlasna; });
+      if (wlasne.length) dod('uwaga', 0, 'Dla tej działki jest sprawa w rejestrze pozwoleń na budowę', wielka(wlasne[0].opis) + ' (' + (wlasne[0].data_decyzji ? 'decyzja ' + dataPL(wlasne[0].data_decyzji) : 'wniosek ' + dataPL(wlasne[0].data_wniosku)) + '). Zapytaj sprzedającego o projekt i decyzję - może przejść na kupującego.', 'GUNB');
+    }
+
     // --- Ksztalt i powierzchnia ---
     var wy = stan.wymiary;
     if (wy && wy.szerokosc) {
@@ -1260,6 +1483,7 @@
         karta('Wysokość terenu', w.sr.toFixed(1).replace('.', ',') + ' m n.p.m.', 'średnia z ' + w.punktow + ' punktów na działce') +
         karta('Różnica wysokości', w.roznica.toFixed(1).replace('.', ',') + ' m', 'od ' + w.min.toFixed(1).replace('.', ',') + ' do ' + w.max.toFixed(1).replace('.', ',') + ' m') +
         karta('Spadek terenu', sp === null ? '-' : sp.toLocaleString('pl-PL') + '%', 'nachylenie płaszczyzny dopasowanej do terenu', spPill, spK);
+      if (w.siatka && $('teren-wizual')) $('teren-wizual').innerHTML = rysujTeren(w);
     } else if (klucz === 'uzytki') {
       if (w.blad) { $('uzytki-wynik').innerHTML = ocena('uwaga', 'Brak danych o użytkach dla tej działki', 'Powiat nie udostępnia warstwy użytków w usłudze krajowej. Sprawdź wypis z rejestru gruntów.'); return; }
       var ho = (w.opis || []).map(function (o) {
@@ -1270,6 +1494,7 @@
       }).join('');
       $('uzytki-wynik').innerHTML = ho + (w.grupa ? '<p class="mapbox-cap" style="margin-top:.6rem;">Grupa rejestrowa: ' + esc(w.grupa) + (w.pole ? ' · pole w ewidencji: ' + esc(w.pole) + ' ha' : '') + ' · odczyt w punktach wewnątrz działki</p>' : '');
     } else if (klucz === 'otoczenie') rysujOtoczenie(w);
+    else if (klucz === 'pozwolenia') rysujPozwolenia(w);
   }
 
   function rysujPlanowanie() {
@@ -1296,6 +1521,9 @@
       if (mp.funkcja) h += ocena('uwaga', 'Funkcja terenu: ' + mp.funkcja, mp.symbol ? 'symbol ' + mp.symbol : '');
       if (mp.link) h += '<a class="legenda-link" href="' + esc(mp.link) + '" target="_blank" rel="noopener">Otwórz treść uchwały →</a>';
       else if (mp.ru && mp.ru.link) h += '<a class="legenda-link" href="' + esc(mp.ru.link) + '" target="_blank" rel="noopener">Plan w Rejestrze Urbanistycznym →</a>';
+      else if (mp.mesip && mp.mesip.portal) h += '<a class="legenda-link" href="' + esc(mp.mesip.portal) + '" target="_blank" rel="noopener">Plan w geoportalu ' + (mp.mesip.zrodlo === 'MeSIP' ? 'MeSIP' : 'SIP Poznania') + ' →</a>';
+      if (mp.mesip && mp.mesip.w_opracowaniu) h += ocena('uwaga', 'Dla tego terenu opracowywany jest nowy plan', mp.mesip.w_opracowaniu + ' - zapisy mogą się zmienić; sprawdź etap procedury w urzędzie.');
+      if (mp.mesip && mp.mesip.tereny && mp.mesip.tereny.length > 1) h += ocena('uwaga', 'Na działce jest kilka terenów planu', mp.mesip.tereny.map(function (t) { return t.symbol + (t.opis ? ' (' + t.opis + ')' : ''); }).join(', '));
     }
     // Wskazniki strefy planu ogolnego (z Rejestru Urbanistycznego)
     if (pg && pg.status === 'jest' && (pg.wysokosc || pg.zabudowa || pg.pbc)) {
@@ -1312,6 +1540,7 @@
   var ustaleniaStart = false;
   function wczytajUstalenia(mp) {
     var box = $('plan-ustalenia'); if (!box || ustaleniaStart) return;
+    if (mp.mesip && mp.mesip.tereny && mp.mesip.tereny.some(function (t) { return t.ustalenia; })) { ustaleniaStart = true; rysujUstaleniaMesip(mp.mesip); return; }
     var id = mp.ru && mp.ru.id;
     var pdf = !id && mp.link && /\.pdf(\?|$)/i.test(mp.link) ? mp.link : '';
     if (!id && !pdf) return;          // brak dostepu do tresci uchwaly - zostaje link w sekcji wyzej
@@ -1340,6 +1569,25 @@
   // Do PDF/druku rozwijamy wszystkie tereny planu
   window.addEventListener('beforeprint', function () { document.querySelectorAll('.plan-ustalenia details').forEach(function (d) { d.open = true; }); });
 
+  // Tekst ustalen terenu z MeSIP (fragment uchwaly dla terenu) - pokazujemy jako liste punktow
+  function rysujUstaleniaMesip(ms) {
+    var box = $('plan-ustalenia'); if (!box) return;
+    var punkty = function (txt) {
+      var linie = String(txt || '').replace(/\r/g, '').split(/\n+/).map(function (l) { return l.trim(); }).filter(Boolean);
+      if (!linie.length) return '';
+      var naglowek = /^\d+\.\s/.test(linie[0]) && !/^\d+\)/.test(linie[0]) ? linie.shift().replace(/^\d+\.\s*/, '') : '';
+      return (naglowek ? '<p class="ust-wstep">' + esc(naglowek) + '</p>' : '') + '<ul class="ust-inne">' + linie.map(function (l) { return '<li>' + esc(l.replace(/^\d+\)\s*/, '').replace(/[\u2013\u2014]/g, '-')) + '</li>'; }).join('') + '</ul>';
+    };
+    var t0 = ms.tereny[0], pl = ms.plan || {};
+    var h = '<div class="legenda-title">Zapisy planu miejscowego dla terenu ' + esc(t0.symbol) + '</div><div class="legenda-body">' +
+      (t0.opis ? '<div class="legenda-row"><span>Przeznaczenie</span><strong>' + esc(t0.opis) + '</strong></div>' : '') + punkty(t0.ustalenia);
+    ms.tereny.slice(1).forEach(function (t) {
+      h += '<details class="ust-teren"><summary><strong>' + esc(t.symbol) + '</strong> - ' + esc(t.opis || '') + ' (także na działce)</summary>' + punkty(t.ustalenia) + '</details>';
+    });
+    h += '<p class="ust-uwaga">Tekst ustaleń z geoportalu MeSIP' + (pl.uchwala ? ' (uchwała ' + esc(pl.uchwala) + (pl.z_dnia ? ' z ' + esc(pl.z_dnia) : '') + ')' : '') +
+      '. Wymiary, linie zabudowy i ustalenia ogólne planu sprawdź w pełnym tekście uchwały i na rysunku. <a href="' + esc(ms.portal) + '" target="_blank" rel="noopener">Geoportal MeSIP →</a></p></div>';
+    box.innerHTML = h;
+  }
   function normSymbol(s) { return String(s || '').toUpperCase().replace(/[\s.]/g, ''); }
   function rysujUstalenia(d, symbol) {
     var box = $('plan-ustalenia'); if (!box || !d || !d.tereny) return;
@@ -1421,6 +1669,75 @@
       return '<div class="ot-item"><div class="ot-k">' + k[1] + '</div><div class="ot-v">' + (l.length ? odl(l[0].odl) : '> 1,5 km') + '</div><div class="ot-n">' +
         (l.length ? esc(l[0].nazwa || 'najbliższy') + (l.length > 1 ? ' · w promieniu: ' + l.length : '') : 'brak w promieniu 1,5 km') + '</div></div>';
     }).join('');
+  }
+
+  function rysujPozwolenia(w) {
+    var el = $('pozwolenia-wynik'); if (!el) return;
+    var linkRWDZ = '<a href="' + URL_RWDZ + '" target="_blank" rel="noopener">wyszukiwarce GUNB</a>';
+    if (w.blad) { el.innerHTML = bladSekcji('Nasz serwer nie odpowiedział.', w); return; }
+    if (w.stan !== 'ok') { el.innerHTML = ocena('uwaga', 'Rejestr pozwoleń dla tego województwa jeszcze uzupełniamy', 'Na razie pozwolenia w okolicy sprawdzisz w wyszukiwarce GUNB (po adresie lub numerze działki).') + '<p class="mapbox-cap" style="margin-top:.6rem;">Wyszukiwarka rejestru RWDZ: <a href="' + URL_RWDZ + '" target="_blank" rel="noopener">wyszukiwarka.gunb.gov.pl</a></p>'; return; }
+    var lista = w.lista || [];
+    var nowe = lista.filter(function (x) { return x.rodzaj === 0; });
+    var ile = function (g) { return nowe.filter(function (x) { return grupaPozw(x.kategoria) === g; }).length; };
+    var od = dataPL(w.od).slice(3);
+    var karta = function (l, v, n) { return '<div class="scard"><div class="scard-top"><span class="scard-l">' + l + '</span></div><div class="scard-v">' + v + '</div><div class="scard-note">' + n + '</div></div>'; };
+    var h = '<div class="status-grid pozw-karty">' +
+      karta('Domy jednorodzinne', ile('dom'), 'nowe budynki od ' + od) +
+      karta('Budynki wielorodzinne', ile('mieszk'), 'nowe budynki od ' + od) +
+      karta('Usługi i handel', ile('uslugi'), 'nowe budynki od ' + od) +
+      karta('Przemysł i magazyny', ile('przem'), 'nowe budynki od ' + od) + '</div>';
+    var wlasne = lista.filter(function (x) { return x.wlasna; });
+    if (wlasne.length) h += ocena('uwaga', 'Dla tej działki jest sprawa w rejestrze pozwoleń', wielka(wlasne[0].opis) + ' · ' + (wlasne[0].data_decyzji ? 'decyzja z ' + dataPL(wlasne[0].data_decyzji) : 'wniosek z ' + dataPL(wlasne[0].data_wniosku)));
+    if (!lista.length) h += ocena('uwaga', 'Brak pozwoleń na budowę w promieniu 1 km od ' + od, 'Okolica w ostatnich latach się nie zabudowywała albo urząd nie przekazał danych do rejestru GUNB.');
+    else {
+      lista.forEach(function (x, i) { x._nr = i + 1; });   // lista jest posortowana od najblizszej
+      h += '<div class="pozw-uklad">' + mapkaPozwolen(lista, w.promien || 1000) + '<div class="pozw-lista-box">';
+      var wazne = lista.filter(function (x) { return x.rodzaj <= 3; });
+      var reszta = lista.filter(function (x) { return x.rodzaj > 3; });
+      var wiersz = function (x) {
+        var g = grupaPozw(x.kategoria);
+        var dt = x.data_decyzji ? dataPL(x.data_decyzji) : 'wniosek ' + dataPL(x.data_wniosku);
+        var gdzie = [x.ulica, x.inwestor].filter(Boolean).map(esc).join(' · ');
+        return '<li class="pozw-' + g + (x.wlasna ? ' pozw-wlasna' : '') + '"><span class="pozw-odl">' + (x.rodzaj <= 3 ? '<b class="pozw-nr pz-' + g + '">' + x._nr + '</b>' : '') + (x.wlasna ? 'ta działka' : odl(x.odl)) + '</span>' +
+          '<div><strong>' + esc(wielka(x.opis || (GRUPY_POZW[g] ? GRUPY_POZW[g].n : 'obiekt budowlany'))) + '</strong>' +
+          '<small>' + (GRUPY_POZW[g] ? GRUPY_POZW[g].n : 'inne') + ' · ' + RODZAJ_POZW[x.rodzaj] + ' · ' + dt + (x.kubatura ? ' · ' + m(x.kubatura) + ' m³' : '') + (gdzie ? '<br>' + gdzie : '') + '</small></div></li>';
+      };
+      var pierwsze = wazne.slice(0, 10);
+      h += '<ul class="pozw-lista">' + (pierwsze.length ? pierwsze.map(wiersz).join('') : '<li class="pozw-pusto">brak nowych budynków i rozbudów - tylko przebudowy i roboty wewnątrz budynków</li>') + '</ul>';
+      var dalsze = wazne.slice(10).concat(reszta);
+      if (dalsze.length) h += '<details class="pozw-wiecej"><summary>Pokaż pozostałe (' + dalsze.length + ')' + (reszta.length ? ' - w tym przebudowy i instalacje' : '') + '</summary><ul class="pozw-lista">' + dalsze.map(wiersz).join('') + '</ul></details>';
+      h += '</div></div>';
+    }
+    h += '<p class="mapbox-cap" style="margin-top:.75rem;">Pozwolenia na budowę z rejestru GUNB (RWDZ) w promieniu ' + odl(w.promien || 1000) + ', wnioski i decyzje od ' + od + ' · bez sieci uzbrojenia i rozbiórek' +
+      (w.aktualnosc ? ' · stan rejestru: ' + dataPL(w.aktualnosc.slice(0, 10)) : '') + (w.bez_polozenia ? ' · ' + w.bez_polozenia + ' spraw bez ustalonego położenia' : '') + ' · szczegóły sprawy w ' + linkRWDZ + '</p>';
+    el.innerHTML = h;
+  }
+
+  // Mapa polozenia pozwolen: ortofotomapa (GUGiK) 2 x 2 km, obrys dzialki, ponumerowane punkty (numery jak na liscie)
+  function mapkaPozwolen(lista, R) {
+    var s = geo.srodek, S = 560;
+    var dLon = R * 1.08 / (111320 * Math.cos(s[1] * Math.PI / 180)), dLat = R * 1.08 / 110574;
+    var bb = [s[0] - dLon, s[1] - dLat, s[0] + dLon, s[1] + dLat];
+    var X = function (lon) { return (lon - bb[0]) / (bb[2] - bb[0]) * S; }, Y = function (lat) { return (bb[3] - lat) / (bb[3] - bb[1]) * S; };
+    var orto = 'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/jpeg&TRANSPARENT=false&LAYERS=Raster&STYLES=&WIDTH=900&HEIGHT=900&BBOX=' + bb.map(function (v) { return v.toFixed(6); }).join(',');
+    var c = S / 2, r1 = R / (R * 1.08) * S / 2;
+    var obrys = geo.pier.map(function (r) { return 'M' + r.map(function (p) { return X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1); }).join('L') + 'Z'; }).join('');
+    var pkt = lista.slice().reverse().map(function (x) {
+      var cx = X(x.lon).toFixed(1), cy = Y(x.lat).toFixed(1), g = grupaPozw(x.kategoria);
+      var tyt = '<title>' + esc((x._nr ? x._nr + '. ' : '') + wielka(x.opis || '') + ' - ' + odl(x.odl)) + '</title>';
+      if (x.rodzaj > 3) return '<circle class="pz-' + g + ' pz-drobne" cx="' + cx + '" cy="' + cy + '" r="3.5">' + tyt + '</circle>';
+      return '<g class="pz-pin">' + tyt + '<circle class="pz-' + g + '" cx="' + cx + '" cy="' + cy + '" r="9"/><text x="' + cx + '" y="' + (+cy + 3.5).toFixed(1) + '">' + x._nr + '</text></g>';
+    }).join('');
+    var leg = [['dom', 'domy'], ['mieszk', 'wielorodzinne'], ['uslugi', 'usługi'], ['przem', 'przemysł'], ['infra', 'infrastruktura']];
+    return '<figure class="pozw-mapka"><svg viewBox="0 0 ' + S + ' ' + S + '" role="img" aria-label="Położenie pozwoleń na budowę na ortofotomapie">' +
+      '<image href="' + orto + '" x="0" y="0" width="' + S + '" height="' + S + '" preserveAspectRatio="none"/>' +
+      '<rect class="pz-przyciemn" x="0" y="0" width="' + S + '" height="' + S + '"/>' +
+      '<circle class="pz-krag" cx="' + c + '" cy="' + c + '" r="' + r1.toFixed(1) + '"/><circle class="pz-krag" cx="' + c + '" cy="' + c + '" r="' + (r1 / 2).toFixed(1) + '"/>' +
+      '<text class="pz-opis" x="' + c + '" y="' + (c - r1 / 2 - 4).toFixed(1) + '">500 m</text><text class="pz-opis" x="' + c + '" y="' + (c - r1 - 4).toFixed(1) + '">1 km</text>' +
+      '<path class="pz-dzialka" d="' + obrys + '"/>' + pkt +
+      '<text class="pz-opis pz-n" x="' + (S - 12) + '" y="20">N ↑</text></svg>' +
+      '<figcaption>' + leg.map(function (l) { return '<span><i class="pz-' + l[0] + '"></i>' + l[1] + '</span>'; }).join('') +
+      '<span class="pz-zrodlo">numery jak na liście · małe kropki: przebudowy i instalacje · tło: ortofotomapa GUGiK</span></figcaption></figure>';
   }
 
   function rysujListeKontrolna() {

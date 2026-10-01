@@ -118,5 +118,27 @@
     });
   });
 
+  // Wejscie z linku "Zamow raport rozszerzony" (raport.html?kup=1): podpowiedz nad formularzem,
+  // a po wygenerowaniu raportu dla dzialki od razu okienko platnosci
+  var trybKup = /[?&]kup=1(&|$)/.test(location.search);
+  if (trybKup) {
+    document.addEventListener('DOMContentLoaded', function () {
+      var start = document.querySelector('#start .lead');
+      if (start && !document.querySelector('.kup-podpowiedz')) {
+        var p = document.createElement('div');
+        p.className = 'kup-podpowiedz';
+        p.innerHTML = '<strong>Zamówienie raportu rozszerzonego (69 zł).</strong> Wpisz identyfikator działki albo wskaż ją na mapie i kliknij „Generuj raport” - zaraz potem otworzy się płatność (BLIK, karta, przelew).';
+        start.parentNode.insertBefore(p, start.nextSibling);
+      }
+    });
+    var otwarto = false;
+    document.addEventListener('gruntowo:dzialka', function (e) {
+      var id = e.detail && e.detail.id;
+      if (!id || otwarto || !document.querySelector('[data-kup-raport]')) return;
+      otwarto = true;
+      setTimeout(function () { kup(id); }, 1200);
+    });
+  }
+
   window.GruntowoPlatnosc = { kup: kup, sprawdz: sprawdz, zamowienieDla: zamowienieDla, esc: esc, logoPayU: logoPayU };
 })();

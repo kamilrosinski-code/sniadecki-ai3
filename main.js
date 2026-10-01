@@ -28,6 +28,11 @@
         '#konsult-modal p{font-size:.88rem;color:#8a9a93;margin:0 0 1rem}#konsult-modal label{display:block;font-size:.78rem;color:#8a9a93;margin:.6rem 0 .25rem}' +
         '#konsult-modal input{width:100%;box-sizing:border-box;background:#1a1c17;border:1px solid #2a2c26;border-radius:8px;color:#f2f0eb;padding:.65rem .75rem;font:inherit}' +
         '#konsult-modal button[type=submit]{margin-top:1.1rem;width:100%;background:#c9a96e;color:#14181a;border:0;border-radius:8px;padding:.8rem;font-weight:600;font:inherit;cursor:pointer}' +
+        '#konsult-modal .km-mapa-btn{margin-top:.5rem;background:none;border:0;color:#c9a96e;font:inherit;font-size:.8rem;text-decoration:underline;cursor:pointer;padding:0}' +
+        '#konsult-modal .km-mapa{margin-top:.6rem;border:1px solid #2a2c26;border-radius:8px;overflow:hidden;flex-shrink:0}#konsult-modal .km-mapa-btn{flex-shrink:0}' +
+        '#konsult-modal .km-szukaj{display:flex;gap:.4rem;padding:.4rem}#konsult-modal .km-szukaj input{flex:1;min-width:0;width:auto}' +
+        '#konsult-modal .km-szukaj button{background:#c9a96e;color:#14181a;border:0;border-radius:6px;padding:0 .8rem;font:inherit;font-size:.8rem;cursor:pointer}' +
+        '#konsult-modal .km-mapa-el{height:260px}#konsult-modal .km-info{margin:0;padding:.45rem .6rem;font-size:.78rem;color:#8a9a93}#konsult-modal .km-info strong{color:#dfc090}' +
         '#konsult-modal .x{position:absolute;top:.6rem;right:.8rem;background:none;border:0;color:#8a9a93;font-size:1.6rem;cursor:pointer}#konsult-modal .msg{color:#ff9a7a;font-size:.85rem;min-height:1.2em;margin-top:.5rem}';
       document.head.appendChild(st);
       m = document.createElement('div'); m.id = 'konsult-modal';
@@ -38,21 +43,76 @@
         '<label>E-mail</label><input name="email" type="email" autocomplete="email" required>' +
         '<label>Telefon</label><input name="telefon" type="tel" autocomplete="tel">' +
         '<label>Numer działki lub adres (opcjonalnie)</label><input name="dzialka" placeholder="np. 302105_2.0009.222/8">' +
+        '<button type="button" class="km-mapa-btn">Nie znasz numeru? Wskaż działkę na mapie</button>' +
+        '<div class="km-mapa" hidden><div class="km-szukaj"><input type="text" placeholder="Miejscowość lub adres" autocomplete="off"><button type="button">Szukaj</button></div>' +
+        '<div class="km-mapa-el"></div><p class="km-info">Wyszukaj miejscowość, przybliż mapę i kliknij w działkę.</p></div>' +
         '<input name="strona_www" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">' +
         '<div class="msg" role="status"></div><button type="submit">Dalej - wybierz termin →</button></form>';
       document.body.appendChild(m);
       m.addEventListener('click', function (e) { if (e.target === m || e.target.classList.contains('x')) m.style.display = 'none'; });
+      // Wskazanie dzialki na mapie w okienku konsultacji (klik -> numer z ULDK do pola "dzialka")
+      let kmMapa = null, kmZnacznik = null;
+      m.querySelector('.km-mapa-btn').addEventListener('click', function () {
+        const box = m.querySelector('.km-mapa');
+        box.hidden = !box.hidden;
+        if (!box.hidden) setTimeout(function () { box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60);
+        if (box.hidden || kmMapa) { if (kmMapa) setTimeout(function () { kmMapa.invalidateSize(); }, 50); return; }
+        const el = box.querySelector('.km-mapa-el'), info = box.querySelector('.km-info'), pole = m.querySelector('input[name=dzialka]');
+        if (typeof L === 'undefined') { el.innerHTML = '<p style="padding:1rem;font-size:.8rem;color:#8a9a93">Mapa chwilowo niedostępna - wpisz miejscowość i ulicę w polu powyżej.</p>'; return; }
+        kmMapa = L.map(el, { center: [52.40, 16.92], zoom: 11 });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(kmMapa);
+        L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20 }).addTo(kmMapa);
+        const szukajPole = box.querySelector('.km-szukaj input');
+        const szukaj = function () {
+          const q = szukajPole.value.trim(); if (!q) return;
+          fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pl&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'pl' } })
+            .then(function (r) { return r.json(); })
+            .then(function (w) { if (w && w.length) kmMapa.setView([+w[0].lat, +w[0].lon], 17); else info.textContent = 'Nie znaleźliśmy tego miejsca - wpisz samą miejscowość.'; })
+            .catch(function () { info.textContent = 'Wyszukiwarka chwilowo nie działa - przesuń mapę ręcznie.'; });
+        };
+        box.querySelector('.km-szukaj button').addEventListener('click', szukaj);
+        szukajPole.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); szukaj(); } });
+        kmMapa.on('click', function (e) {
+          if (kmMapa.getZoom() < 15) { kmMapa.setView(e.latlng, 17); info.textContent = 'Teraz kliknij w swoją działkę.'; return; }
+          if (kmZnacznik) kmZnacznik.remove();
+          kmZnacznik = L.marker(e.latlng).addTo(kmMapa);
+          info.textContent = 'Ustalamy numer działki…';
+          fetch(ULDK_PROXY + '?xy=' + encodeURIComponent(e.latlng.lng.toFixed(6) + ',' + e.latlng.lat.toFixed(6)))
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (d && d.id) { pole.value = d.id; info.innerHTML = 'Wybrana działka: <strong>' + d.id + '</strong>'; }
+              else { pole.value = e.latlng.lat.toFixed(6) + ', ' + e.latlng.lng.toFixed(6); info.textContent = 'Nie ustaliliśmy numeru - zapisaliśmy współrzędne punktu.'; }
+            })
+            .catch(function () { pole.value = e.latlng.lat.toFixed(6) + ', ' + e.latlng.lng.toFixed(6); info.textContent = 'Zapisaliśmy współrzędne punktu - numer ustalimy sami.'; });
+        });
+        setTimeout(function () { kmMapa.invalidateSize(); }, 80);
+      });
       m.querySelector('form').addEventListener('submit', function (e) {
         e.preventDefault();
         const f = e.target, msg = f.querySelector('.msg'), btn = f.querySelector('button[type=submit]');
         const v = function (n) { return f.elements[n].value.trim(); };
         if (!v('imie') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('email'))) { msg.textContent = 'Podaj imię i poprawny e-mail.'; return; }
         btn.disabled = true; btn.textContent = 'Chwilka…';
+        // Kalendarz Zencal w NOWEJ karcie (otwarta od razu przy kliknieciu - inaczej przegladarka ja zablokuje);
+        // gruntowo.pl zostaje w tej karcie z podziekowaniem, wiec po rezerwacji klient wraca na strone
+        const okno = window.open('', '_blank');
+        if (okno) { try { okno.document.title = 'Wybór terminu - gruntowo.pl'; okno.document.body.innerHTML = '<p style="font:16px sans-serif;padding:2rem">Otwieramy kalendarz…</p>'; } catch (e2) {} }
         const dz = v('dzialka'), jestId = /^\d{6}_\d\./.test(dz);
         doCRM({ zrodlo: 'konsultacja', imie: v('imie'), email: v('email'), telefon: v('telefon'),
           dzialka: jestId ? dz : '', miejscowosc: jestId ? '' : dz, temat: 'Konsultacja z ekspertem - wybór terminu w Zencal',
           strona_www: v('strona_www'), strona: location.href })
-          .then(function () { window.location.href = ZENCAL_URL; });   // w Zencal i tak wybiera termin, nawet gdy CRM nie odpowie
+          .then(function () {   // w Zencal i tak wybiera termin, nawet gdy CRM nie odpowie
+            if (!okno || okno.closed) { window.location.href = ZENCAL_URL; return; }   // blokada okien - jak dawniej
+            okno.location.href = ZENCAL_URL;
+            f.innerHTML = '<button type="button" class="x" aria-label="Zamknij">×</button>' +
+              '<div style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:#c9a96e">Konsultacja z ekspertem · 499 zł</div>' +
+              '<h3>Dziękujemy, ' + v('imie').split(' ')[0].replace(/[<>&"]/g, '') + '!</h3>' +
+              '<p>Kalendarz otworzył się w nowej karcie - wybierz tam dogodny termin. Po rezerwacji możesz zamknąć tamtą kartę i wrócić tutaj.</p>' +
+              '<p>Potwierdzenie spotkania przyjdzie na e-mail. Przed rozmową przygotujemy analizę Twojej działki.</p>' +
+              '<a href="' + ZENCAL_URL + '" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:1rem;background:#c9a96e;color:#14181a;border-radius:8px;padding:.8rem;font-weight:600;text-decoration:none">Otwórz kalendarz ponownie</a>' +
+              '<button type="button" class="km-wroc" style="display:block;width:100%;margin-top:.6rem;background:none;border:1px solid #2a2c26;border-radius:8px;color:#f2f0eb;padding:.7rem;font:inherit;cursor:pointer">Wróć na stronę</button>';
+            f.querySelector('.km-wroc').addEventListener('click', function () { m.style.display = 'none'; });
+          });
       });
     }
     m.style.display = 'flex';
@@ -75,6 +135,77 @@
       setTimeout(function () { const i = document.getElementById('s-miasto'); if (i && i.offsetParent) i.focus({ preventScroll: true }); }, 600);
     });
   });
+
+  // ===== HERO: najazd kamery + lupa nad dzialka; wyszukiwarka wysuwa sie po chwili ruchu kursorem =====
+  (function () {
+    const hero = document.querySelector('.hero');
+    const sb = document.getElementById('search-box');
+    if (!hero || !sb) return;
+    const bg = hero.querySelector('.hero-bg');
+    const malo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const mysz = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    let wysunieta = false;
+    const wysun = function () {
+      if (wysunieta) return; wysunieta = true;
+      hero.classList.remove('hero-czeka'); sb.classList.add('wysuwa');
+    };
+    // Bez myszy (telefon), przy ograniczonym ruchu albo gdy ktos wchodzi z linku do wyszukiwarki - od razu
+    if (!mysz || malo || /#szukaj|#search-box/.test(location.hash)) { wysun(); }
+    else {
+      hero.classList.add('hero-czeka');
+      setTimeout(wysun, 6000);                       // zabezpieczenie: najpozniej po 6 s
+      window.addEventListener('scroll', function () { if (window.scrollY > 40) wysun(); }, { passive: true });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Tab') wysun(); });
+      document.querySelectorAll('[data-do-wyszukiwarki]').forEach(function (a) { a.addEventListener('click', wysun); });
+    }
+    if (!mysz || malo || !bg) return;
+
+    // Tlo w osobnej warstwie (do skalowania); lupa z tym samym zdjeciem
+    hero.classList.add('hero-ruch');
+    const lupa = document.createElement('div');
+    lupa.className = 'hero-lupa';
+    lupa.innerHTML = '<svg viewBox="0 0 230 230" aria-hidden="true"><line class="lp-krzyz" x1="115" y1="96" x2="115" y2="106"/><line class="lp-krzyz" x1="115" y1="124" x2="115" y2="134"/>' +
+      '<line class="lp-krzyz" x1="96" y1="115" x2="106" y2="115"/><line class="lp-krzyz" x1="124" y1="115" x2="134" y2="115"/>' +
+      '<polygon class="lp-dz" points="72,92 156,78 168,146 84,160"/>' +
+      '<circle class="lp-pkt" cx="72" cy="92" r="2.6"/><circle class="lp-pkt" cx="156" cy="78" r="2.6"/><circle class="lp-pkt" cx="168" cy="146" r="2.6"/><circle class="lp-pkt" cx="84" cy="160" r="2.6"/>' +
+      '<text class="lp-opis" x="115" y="188">TWOJA DZIAŁKA</text></svg>';
+    hero.insertBefore(lupa, hero.querySelector('.hero-content'));
+    const R = 115, ZOOM = 1.9;
+    let iw = 1800, ih = 1013;
+    const im = new Image(); im.onload = function () { iw = im.naturalWidth; ih = im.naturalHeight; }; im.src = 'hero.jpeg';
+
+    let cel = null, poz = null, ruch = 0, ostatni = null, rafId = 0;
+    const rysuj = function () {
+      rafId = 0;
+      if (!cel) return;
+      poz = poz ? { x: poz.x + (cel.x - poz.x) * 0.22, y: poz.y + (cel.y - poz.y) * 0.22 } : { x: cel.x, y: cel.y };
+      const W = hero.clientWidth, H = hero.clientHeight;
+      // obraz "cover" z pozycja center 40%, dodatkowo przeskalowany najazdem tla
+      const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s, x0 = (W - w) / 2, y0 = (H - h) * 0.4;
+      const zb = 1.06, ox = cel.x, oy = cel.y;                 // skala i srodek najazdu tla
+      const px = ox + (poz.x - ox) / zb, py = oy + (poz.y - oy) / zb;   // punkt zdjecia pod kursorem
+      lupa.style.left = poz.x + 'px'; lupa.style.top = poz.y + 'px';
+      lupa.style.backgroundSize = (w * ZOOM) + 'px ' + (h * ZOOM) + 'px';
+      lupa.style.backgroundPosition = (-((px - x0) * ZOOM - R)) + 'px ' + (-((py - y0) * ZOOM - R)) + 'px';
+      if (Math.abs(cel.x - poz.x) > 0.5 || Math.abs(cel.y - poz.y) > 0.5) rafId = requestAnimationFrame(rysuj);
+    };
+    hero.addEventListener('mousemove', function (e) {
+      const r = hero.getBoundingClientRect();
+      cel = { x: e.clientX - r.left, y: e.clientY - r.top };
+      bg.style.transformOrigin = (cel.x / r.width * 100).toFixed(1) + '% ' + (cel.y / r.height * 100).toFixed(1) + '%';
+      bg.style.transform = 'scale(1.06)';
+      // lupa tylko nad "polem" - nad formularzem by przeszkadzala
+      const nadFormularzem = e.target.closest && e.target.closest('.search-box, a, button, input, .hero-stats');
+      lupa.classList.toggle('widoczna', !nadFormularzem);
+      if (ostatni) ruch += Math.hypot(e.clientX - ostatni.x, e.clientY - ostatni.y);
+      ostatni = { x: e.clientX, y: e.clientY };
+      if (!wysunieta && ruch > 600) setTimeout(wysun, 400);   // "po chwili" przesuwania kursora
+      if (!rafId) rafId = requestAnimationFrame(rysuj);
+    });
+    hero.addEventListener('mouseleave', function () {
+      lupa.classList.remove('widoczna'); bg.style.transform = 'scale(1)'; ostatni = null;
+    });
+  })();
 
   // Pośrednik ULDK - ustala identyfikator działki z współrzędnych pinezki (ten sam co w raport.js)
   const ULDK_PROXY = 'https://script.google.com/macros/s/AKfycbzMevjlU6LD5YKp37spIFdNf8lEfkUWL03PuK8N2Ey8HqBBjBiPgvJASVGQP1yLp_Tf/exec';
@@ -195,10 +326,14 @@
         zoomControl: true,
         attributionControl: true
       });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap'
       }).addTo(leafletMap);
+      // Te same przelaczniki co w mapie raportu: ortofotomapa GUGiK i granice dzialek (KIEG, od duzego przyblizenia)
+      const orto = L.tileLayer.wms('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution', { layers: 'Raster', format: 'image/jpeg', maxZoom: 20, attribution: 'GUGiK' });
+      const dzialki = L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20 }).addTo(leafletMap);
+      L.control.layers({ 'Mapa': osm, 'Ortofotomapa': orto }, { 'Granice działek': dzialki }, { collapsed: false }).addTo(leafletMap);
 
       // Zapisuj współrzędne środka przy każdym przesunięciu mapy
       const aktualizujWsp = function () {
@@ -226,7 +361,7 @@
       .then(function (wyniki) {
         if (wyniki && wyniki.length) {
           const lat = parseFloat(wyniki[0].lat), lng = parseFloat(wyniki[0].lon);
-          leafletMap.setView([lat, lng], 15);
+          leafletMap.setView([lat, lng], 16);
         }
       })
       .catch(function () { /* zostaje domyślny widok */ })

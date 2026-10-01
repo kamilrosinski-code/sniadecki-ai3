@@ -20,7 +20,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body>
 
@@ -57,6 +57,8 @@
       <p class="hero-eyebrow" data-cms="hero_eyebrow">Pokaż nam swój grunt, a my powiemy, co możesz z nim zrobić!</p>
       <h1 class="hero-headline" data-cms="hero_headline">Grunt pod<br /><em>właściwą decyzję</em></h1>
       <p class="hero-sub" data-cms="hero_sub">Masz grunt? Wypełnij formularz i dowiedz się o jego potencjale całkowicie bezpłatnie! W przypadku najciekawszych nieruchomości możesz otrzymać darmową konsultację naszego eksperta.</p>
+
+      <p class="hero-podpowiedz" aria-hidden="true">Przesuń kursor po polu</p>
 
       <!-- WYSZUKIWARKA - jedna prosta ścieżka -->
       <div class="search-box" id="search-box">
@@ -212,7 +214,7 @@
           <div class="src-panel src-panel-2">
             <div class="sp-head">ANALIZA · RAPORT ROZSZERZONY</div>
             <div class="sp-row"><span>Scoring inwestycyjny</span><b>84/100</b></div>
-            <div class="sp-row"><span>Chłonność</span><b>MN/MW</b></div>
+            <div class="sp-row"><span>Sieci przy działce</span><b>woda · prąd · gaz</b></div>
             <div class="sp-row"><span>Przeznaczenie (MPZP)</span><b>zabudowa mieszkaniowa</b></div>
             <div class="sp-row"><span>Ceny w okolicy</span><b>mediana 480 zł/m²</b></div>
             <div class="sp-row"><span>Ograniczenia</span><b>brak istotnych</b></div>
@@ -222,10 +224,10 @@
           <div class="src-panel src-panel-3">
             <div class="sp-head">ANALIZA · KONSULTACJA EKSPERTA</div>
             <div class="sp-row"><span>Szacowana wartość</span><b>620 000 - 710 000 zł</b></div>
-            <div class="sp-row"><span>Chłonność działki</span><b>~ 12 lokali (MN) / 34 (MW)</b></div>
+            <div class="sp-row"><span>Szacowana chłonność</span><b>~ 12 lokali (MN) / 34 (MW)</b></div>
             <div class="sp-row"><span>Charakter zabudowy</span><b>szeregowa / wielorodzinna</b></div>
             <div class="sp-row"><span>Potencjał sprzedażowy</span><b>wysoki</b></div>
-            <div class="sp-row"><span>Sprzedaż off-market</span><b>baza inwestorów</b></div>
+            <div class="sp-row"><span>Potencjalni kupcy</span><b>weryfikacja w bazie inwestorów</b></div>
             <div class="sp-row sp-hi"><span>Rekomendacja</span><b>★ przed wystawieniem</b></div>
           </div>
           <!-- Model 4: wsparcie kompleksowe -->
@@ -271,8 +273,9 @@
             <li>Werdykt inwestycyjny modelu analitycznego</li>
             <li>Analiza korzyści i zagrożeń</li>
             <li>Ograniczenia formalnoprawne i uzbrojenie</li>
+            <li>Pozwolenia na budowę w okolicy</li>
           </ul>
-          <a href="#kontakt" class="ofr-btn">Zamów raport rozszerzony</a>
+          <a href="raport.html?kup=1" class="ofr-btn">Zamów raport rozszerzony - 69 zł</a>
           <a href="raport-rozszerzony.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1" target="_blank" rel="noopener" class="ofr-haslo-link">Zobacz przykładowy raport rozszerzony →</a>
           <a href="#haslo" class="ofr-haslo-link">Masz hasło? Odblokuj raport za darmo →</a>
         </div>
@@ -286,9 +289,9 @@
           <ul class="ofr-lista">
             <li><strong>Wszystko z raportu rozszerzonego</strong></li>
             <li>Indywidualna konsultacja z ekspertem (nie chatbot)</li>
-            <li>Dobór formy przekształcenia lub adaptacji</li>
-            <li>Propozycje formy sprzedaży i doradztwo projektowe</li>
-            <li>Dostęp do naszej bazy inwestorów</li>
+            <li>Prezentacja szacowanej chłonności zabudowy na działce</li>
+            <li>Propozycje formy sprzedaży, przekształcenia lub adaptacji</li>
+            <li>Weryfikacja potencjalnych kupców w naszej bazie inwestorów</li>
           </ul>
           <a href="#kontakt" class="ofr-btn ofr-btn-premium" data-zencal>Umów konsultację</a>
         </div>
@@ -476,6 +479,6 @@
   </footer>
 
   <script src="haslo.js?v=20260925"></script>
-  <script src="main.js?v=21"></script>
+  <script src="main.js?v=27"></script>
 </body>
 </html>

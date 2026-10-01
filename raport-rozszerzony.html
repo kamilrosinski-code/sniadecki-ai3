@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="raport-style.css?v=20261002b" />
-<link rel="stylesheet" href="raport-rozszerzony.css?v=20261002b" />
+<link rel="stylesheet" href="raport-style.css?v=20261002k" />
+<link rel="stylesheet" href="raport-rozszerzony.css?v=20261002k" />
 <link rel="stylesheet" href="raport-druk.css?v=20260929" />
 </head>
 <body>
@@ -27,7 +27,7 @@
       <button type="submit" class="btn btn-gold">Otwórz raport</button>
     </div>
     <div class="haslo-msg" data-haslo-msg role="status" aria-live="polite"></div>
-    <p class="bramka-alt">Nie masz hasła? <a href="raport.html">Wygeneruj raport bezpłatny</a> albo <a href="index.html#kontakt">zamów raport rozszerzony</a>.</p>
+    <p class="bramka-alt">Nie masz hasła? <a href="raport.html">Wygeneruj raport bezpłatny</a> albo <a href="raport.html?kup=1">kup raport rozszerzony</a>.</p>
   </form>
 </div>
 
@@ -82,7 +82,7 @@
       <p class="cf-note">Podając dane akceptujesz przetwarzanie ich zgodnie z <a href="klauzula.html" target="_blank" rel="noopener">klauzulą informacyjną</a>.</p>
     </div>
     <div style="margin-top:1rem;">
-      <button class="btn" id="btn-pokazmape" style="font-size:.75rem;">Nie znasz identyfikatora? Wskaz działkę na mapie</button>
+      <button class="btn" id="btn-pokazmape" style="font-size:.75rem;">Nie znasz identyfikatora? Wskaż działkę na mapie</button>
     </div>
     <div id="pickmap"></div>
     <div class="examples">
@@ -146,7 +146,7 @@
       </div>
       <div class="wk wk-uwaga"><div class="wk-tytul"><span class="wk-ikona">!</span>Do sprawdzenia przed decyzją</div><ul data-w="uwagi"><li class="wk-pusto">zbieramy dane…</li></ul></div>
       <nav class="spis" aria-label="Spis sekcji">
-        <a href="#sec-planowanie">Planowanie</a><a href="#sec-przyroda">Ochrona przyrody</a><a href="#sec-powodz">Powódź</a><a href="#sec-media">Media</a><a href="#sec-teren">Teren</a><a href="#sec-uzytki">Użytki i klasy</a><a href="#sec-otoczenie">Droga i otoczenie</a><a href="#sec-lista">Lista kontrolna</a><a href="#werdykt-dol">Werdykt końcowy</a>
+        <a href="#sec-planowanie">Planowanie</a><a href="#sec-przyroda">Ochrona przyrody</a><a href="#sec-powodz">Powódź</a><a href="#sec-media">Media</a><a href="#sec-teren">Teren</a><a href="#sec-uzytki">Użytki i klasy</a><a href="#sec-otoczenie">Droga i otoczenie</a><a href="#sec-pozwolenia">Pozwolenia w okolicy</a><a href="#sec-lista">Lista kontrolna</a><a href="#werdykt-dol">Werdykt końcowy</a>
       </nav>
     </div>
 
@@ -304,6 +304,7 @@
     <div class="sec sec-roz" id="sec-teren">
       <div class="sec-head"><span class="sec-num">12</span><span class="sec-title">Ukształtowanie terenu</span><span class="tag tag-real">NMT &middot; GUGiK</span></div>
       <div class="status-grid" id="teren-karty"><div class="roz-lad">Pobieramy wysokości z numerycznego modelu terenu…</div></div>
+      <div id="teren-wizual"></div>
     </div>
 
     <!-- 13 UŻYTKI -->
@@ -320,9 +321,16 @@
       <p class="mapbox-cap" style="margin-top:.75rem;">Odległości w linii prostej od środka działki, w promieniu 1,5 km &middot; dane © współtwórcy OpenStreetMap (ODbL)</p>
     </div>
 
-    <!-- 15 LISTA KONTROLNA -->
+    <!-- 15 POZWOLENIA NA BUDOWĘ -->
+    <div class="sec sec-roz" id="sec-pozwolenia">
+      <div class="sec-head"><span class="sec-num">15</span><span class="sec-title">Pozwolenia na budowę w okolicy</span><span class="tag tag-real">GUNB &middot; RWDZ</span></div>
+      <p class="roz-intro">Co się buduje w promieniu 1 km - nowe domy, bloki, usługi i hale z ostatnich 3 lat. Dużo nowych domów to znak, że okolica jest poszukiwana; planowana hala tuż obok może obniżyć atrakcyjność działki.</p>
+      <div class="roz-wynik" id="pozwolenia-wynik"><span class="roz-lad">Sprawdzamy rejestr pozwoleń na budowę…</span></div>
+    </div>
+
+    <!-- 16 LISTA KONTROLNA -->
     <div class="sec sec-roz" id="sec-lista">
-      <div class="sec-head"><span class="sec-num">15</span><span class="sec-title">Lista kontrolna przed zakupem</span><span class="tag tag-analiza">do sprawdzenia</span></div>
+      <div class="sec-head"><span class="sec-num">16</span><span class="sec-title">Lista kontrolna przed zakupem</span><span class="tag tag-analiza">do sprawdzenia</span></div>
       <p class="roz-intro">Tych informacji nie da się sprawdzić automatycznie - warto je potwierdzić u właściciela, w urzędzie gminy lub u notariusza.</p>
       <ul class="lista-kontrolna" id="lista-kontrolna"></ul>
       <div class="pdf-pasek">
@@ -334,14 +342,14 @@
       </div>
     </div>
 
-    <!-- 16 WERDYKT KOŃCOWY -->
+    <!-- 17 WERDYKT KOŃCOWY -->
     <div class="werdykt werdykt-dol" id="werdykt-dol">
       <div class="werdykt-glowa">
         <div class="werdykt-wynik">
           <div class="werdykt-gauge" data-w="gauge"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="g-tlo"/><circle cx="60" cy="60" r="52" class="g-pasek" data-w="pasek"/></svg><div class="werdykt-liczba"><span data-w="punkty">-</span><small>/100</small></div></div>
         </div>
         <div class="werdykt-opis">
-          <div class="werdykt-eyebrow"><span class="sec-num">16</span> Werdykt końcowy</div>
+          <div class="werdykt-eyebrow"><span class="sec-num">17</span> Werdykt końcowy</div>
           <h2 class="werdykt-tytul" data-w="tytul">Analizujemy działkę…</h2>
           <p class="werdykt-lead" data-w="lead"></p>
           <div class="werdykt-postep" data-w="postep"></div>
@@ -358,7 +366,7 @@
     <!-- CTA - konsultacja z ekspertem -->
     <div class="premium-cta">
       <h3>Chcesz omówić wynik z ekspertem?</h3>
-      <p>Model analityczny wskazuje plusy i ryzyka. Ekspert oceni, co realnie da się zrobić z tą działką - przeznaczenie, chłonność, formę sprzedaży lub przekształcenia.</p>
+      <p>Model analityczny wskazuje plusy i ryzyka. Ekspert omówi z Tobą przeznaczenie działki, przedstawi szacowaną chłonność zabudowy i możliwe formy sprzedaży lub przekształcenia.</p>
       <div class="warianty warianty-jeden">
         <div class="wariant wariant-premium">
           <div class="wariant-badge">★ z ekspertem</div>
@@ -367,9 +375,9 @@
           <ul class="wariant-lista">
             <li><strong>Ten raport rozszerzony</strong> jako punkt wyjścia</li>
             <li>Indywidualna ocena potencjału inwestycyjnego gruntu</li>
+            <li>Prezentacja szacowanej chłonności zabudowy na działce</li>
             <li>Propozycje formy sprzedaży (podział, sprzedaż całości, JV)</li>
-            <li>Doradztwo w kwestiach projektowych i chłonności</li>
-            <li>Znalezienie kupca w naszej własnej bazie inwestorów</li>
+            <li>Weryfikacja potencjalnych kupców działki w naszej bazie inwestorów</li>
           </ul>
           <a href="index.html?konsultacja=1" class="wariant-btn wariant-btn-premium" data-konsultacja>Umów konsultację z ekspertem</a>
         </div>
@@ -377,13 +385,13 @@
     </div>
 
     <div class="footer-rep">
-      Raport prezentuje dane rzeczywiste z rejestrów publicznych GUGiK: geometria, powierzchnia i lokalizacja (ULDK), podgląd planów (KIMP) oraz cen transakcyjnych (KICN/RCN). Werdykt, plusy i minusy wyznacza automatyczny model na podstawie danych GUGiK (ULDK, KIMPZP, POG, KIUT, EGiB, NMT), Wod Polskich (ISOK), GDOS i OpenStreetMap - nie zastępuje wypisu i wyrysu z planu, decyzji WZ ani operatu szacunkowego. Dane mogą różnic się od stanu faktycznego - przed decyzja inwestycyjna zweryfikuj je w gminie i wypisie z rejestru gruntów. gruntowo.pl &middot; <span id="rep-date2"></span>
+      Raport prezentuje dane rzeczywiste z rejestrów publicznych GUGiK: geometria, powierzchnia i lokalizacja (ULDK), podgląd planów (KIMP) oraz cen transakcyjnych (KICN/RCN). Werdykt, plusy i minusy wyznacza automatyczny model na podstawie danych GUGiK (ULDK, KIMPZP, POG, KIUT, EGiB, NMT), Wod Polskich (ISOK), GDOS i OpenStreetMap - nie zastępuje wypisu i wyrysu z planu, decyzji WZ ani operatu szacunkowego. Zakres danych zależy od tego, co udostępniają urzędy - część gmin i powiatów nie publikuje w usługach krajowych planów, sieci uzbrojenia czy użytków gruntowych. Nie odpowiadamy za takie braki; dbamy o to, żeby danych było jak najwięcej i żeby odpowiadały stanowi faktycznemu, a brakujące informacje raport wyraźnie oznacza. Przed decyzją inwestycyjną zweryfikuj dane w gminie i w wypisie z rejestru gruntów. gruntowo.pl &middot; <span id="rep-date2"></span>
     </div>
   </div>
 </section>
 
 <script src="haslo.js?v=20260925"></script>
-<script src="platnosc.js?v=20260930b"></script>
-<script src="raport-rozszerzony.js?v=20261002b"></script>
+<script src="platnosc.js?v=20261002k"></script>
+<script src="raport-rozszerzony.js?v=20261002k"></script>
 </body>
 </html>

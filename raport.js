@@ -56,7 +56,7 @@
       'Nakładamy plan zagospodarowania (MPZP)...',
       'Sprawdzamy ceny transakcyjne w okolicy...',
       'Analizujemy uzbrojenie terenu i sieci...',
-      'Sprawdzamy formy ochrony przyrody i zabytki...',
+      'Sprawdzamy formy ochrony przyrody...',
       'Składamy raport w całość...'
     ];
     let i = 0;
@@ -91,14 +91,61 @@
   document.querySelectorAll('.chip').forEach(function (c) {
     c.addEventListener('click', function () { input.value = c.getAttribute('data-id'); input.focus(); });
   });
+  // Wskazanie dzialki na mapie: Leaflet + ortofoto/OSM + granice dzialek (KIEG); klik -> identyfikator z ULDK
   $('btn-pokazmape').addEventListener('click', function () {
     const m = $('pickmap');
     m.classList.toggle('show');
-    if (m.classList.contains('show') && !m.dataset.loaded) {
-      m.innerHTML = '<iframe src="https://mapy.geoportal.gov.pl/imap/Imgp_2.html?locale=pl&gpmap=gp0" title="Geoportal"></iframe>';
-      m.dataset.loaded = '1';
-    }
+    if (m.classList.contains('show') && !m.dataset.loaded) { m.dataset.loaded = '1'; mapaWyboru(m); }
   });
+  function wczytajLeaflet() {
+    if (window.L) return Promise.resolve();
+    return new Promise(function (ok, nie) {
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
+      const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+      s.onload = function () { ok(); }; s.onerror = function () { nie(new Error('leaflet')); }; document.head.appendChild(s);
+    });
+  }
+  function mapaWyboru(box) {
+    box.innerHTML = '<div class="pm-pasek"><input id="pm-szukaj" type="text" placeholder="Miejscowość lub adres, np. Luboń, ul. Żabikowska" autocomplete="off" />' +
+      '<button type="button" class="btn btn-gold" id="pm-szukaj-btn">Szukaj</button></div>' +
+      '<div id="pm-mapa"></div><div class="pm-info" id="pm-info">Wyszukaj miejscowość, przybliż mapę i <strong>kliknij w swoją działkę</strong> - jej numer wpiszemy do formularza.</div>';
+    wczytajLeaflet().then(function () {
+      const mapa = L.map('pm-mapa', { center: [52.11, 19.42], zoom: 6 });
+      const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(mapa);
+      const orto = L.tileLayer.wms('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution', { layers: 'Raster', format: 'image/jpeg', maxZoom: 20, attribution: 'GUGiK' });
+      const dzialki = L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20 }).addTo(mapa);
+      L.control.layers({ 'Mapa': osm, 'Ortofotomapa': orto }, { 'Granice działek': dzialki }, { collapsed: false }).addTo(mapa);
+      let znacznik = null;
+      const info = $('pm-info');
+      const szukaj = function () {
+        const q = $('pm-szukaj').value.trim(); if (!q) return;
+        fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pl&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'pl' } })
+          .then(function (r) { return r.json(); })
+          .then(function (w) { if (w && w.length) mapa.setView([+w[0].lat, +w[0].lon], 17); else info.textContent = 'Nie znaleźliśmy tego miejsca - spróbuj wpisać samą miejscowość.'; })
+          .catch(function () { info.textContent = 'Wyszukiwarka chwilowo nie działa - przesuń i przybliż mapę ręcznie.'; });
+      };
+      $('pm-szukaj-btn').addEventListener('click', szukaj);
+      $('pm-szukaj').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); szukaj(); } });
+      mapa.on('click', function (e) {
+        if (mapa.getZoom() < 15) { info.innerHTML = 'Przybliż mapę bardziej (widoczne granice działek), a potem kliknij w działkę.'; mapa.setView(e.latlng, 17); return; }
+        if (znacznik) znacznik.remove();
+        znacznik = L.marker(e.latlng).addTo(mapa);
+        info.textContent = 'Ustalamy numer działki…';
+        fetch(ULDK_PROXY + '?xy=' + encodeURIComponent(e.latlng.lng.toFixed(6) + ',' + e.latlng.lat.toFixed(6)))
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!d || !d.id) { info.textContent = (d && d.error) || 'W tym miejscu nie znaleźliśmy działki - kliknij dokładniej.'; return; }
+            input.value = d.id;
+            info.innerHTML = 'Wybrana działka: <strong>' + d.id + '</strong>. Podaj e-mail i kliknij „Generuj raport”.';
+            const em = $('r-email'); if (em) { em.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(function () { em.focus({ preventScroll: true }); }, 500); }
+          })
+          .catch(function () { info.textContent = 'Nie udało się połączyć z rejestrem działek - spróbuj za chwilę.'; });
+      });
+      setTimeout(function () { mapa.invalidateSize(); }, 200);
+    }).catch(function () {
+      $('pm-mapa').innerHTML = '<p class="pm-blad">Mapa chwilowo niedostępna. Identyfikator działki znajdziesz na <a href="https://mapy.geoportal.gov.pl" target="_blank" rel="noopener">geoportal.gov.pl</a> po kliknięciu w działkę.</p>';
+    });
+  }
 
   btnGen.addEventListener('click', function () { generuj(false); });
   input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { const em = $('r-email'); if (em) em.focus(); } });
@@ -1160,7 +1207,8 @@
     let done = false;
     const zakoncz = function () { if (!done) { done = true; if (gotowe) gotowe(); } };
     img.onerror = function () {
-      if (proba < 2) { proba++; const self = this; setTimeout(function () { self.src = warstwaUrl + '&_r=' + Date.now(); }, 800 * Math.pow(2, proba) + Math.random() * 400); }
+      if (this.dataset.lokalna) return;
+      if (proba < 2) { proba++; const self = this; setTimeout(function () { if (!self.dataset.lokalna) self.src = warstwaUrl + '&_r=' + Date.now(); }, 800 * Math.pow(2, proba) + Math.random() * 400); }
       else { this.style.display = 'none'; zakoncz(); }
     };
     img.onload = function () { this.style.display = 'block'; zakoncz(); };
@@ -1243,6 +1291,77 @@
   // Uslugi WMS maja CORS (odczyt wprost ze strony); szczegoly aktu (uchwala, PDF) - przez nasz serwer (plan-info.php).
   const URL_RU = 'https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/';
   const URL_PLAN_INFO = 'https://sniadecki-development.pl/gruntowo-api/plan-info.php';
+  // MeSIP (metropolia poznanska): gminy, ktore publikuja plany tylko tam - [lon min, lat min, lon max, lat max]
+  const URL_MESIP = 'https://sniadecki-development.pl/gruntowo-api/mesip.php';
+  // + Poznan (SIP GEOPOZ: funkcje terenow wszystkich planow miasta)
+  const MESIP_OBSZARY = [[16.8340, 52.3172, 16.9108, 52.3606], [16.9570, 52.4442, 17.1050, 52.5690], [16.7300, 52.2900, 17.0750, 52.5100]];
+  // Mapy planow z geoportali lokalnych (gdy KIMPZP nie ma planu albo ma sam zasieg)
+  //  xyz: kafelki 1024 px w EPSG:3857 (MeSIP, z CORS) skladane na kanwie; wms: zwykly GetMap
+  const MAPY_LOKALNE = {
+    'Luboń': { typ: 'xyz', kafel: 1024, zrodlo: 'MeSIP (geoportal Lubonia)', warstwy: [
+      'https://geoportal.mesip.pl/mapproxy/apps/lubon/5/mapproxy/wmts/lubon_um_mpzp_przeznaczenie_os_czasu_12d89662_56ac_4ad2_bd4e_8a06a7950b1e/webmercator/{z}/{x}/{y}.png',
+      'https://geoportal.mesip.pl/mapproxy/apps/lubon/5/mapproxy/wmts/lubon_um_mpzp_granice_os_czasu_ac6f1771_5641_4a6b_895d_98679af350c6/webmercator/{z}/{x}/{y}.png'] },
+    'Czerwonak': { typ: 'xyz', kafel: 1024, zrodlo: 'MeSIP (geoportal Czerwonaka)', warstwy: [
+      'https://geoportal.mesip.pl/mapproxy/apps/gmina_czerwonak/20/mapproxy/wmts/czerwonak_ug_mpzp_przeznaczenie_d726ce89_30fb_44fd_8bcd_6606d808b6f0/webmercator/{z}/{x}/{y}.png',
+      'https://geoportal.mesip.pl/mapproxy/apps/gmina_czerwonak/20/mapproxy/wmts/czerwonak_ug_mpzp_granice_d1d4ead7_3082_4612_a1d4_33b79c05c3bd/webmercator/{z}/{x}/{y}.png'] },
+    'Poznań': { typ: 'wms', zrodlo: 'SIP Poznania (GEOPOZ)', url: 'https://wms2.geopoz.poznan.pl/geoserver/ows',
+      warstwy: 'mpzp_poznan:mpzp_funkcje,mpzp_poznan:mpzp_linie_rozgr,mpzp_poznan:mpzp_linie_zbudowy,mpzp_poznan:mpzp_obowiazujace' }
+  };
+  function mapaPlanuLokalna(cfg, bb, wh) {
+    if (cfg.typ === 'wms') return Promise.resolve(cfg.url + '?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&TRANSPARENT=true&LAYERS=' + cfg.warstwy +
+      '&STYLES=' + cfg.warstwy.split(',').map(function () { return ''; }).join(',') + '&WIDTH=' + wh.W + '&HEIGHT=' + wh.H + '&BBOX=' + bb.join(','));
+    const W = wh.W, H = wh.H, latS = (bb[1] + bb[3]) / 2;
+    const mpp = (bb[2] - bb[0]) * 111320 * Math.cos(latS * Math.PI / 180) / W;
+    const z = Math.max(12, Math.min(19, Math.round(Math.log2(156543.03392 * Math.cos(latS * Math.PI / 180) / (cfg.kafel / 256) / mpp))));
+    const n = Math.pow(2, z);
+    const tx = function (lon) { return (lon + 180) / 360 * n; };
+    const ty = function (lat) { const r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n; };
+    const lat = function (y) { const m = Math.PI - 2 * Math.PI * y / n; return 180 / Math.PI * Math.atan(0.5 * (Math.exp(m) - Math.exp(-m))); };
+    const x0 = Math.floor(tx(bb[0])), x1 = Math.floor(tx(bb[2])), y0 = Math.floor(ty(bb[3])), y1 = Math.floor(ty(bb[1]));
+    if ((x1 - x0 + 1) * (y1 - y0 + 1) > 16) return Promise.resolve(null);
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    const zadania = [];
+    cfg.warstwy.forEach(function (tpl) {
+      for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+        zadania.push(new Promise(function (ok) {
+          const im = new Image(); im.crossOrigin = 'anonymous';
+          im.onload = function () { ok({ im: im, x: x, y: y }); }; im.onerror = function () { ok(null); };
+          im.src = tpl.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+        }));
+      }
+    });
+    return Promise.all(zadania).then(function (kafle) {
+      let ile = 0;
+      kafle.forEach(function (k) {   // kolejnosc: najpierw przeznaczenie, potem granice (na wierzchu)
+        if (!k) return; ile++;
+        const X0 = (k.x / n * 360 - 180 - bb[0]) / (bb[2] - bb[0]) * W, X1 = ((k.x + 1) / n * 360 - 180 - bb[0]) / (bb[2] - bb[0]) * W;
+        const Y0 = (bb[3] - lat(k.y)) / (bb[3] - bb[1]) * H, Y1 = (bb[3] - lat(k.y + 1)) / (bb[3] - bb[1]) * H;
+        ctx.drawImage(k.im, X0, Y0, X1 - X0, Y1 - Y0);
+      });
+      if (!ile) return null;
+      try { return cv.toDataURL('image/png'); } catch (e) { return null; }
+    });
+  }
+  function nalozMapePlanu(ms, bbox, wh) {
+    const cfg = ms && MAPY_LOKALNE[ms.gmina];
+    const img = document.getElementById('map-mpzp');
+    if (!cfg || !img) return;
+    mapaPlanuLokalna(cfg, margines(bbox, 0.3), wh).then(function (u) {
+      if (!u) return;
+      img.dataset.lokalna = '1';
+      img.onerror = null;
+      img.onload = function () { this.style.display = 'block'; this.style.opacity = '0.82'; };
+      img.src = u;
+      const cap = img.parentElement && img.parentElement.nextElementSibling;
+      if (cap && cap.classList.contains('mapbox-cap')) cap.textContent = 'Plan miejscowy z geoportalu: ' + cfg.zrodlo + ' - symbole terenów i linie rozgraniczające';
+    }).catch(function () {});
+  }
+  function mesipPlan(lon, lat) {
+    if (!MESIP_OBSZARY.some(function (b) { return lon >= b[0] && lon <= b[2] && lat >= b[1] && lat <= b[3]; })) return Promise.resolve(null);
+    return fetch(URL_MESIP + '?lon=' + lon.toFixed(6) + '&lat=' + lat.toFixed(6)).then(function (r) { return r.json(); })
+      .then(function (d) { return d && d.ok ? d : null; }).catch(function () { return null; });
+  }
   const RU_STREFY = ['SW', 'SJ', 'SZ', 'SU', 'SH', 'SP', 'SR', 'SI', 'SN', 'SC', 'SG', 'SO', 'SK'];
   const RU_POG_MAPA = ['APP.POG.PrawnieWiazacyLubRealizowany']
     .concat(RU_STREFY.map(function (k) { return 'APP.POG.' + k + '.PrawnieWiazacyLubRealizowany'; }))
@@ -1442,8 +1561,12 @@
     const mapa = pokrycieMPZP(bbox, wkt).catch(function () { return null; });
     // 3) Rejestr Urbanistyczny - oficjalny rejestr aktow (tytul, status, data, link do uchwaly)
     const rej = ruFI('wms-mpzp', RU_MPZP_FI, c.lon, c.lat).catch(function () { return null; });
+    // 4) MeSIP - gminy metropolii poznanskiej, ktore nie przekazaly planow do rejestrow krajowych (np. Lubon)
+    const ms = mesipPlan(c.lon, c.lat);
 
-    Promise.all([opis, mapa, rej]).then(function (w) {
+    Promise.all([opis, mapa, rej, ms]).then(function (w) {
+      const mesip = w[3];
+      if (mesip) nalozMapePlanu(mesip, bbox, wh);
       const html = w[0], pokrycie = w[1];     // pokrycie: % dzialki pod planem (null = nie udalo sie)
       const ruObj = w[2] || [];
       const ruPlan = ruObj.filter(function (o) { return /PrawnieWiazacy/.test(o.warstwa); })[0];
@@ -1459,12 +1582,12 @@
       const mapaJest = pokrycie !== null && pokrycie >= 5;
 
       let status;
-      if (opisJest || mapaJest || ru) status = 'jest';
+      if (opisJest || mapaJest || ru || mesip) status = 'jest';
       else if (html === null && pokrycie === null && w[2] === null) status = 'blad';
       else if (tekst.length >= 5 || pokrycie === 0) status = 'brak';
       else status = 'nieznany';
 
-      const wynik = { status: status, html: opisJest ? html : '', pokrycie: pokrycie, zrodlo: opisJest ? 'opis' : (mapaJest ? 'mapa' : (ru ? 'rejestr' : '')), ru: ru, projekt: ruProjekt };
+      const wynik = { status: status, html: opisJest ? html : '', pokrycie: pokrycie, zrodlo: opisJest ? 'opis' : (mapaJest ? 'mapa' : (ru ? 'rejestr' : (mesip ? 'mesip' : ''))), ru: ru, projekt: ruProjekt, mesip: mesip };
       window.gruntowoRaport.mpzp = wynik;
       oglos('gruntowo:mpzp', wynik);
       // Blok z Rejestru Urbanistycznego (uzupelniany o numer uchwaly i PDF z naszego serwera)
@@ -1503,6 +1626,8 @@
       if (dane.symbol || dane.uchwala || dane.link) {
         let h = '<div class="legenda-title">Zapisy planu dla działki</div><div class="legenda-body">';
         if (dane.symbol) h += '<div class="legenda-row"><span>Symbol / przeznaczenie</span><strong>' + dane.symbol + '</strong></div>';
+        else if (mesip && mesip.tereny && mesip.tereny.length) h += '<div class="legenda-row"><span>Symbol / przeznaczenie</span><strong>' + mesip.tereny.map(function (t) { return escH(t.symbol + (t.opis ? ' - ' + t.opis : '')); }).join('; ') + '</strong></div>' +
+          '<div class="legenda-row"><span>Źródło symbolu</span><strong>' + escH(mesip.zrodlo || 'geoportal gminy') + '</strong></div>';
         if (dane.uchwala) h += '<div class="legenda-row"><span>Uchwała</span><strong>' + dane.uchwala + '</strong></div>';
         if (dane.data) h += '<div class="legenda-row"><span>Data uchwalenia</span><strong>' + dane.data + '</strong></div>';
         if (nazwaPlanu) h += '<div class="legenda-row"><span>Plan</span><strong>' + nazwaPlanu.replace(/</g, '&lt;') + '</strong></div>';
@@ -1510,6 +1635,23 @@
           ? '<a class="legenda-link" href="' + dane.link + '" target="_blank" rel="noopener">Otwórz treść uchwały →</a>'
           : (ru ? '' : '<a class="legenda-link" href="https://rejestr-urbanistyczny.gov.pl/" target="_blank" rel="noopener">Znajdź plan i uchwałę w Rejestrze Urbanistycznym →</a>');
         h += blokRU + '</div>';
+        box.innerHTML = h;
+      } else if (mesip) {
+        const t0 = mesip.tereny[0], pl = mesip.plan || {};
+        let h = '<div class="legenda-title">Zapisy planu dla działki</div><div class="legenda-body">';
+        if (t0) h += '<div class="legenda-row"><span>Symbol / przeznaczenie</span><strong>' + escH(t0.symbol) + (t0.opis ? ' - ' + escH(t0.opis.toLowerCase()) : '') + '</strong></div>';
+        if (mesip.tereny.length > 1) h += '<div class="legenda-row"><span>Także na działce</span><strong>' + mesip.tereny.slice(1).map(function (t) { return escH(t.symbol + (t.opis ? ' - ' + t.opis.toLowerCase() : '')); }).join('; ') + '</strong></div>';
+        if (pl.uchwala || (t0 && t0.uchwala)) h += '<div class="legenda-row"><span>Uchwała</span><strong>' + escH(pl.uchwala || t0.uchwala) + '</strong></div>';
+        if (pl.z_dnia) h += '<div class="legenda-row"><span>Data uchwalenia</span><strong>' + escH(pl.z_dnia) + '</strong></div>';
+        if (pl.nazwa) h += '<div class="legenda-row"><span>Plan</span><strong>' + escH(pl.nazwa) + (pl.kod ? ' [' + escH(pl.kod) + ']' : '') + '</strong></div>';
+        if (mesip.w_opracowaniu) h += '<div class="legenda-row"><span>W opracowaniu</span><strong>' + escH(mesip.w_opracowaniu) + '</strong></div>';
+        if (mesip.zrodlo === 'MeSIP') {
+          h += '<a class="legenda-link" href="' + escH(mesip.portal) + '" target="_blank" rel="noopener">Plan w geoportalu MeSIP (rysunek, tekst uchwały) →</a>';
+          h += '<p class="legenda-ru-proj">' + escH(mesip.gmina) + ' publikuje plany w Metropolitalnym Systemie Informacji Przestrzennej (MeSIP), a nie w rejestrach krajowych.</p></div>';
+        } else {
+          h += '<a class="legenda-link" href="' + escH(pl.link || mesip.portal) + '" target="_blank" rel="noopener">Plan w Systemie Informacji Przestrzennej Poznania →</a>';
+          h += '<p class="legenda-ru-proj">Symbol terenu z SIP Poznania (GEOPOZ). Treść uchwały znajdziesz na stronie Miejskiej Pracowni Urbanistycznej.</p></div>';
+        }
         box.innerHTML = h;
       } else if (ru) {
         box.innerHTML = '<div class="legenda-title">Plan miejscowy dla działki</div><div class="legenda-body">' + blokRU +

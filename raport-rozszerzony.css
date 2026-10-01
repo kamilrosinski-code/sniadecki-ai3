@@ -203,3 +203,68 @@ body.tryb-oplacony #btn-nowa{display:none!important;}
 .wycena-gora-sub { font-size: .85rem; color: #8a9a93; max-width: 46rem; }
 .wycena-gora-link { font-size: .85rem; color: #dfc090; white-space: nowrap; }
 @media print { .wycena-gora { background: none; border-color: #b08d3e; } .wycena-gora-val { color: #7a5c1e; } .wycena-gora-link { display: none; } }
+
+/* Pozwolenia na budowę w okolicy */
+.pozw-karty{margin-bottom:1rem;}
+.pozw-karty .scard-v{font-family:var(--ff-d);font-size:1.9rem;line-height:1.1;color:var(--goldl);}
+.pozw-uklad{display:grid;grid-template-columns:minmax(300px,1.05fr) 1fr;gap:1.4rem;align-items:start;margin-top:1rem;}
+.pozw-mapka{margin:0;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:.6rem;}
+.pozw-mapka svg{display:block;width:100%;height:auto;}
+.pozw-mapka .pz-krag{fill:none;stroke:rgba(255,255,255,.75);stroke-width:1.2;stroke-dasharray:4 5;}
+.pozw-mapka .pz-przyciemn{fill:rgba(10,12,12,.28);}
+.pozw-mapka .pz-pin circle{stroke:#fff;stroke-width:1.6;}
+.pozw-mapka .pz-pin text{fill:#14181a;font:700 10px var(--ff-m);text-anchor:middle;}
+.pozw-mapka .pz-zrodlo{flex-basis:100%;font-size:.66rem;opacity:.8;}
+.pozw-mapka .pz-opis{fill:#fff;font:600 11px var(--ff-m);text-anchor:middle;paint-order:stroke;stroke:rgba(0,0,0,.6);stroke-width:3px;}
+.pozw-mapka .pz-n{text-anchor:end;}
+.pozw-mapka .pz-dzialka{fill:rgba(223,192,144,.35);stroke:#dfc090;stroke-width:2.5;}
+.pozw-mapka circle.pz-drobne{stroke:#fff;stroke-width:.8;}
+.pozw-mapka .pz-drobne{opacity:.75;}
+.pz-dom{fill:#7fb38f;background:#7fb38f;} .pz-mieszk{fill:#d9a55b;background:#d9a55b;} .pz-uslugi{fill:#6fa3c9;background:#6fa3c9;}
+.pz-przem{fill:#c97a6f;background:#c97a6f;} .pz-infra{fill:#9a8fb8;background:#9a8fb8;} .pz-inne{fill:#8a9a93;background:#8a9a93;}
+.pozw-mapka figcaption{display:flex;flex-wrap:wrap;gap:.3rem .8rem;margin-top:.4rem;font-size:.7rem;color:var(--sage);}
+.pozw-mapka figcaption i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:.3rem;vertical-align:middle;}
+.pozw-lista{list-style:none;margin:0;padding:0;}
+.pozw-lista li{display:flex;gap:.9rem;padding:.6rem 0 .6rem .7rem;border-bottom:1px solid var(--line);border-left:3px solid #8a9a93;font-size:.86rem;line-height:1.45;}
+.pozw-lista li.pozw-dom{border-left-color:#7fb38f;} .pozw-lista li.pozw-mieszk{border-left-color:#d9a55b;} .pozw-lista li.pozw-uslugi{border-left-color:#6fa3c9;}
+.pozw-lista li.pozw-przem{border-left-color:#c97a6f;} .pozw-lista li.pozw-infra{border-left-color:#9a8fb8;}
+.pozw-lista li.pozw-wlasna{background:rgba(176,141,62,.08);}
+.pozw-lista li.pozw-pusto{border-left-color:transparent;color:var(--sage);}
+.pozw-lista strong{display:block;font-weight:500;color:var(--cream);}
+.pozw-lista small{color:var(--sage);font-size:.76rem;}
+.pozw-odl{flex:0 0 62px;font-family:var(--ff-m);font-size:.78rem;color:var(--goldl);padding-top:.1rem;}
+.pozw-wiecej{margin-top:.6rem;}
+.pozw-wiecej summary{cursor:pointer;color:var(--goldl);font-size:.84rem;padding:.4rem 0;}
+@media (max-width:760px){.pozw-uklad{grid-template-columns:1fr;}.pozw-mapka{max-width:320px;}}
+@media print{.pozw-uklad{grid-template-columns:200px 1fr;}.pozw-lista li{break-inside:avoid;}}
+.ust-wstep { margin: .6rem 0 0; font-size: .88rem; color: var(--cream2); }
+
+/* Teren: mapa wysokości + przekrój */
+#teren-wizual:empty{display:none;}
+.teren-uklad{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:1rem;align-items:start;}
+.teren-fig{margin:0;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:.7rem;}
+.teren-fig svg{display:block;width:100%;height:auto;}
+.tr-poza{opacity:.35;}
+.tr-warstwica{fill:none;stroke:rgba(20,24,26,.55);stroke-width:.7;}
+.tr-warstwica.tr-gruba{stroke-width:1.4;stroke:rgba(20,24,26,.75);}
+.tr-obrys{fill:none;stroke:#fff;stroke-width:2;}
+.tr-strz-tlo{stroke:rgba(0,0,0,.45);stroke-width:5;stroke-linecap:round;}
+.tr-strz{stroke:#fff;stroke-width:2.4;stroke-linecap:round;}
+.tr-etyk{fill:#fff;font:600 12px var(--ff-m);paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:3px;}
+.tr-pn text{fill:#fff;font:600 11px var(--ff-m);text-anchor:middle;paint-order:stroke;stroke:rgba(0,0,0,.5);stroke-width:2.5px;}
+.tr-pn path{fill:#fff;}
+.tr-podz rect{fill:#fff;} .tr-podz text{fill:#fff;font:10px var(--ff-m);paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:2.5px;}
+.tr-legenda{display:flex;align-items:center;gap:.5rem;margin-top:.5rem;font:.72rem var(--ff-m);color:var(--sage);}
+.tr-legenda i{flex:1;height:8px;border-radius:4px;}
+.tr-p-siatka{stroke:var(--line);}
+.tr-p-os{fill:var(--sage);font:9px var(--ff-m);}
+.tr-p-pole{fill:rgba(176,141,62,.18);}
+.tr-p-linia{fill:none;stroke:var(--goldl);stroke-width:2;}
+.tr-p-dz{fill:rgba(255,255,255,.06);stroke:rgba(255,255,255,.25);stroke-dasharray:3 3;}
+.tr-p-opis{fill:var(--cream2);font:9px var(--ff-m);text-anchor:middle;}
+@media (max-width:760px){.teren-uklad{grid-template-columns:1fr;}}
+@media print{.teren-uklad{grid-template-columns:1fr 1fr;}.teren-fig{break-inside:avoid;}}
+
+.pozw-nr{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:10px;margin-right:.35rem;color:#14181a;font:700 .68rem var(--ff-m);padding:0 4px;}
+.pozw-odl{flex:0 0 92px;}
+@media (max-width:760px){.pozw-mapka{max-width:none;}}

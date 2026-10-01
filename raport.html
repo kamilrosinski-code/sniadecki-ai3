@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="raport-style.css?v=20261002b" />
+<link rel="stylesheet" href="raport-style.css?v=20261002k" />
 <link rel="stylesheet" href="raport-druk.css?v=20260929" />
 </head>
 <body>
@@ -65,7 +65,7 @@
       <p class="cf-note">Podając dane akceptujesz przetwarzanie ich zgodnie z <a href="klauzula.html" target="_blank" rel="noopener">klauzulą informacyjną</a>.</p>
     </div>
     <div style="margin-top:1rem;">
-      <button class="btn" id="btn-pokazmape" style="font-size:.75rem;">Nie znasz identyfikatora? Wskaz działkę na mapie</button>
+      <button class="btn" id="btn-pokazmape" style="font-size:.75rem;">Nie znasz identyfikatora? Wskaż działkę na mapie</button>
     </div>
     <div id="pickmap"></div>
     <div class="examples">
@@ -117,7 +117,7 @@
           </div>
         </div>
       </div>
-      <div class="pods-uwaga">To streszczenie oparte jest na danych automatycznych. Pełna ocena inwestycyjna działki (werdykt) wymaga analizy człowieka - dostępna w raporcie rozszerzonym.</div>
+      <div class="pods-uwaga">To streszczenie oparte jest na danych automatycznych. Werdykt inwestycyjny 0-100 z plusami i minusami działki znajdziesz w raporcie rozszerzonym.</div>
     </div>
 
     <div class="sec">
@@ -162,7 +162,7 @@
       <div class="mapbox"><img id="map-mpzp" alt="Działka na tle warstwy MPZP" /></div>
       <p class="mapbox-cap">Krajowa Integracja MPZP (GUGiK) - zasięg obowiązujących planów</p>
       <div class="mpzp-legenda" id="mpzp-legenda" style="display:none;"></div>
-      <div class="notice" style="margin-top:1rem;"><strong>Jak czytać:</strong> kolorowe obszary to tereny objęte planem przekazanym do integracji. <strong>Brak koloru nie oznacza braku planu</strong> - warstwa obejmuje ~1400 z 2477 gmin. Odczyt przeznaczenia (funkcja, wskaźniki) robimy w raporcie rozszerzonym.</div>
+      <div class="notice" style="margin-top:1rem;"><strong>Jak czytać:</strong> kolorowe obszary to tereny objęte planem przekazanym do integracji. <strong>Brak koloru nie oznacza braku planu</strong> - warstwa obejmuje ~1400 z 2477 gmin. Zapisy planu dla terenu działki (przeznaczenie, wysokość, % zabudowy) pokazujemy w raporcie rozszerzonym.</div>
     </div>
 
     <div class="sec">
@@ -178,7 +178,7 @@
       <div style="margin-top:1.25rem;">
         <div class="tx-table" id="tx-table">
           <div class="tx-row tx-head"><span>Adres / identyfikator</span><span style="text-align:right;">Cena</span><span style="text-align:right;">zł/m²</span><span style="text-align:right;">Data</span></div>
-          <div class="tx-empty" id="tx-empty">Brak odczytanych transakcji w promieniu 1 km. Zobacz punkty cenowe na mapie powyżej - dane RCN obejmują ok. 360 powiatów. Pełna analiza cen w raporcie rozszerzonym.</div>
+          <div class="tx-empty" id="tx-empty">Brak odczytanych transakcji w promieniu 1 km. Zobacz punkty cenowe na mapie powyżej - dane RCN obejmują ok. 360 powiatów. Raport rozszerzony uwzględnia rynek w werdykcie działki.</div>
         </div>
       </div>
       <div class="notice" style="margin-top:1rem;"><strong>Dane z własnej bazy transakcji</strong> - ceny z aktów notarialnych (rejestr RCN), transakcje z ostatnich lat w promieniu 1,5 km od działki. Wartość orientacyjna liczona jako mediana ceny za m² x powierzchnia. <strong>To nie jest operat szacunkowy</strong> - pełna wycena wymaga analizy rzeczoznawcy.</div>
@@ -203,7 +203,7 @@
         <span class="uzbr-item"><span class="uzbr-kolor" style="background:#d02080"></span>ciepłownicza</span>
         <span class="uzbr-item"><span class="uzbr-kolor" style="background:#20a020"></span>telekomunikacyjna</span>
       </div>
-      <div class="notice" style="margin-top:1rem;">Podgląd przebiegu sieci. <strong>Brak linii nie zawsze oznacza brak sieci</strong> - warstwa uzbrojenia widoczna jest tylko przy dużym przybliżeniu i nie wszystkie powiaty przekazują komplet danych GESUT. Dokładne warunki przyłączenia potwierdzamy u gestorów sieci w raporcie rozszerzonym.</div>
+      <div class="notice" style="margin-top:1rem;">Podgląd przebiegu sieci. <strong>Brak linii nie zawsze oznacza brak sieci</strong> - warstwa uzbrojenia widoczna jest tylko przy dużym przybliżeniu i nie wszystkie powiaty przekazują komplet danych GESUT. Raport rozszerzony sprawdza, czy sieci przechodzą przez działkę lub biegną przy jej granicy, i jak daleko jest do przyłącza. Warunki przyłączenia wydaje gestor sieci.</div>
     </div>
 
     <!-- OCHRONA PRZYRODY (WMS GDOS) -->
@@ -226,7 +226,7 @@
         <div class="premium-banner-text">
           <div class="premium-banner-eyebrow">Raport rozszerzony · analiza inwestycyjna</div>
           <h2 class="premium-banner-title">Odblokuj rozszerzoną ocenę działki</h2>
-          <p class="premium-banner-sub">Poniższe sekcje to zakres raportu rozszerzonego - przygotowywanego przez naszego eksperta. Werdykt inwestycyjny, analiza chłonności, ograniczenia, infrastruktura, zagrożenia i wycena rzeczoznawcza.</p>
+          <p class="premium-banner-sub">Poniżej zakres raportu rozszerzonego. Nasz model analityczny zestawia dane z kilkunastu rejestrów publicznych i ocenia działkę w skali 0-100: zapisy planu dla terenu działki, sieci uzbrojenia przy granicach, dostęp do drogi, ochronę przyrody, ryzyko powodziowe, ukształtowanie terenu, klasy gleb i pozwolenia na budowę w okolicy.</p>
         </div>
         <div class="premium-banner-action">
           <a href="#" class="premium-banner-btn" data-kup-raport>
@@ -252,42 +252,45 @@
     <div class="premium-zone">
 
     <div class="sec sec-premium">
-      <div class="sec-head"><span class="sec-num">09</span><span class="sec-title">Ograniczenia formalnoprawne</span><span class="tag tag-premium">ROZSZERZONY</span></div>
+      <div class="sec-head"><span class="sec-num">09</span><span class="sec-title">Planowanie i ograniczenia</span><span class="tag tag-premium">ROZSZERZONY</span></div>
       <div class="status-grid">
-        <div class="scard"><div class="scard-top"><span class="scard-l">MPZP</span><span class="pill pill-info">do odczytu</span></div><div class="scard-v">Przeznaczenie</div><div class="scard-note">funkcja, wskaźniki, linie zabudowy</div></div>
-        <div class="scard"><div class="scard-top"><span class="scard-l">Ochrona przyrody</span><span class="pill pill-info">do sprawdzenia</span></div><div class="scard-v">Natura 2000 / park</div><div class="scard-note">nakładki obszarowe</div></div>
-        <div class="scard"><div class="scard-top"><span class="scard-l">Zabytki</span><span class="pill pill-info">do sprawdzenia</span></div><div class="scard-v">Rejestr / strefa</div><div class="scard-note">ochrona konserwatorska</div></div>
-        <div class="scard"><div class="scard-top"><span class="scard-l">Grunty leśne/rolne</span><span class="pill pill-info">do sprawdzenia</span></div><div class="scard-v">Klasa / wyłączenie</div><div class="scard-note">odrolnienie / odlesienie</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Plan miejscowy</span><span class="pill pill-info">MPZP</span></div><div class="scard-v">Zapisy dla terenu działki</div><div class="scard-note">przeznaczenie, wysokość, % zabudowy, dach</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Plan ogólny</span><span class="pill pill-info">POG</span></div><div class="scard-v">Strefa i wskaźniki</div><div class="scard-note">profil funkcji, intensywność, pow. biologicznie czynna</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Ochrona przyrody</span><span class="pill pill-info">GDOŚ</span></div><div class="scard-v">Natura 2000, parki, rezerwaty</div><div class="scard-note">na działce i w sąsiedztwie</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Użytki i klasy gleb</span><span class="pill pill-info">EGiB</span></div><div class="scard-v">Grunt rolny / leśny / budowlany</div><div class="scard-note">czy potrzebne wyłączenie z produkcji rolnej</div></div>
       </div>
     </div>
 
     <div class="sec sec-premium">
-      <div class="sec-head"><span class="sec-num">10</span><span class="sec-title">Infrastruktura i media</span><span class="tag tag-premium">ROZSZERZONY</span></div>
+      <div class="sec-head"><span class="sec-num">10</span><span class="sec-title">Uzbrojenie i dostęp do drogi</span><span class="tag tag-premium">ROZSZERZONY</span></div>
       <div class="status-grid">
-        <div class="scard"><div class="scard-top"><span class="scard-l">Woda</span><span class="pill pill-info">weryfikacja</span></div><div class="scard-v">Przyłącze</div><div class="scard-note">sieć wodociągowa w rejonie</div></div>
-        <div class="scard"><div class="scard-top"><span class="scard-l">Prąd</span><span class="pill pill-info">weryfikacja</span></div><div class="scard-v">Warunki przyłączenia</div><div class="scard-note">moc, odległość do sieci</div></div>
-        <div class="scard"><div class="scard-top"><span class="scard-l">Kanalizacja</span><span class="pill pill-info">weryfikacja</span></div><div class="scard-v">Sieć / szambo</div><div class="scard-note">dostępność lub plan</div></div>
-        <div class="scard"><div class="scard-top"><span class="scard-l">Dostęp do drogi</span><span class="pill pill-info">weryfikacja</span></div><div class="scard-v">Droga publiczna</div><div class="scard-note">bezpośredni / służebność</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Sieci uzbrojenia</span><span class="pill pill-info">GESUT</span></div><div class="scard-v">Przebieg względem granic</div><div class="scard-note">woda, kanalizacja, gaz, prąd, ciepło</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Strefy ochronne</span><span class="pill pill-info">analiza</span></div><div class="scard-v">Linie przez działkę</div><div class="scard-note">pas technologiczny, możliwe przełożenie sieci</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Dostęp do drogi</span><span class="pill pill-info">EGiB · OSM</span></div><div class="scard-v">Droga publiczna przy granicy</div><div class="scard-note">działka drogowa w ewidencji lub służebność</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Otoczenie</span><span class="pill pill-info">OSM</span></div><div class="scard-v">Szkoły, sklepy, przystanki</div><div class="scard-note">odległości w promieniu 1,5 km</div></div>
       </div>
     </div>
 
     <div class="sec sec-premium">
-      <div class="sec-head"><span class="sec-num">11</span><span class="sec-title">Fizjografia i zagrożenia</span><span class="tag tag-premium">ROZSZERZONY</span></div>
+      <div class="sec-head"><span class="sec-num">11</span><span class="sec-title">Teren i zagrożenia</span><span class="tag tag-premium">ROZSZERZONY</span></div>
       <div class="status-grid">
-        <div class="scard"><div class="scard-top"><span class="scard-l">Ukształtowanie</span><span class="pill pill-info">NMT</span></div><div class="scard-v">Spadek terenu</div><div class="scard-note">z numerycznego modelu terenu</div></div>
-        <div class="scard"><div class="scard-top"><span class="scard-l">Woda gruntowa</span><span class="pill pill-info">do oceny</span></div><div class="scard-v">Poziom</div><div class="scard-note">warunki posadowienia</div></div>
-        <div class="scard"><div class="scard-top"><span class="scard-l">Ryzyko powodziowe</span><span class="pill pill-info">ISOK</span></div><div class="scard-v">Strefa zalewowa</div><div class="scard-note">mapy zagrożenia</div></div>
-        <div class="scard"><div class="scard-top"><span class="scard-l">Osuwiska</span><span class="pill pill-info">SOPO</span></div><div class="scard-v">Tereny zagrożone</div><div class="scard-note">rejestr osuwisk</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Ukształtowanie</span><span class="pill pill-info">NMT</span></div><div class="scard-v">Spadek i różnica wysokości</div><div class="scard-note">z numerycznego modelu terenu</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Ryzyko powodziowe</span><span class="pill pill-info">ISOK</span></div><div class="scard-v">Obszary zagrożenia</div><div class="scard-note">procent działki w strefie zalewowej</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Werdykt 0-100</span><span class="pill pill-info">model</span></div><div class="scard-v">Plusy, minusy, rekomendacja</div><div class="scard-note">czynniki z wszystkich rejestrów</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Lista kontrolna</span><span class="pill pill-info">PDF</span></div><div class="scard-v">Co sprawdzić przed zakupem</div><div class="scard-note">z danymi tej działki, do wydruku</div></div>
       </div>
     </div>
 
     <div class="sec sec-premium">
       <div class="sec-head"><span class="sec-num">12</span><span class="sec-title">Pozwolenia na budowę w pobliżu</span><span class="tag tag-premium">ROZSZERZONY</span></div>
-      <div class="tx-table">
-        <div class="tx-row tx-head"><span>Zamierzenie budowlane</span><span style="text-align:right;">Organ</span><span style="text-align:right;">Status</span><span style="text-align:right;">Data</span></div>
-        <div class="tx-empty">Rejestr RWDZ GUNB jest publiczny (wyszukiwarka.gunb.gov.pl), ale nie udostępnia otwartego API per-dzialka. Najbliższe pozwolenia dopisujemy w raporcie rozszerzonym.</div>
+      <div class="status-grid">
+        <div class="scard"><div class="scard-top"><span class="scard-l">Nowe domy</span><span class="pill pill-info">GUNB</span></div><div class="scard-v">Domy i budynki wielorodzinne</div><div class="scard-note">w promieniu 1 km, ostatnie 3 lata</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Usługi i przemysł</span><span class="pill pill-info">GUNB</span></div><div class="scard-v">Sklepy, biura, hale, magazyny</div><div class="scard-note">czy obok nie powstanie uciążliwa inwestycja</div></div>
+        <div class="scard"><div class="scard-top"><span class="scard-l">Szkic i lista</span><span class="pill pill-info">RWDZ</span></div><div class="scard-v">Od najbliższych</div><div class="scard-note">opis inwestycji, data decyzji, kubatura</div></div>
       </div>
     </div>
+
+    <p class="premium-zakres">Zakres danych zależy od tego, co udostępniają urzędy - część gmin i powiatów nie publikuje w usługach krajowych planów, sieci uzbrojenia czy użytków gruntowych. Nie odpowiadamy za takie braki; dbamy o to, żeby danych było jak najwięcej i żeby odpowiadały stanowi faktycznemu, a brakujące informacje raport wyraźnie oznacza.</p>
 
     </div><!-- /premium-zone -->
 
@@ -301,13 +304,14 @@
         <div class="wariant">
           <div class="wariant-eyebrow">Raport rozszerzony</div>
           <div class="wariant-price"><span class="wariant-num">69 zł</span><span class="wariant-unit">jednorazowo</span></div>
-          <p class="wariant-desc">Rozszerzona analiza inwestycyjna działki przygotowana przez eksperta.</p>
+          <p class="wariant-desc">Rozszerzona analiza działki przygotowana przez nasz model analityczny na podstawie rejestrów publicznych.</p>
           <ul class="wariant-lista">
-            <li>Werdykt inwestycyjny - co realnie da się tu zbudować</li>
-            <li>Analiza chłonności i ograniczeń formalnoprawnych</li>
-            <li>Infrastruktura, media i zagrożenia (zalewowe, osuwiska)</li>
-            <li>Wycena na podstawie transakcji porównawczych</li>
-            <li>Zapisy MPZP / planu ogólnego z interpretacją</li>
+            <li>Werdykt 0-100 z plusami, minusami i rekomendacją</li>
+            <li>Zapisy planu miejscowego dla terenu działki i wskaźniki planu ogólnego</li>
+            <li>Sieci uzbrojenia przy granicach działki i dostęp do drogi</li>
+            <li>Ochrona przyrody, ryzyko powodziowe, teren i klasy gleb</li>
+            <li>Pozwolenia na budowę w promieniu 1 km</li>
+            <li>Lista kontrolna przed zakupem i raport w PDF</li>
           </ul>
           <a href="#" class="wariant-btn" data-kup-raport>Kup raport rozszerzony - 69 zł</a>
           <div class="znaczek-payu" data-payu-znaczek></div>
@@ -322,9 +326,9 @@
           <ul class="wariant-lista">
             <li><strong>Wszystko z raportu rozszerzonego</strong></li>
             <li>Indywidualna ocena potencjału inwestycyjnego gruntu</li>
+            <li>Prezentacja szacowanej chłonności zabudowy na działce</li>
             <li>Propozycje formy sprzedaży (podział, sprzedaż całości, JV)</li>
-            <li>Doradztwo w kwestiach projektowych i chłonności</li>
-            <li>Znalezienie kupca w naszej własnej bazie inwestorów</li>
+            <li>Weryfikacja potencjalnych kupców działki w naszej bazie inwestorów</li>
           </ul>
           <a href="index.html?konsultacja=1" class="wariant-btn wariant-btn-premium" data-konsultacja>Umów konsultację z ekspertem</a>
         </div>
@@ -332,14 +336,14 @@
     </div>
 
     <div class="footer-rep">
-      Raport prezentuje dane rzeczywiste z rejestrów publicznych GUGiK: geometria, powierzchnia i lokalizacja (ULDK), podgląd planów (KIMP) oraz cen transakcyjnych (KICN/RCN). Sekcje oznaczone „analiza w raporcie rozszerzonym" wymagają weryfikacji człowieka. Dane mogą różnic się od stanu faktycznego - przed decyzja inwestycyjna zweryfikuj je w gminie i wypisie z rejestru gruntów. gruntowo.pl &middot; <span id="rep-date2"></span>
+      Raport prezentuje dane rzeczywiste z rejestrów publicznych GUGiK: geometria, powierzchnia i lokalizacja (ULDK), podgląd planów (KIMP) oraz cen transakcyjnych (KICN/RCN). Zakres danych zależy od tego, co udostępniają urzędy - część gmin i powiatów nie publikuje w usługach krajowych planów, sieci uzbrojenia czy użytków gruntowych. Nie odpowiadamy za takie braki; dbamy o to, żeby danych było jak najwięcej i żeby odpowiadały stanowi faktycznemu, a brakujące informacje raport wyraźnie oznacza. Przed decyzją inwestycyjną zweryfikuj dane w gminie i w wypisie z rejestru gruntów. gruntowo.pl &middot; <span id="rep-date2"></span>
     </div>
   </div>
 </section>
 
 <script src="haslo.js?v=20260925"></script>
-<script src="raport.js?v=20261002b"></script>
-<script src="platnosc.js?v=20260930b"></script>
+<script src="raport.js?v=20261002k"></script>
+<script src="platnosc.js?v=20261002k"></script>
 <script>
   // Formularz hasla w raporcie darmowym: po poprawnym hasle otwieramy raport rozszerzony TEJ SAMEJ dzialki.
   GruntowoHaslo.podlacz(document.getElementById('haslo-raport'), {

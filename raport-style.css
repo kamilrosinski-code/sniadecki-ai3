@@ -41,7 +41,7 @@ body>*:not(.bg-grid){position:relative;z-index:1;}
 .chip:hover{border-color:var(--gold);color:var(--cream);}
 .hint{margin-top:1.5rem;font-size:.85rem;color:var(--sage);max-width:560px;line-height:1.7;}
 .hint a{color:var(--gold);text-decoration:underline;text-underline-offset:2px;}
-#pickmap{display:none;margin-top:1.25rem;height:640px;border:1px solid var(--line);border-radius:8px;overflow:hidden;width:100%;}
+#pickmap{display:none;margin-top:1.25rem;border:1px solid var(--line);border-radius:8px;overflow:hidden;width:100%;background:var(--panel);}
 #pickmap.show{display:block;width:100%;}
 #pickmap iframe{width:100%;height:100%;border:0;}
 
@@ -388,3 +388,15 @@ body > .loading-overlay, body > .bramka { position: fixed; z-index: 1100; }
 /* Rejestr Urbanistyczny w legendzie MPZP */
 .legenda-ru { margin-top: .5rem; padding-top: .5rem; border-top: 1px dashed rgba(201,169,110,.25); }
 .legenda-ru-proj { font-size: .82rem; color: var(--sage, #8a9a93); margin: .5rem 0 0; }
+.premium-zakres{margin:1.2rem 0 0;padding:.9rem 1.1rem;border:1px dashed var(--line);border-radius:8px;font-size:.82rem;line-height:1.6;color:var(--sage);}
+.kup-podpowiedz{margin:.9rem 0 1.1rem;padding:.85rem 1.1rem;border:1px solid rgba(176,141,62,.45);border-radius:8px;background:rgba(176,141,62,.1);font-size:.88rem;line-height:1.55;color:var(--cream2);}
+.kup-podpowiedz strong{color:var(--goldl);}
+
+#pm-mapa{height:460px;width:100%;}
+.pm-pasek{display:flex;gap:.5rem;padding:.6rem;}
+.pm-pasek input{flex:1;min-width:0;background:#14181a;border:1px solid var(--line);border-radius:6px;color:var(--cream);padding:.6rem .75rem;font:inherit;font-size:.9rem;}
+.pm-info{padding:.65rem .8rem;font-size:.85rem;color:var(--cream2);border-top:1px solid var(--line);}
+.pm-info strong{color:var(--goldl);}
+.pm-blad{padding:2rem;text-align:center;color:var(--sage);}
+#pickmap .leaflet-control-layers{font-size:.75rem;}
+@media (max-width:640px){#pm-mapa{height:380px;}}
