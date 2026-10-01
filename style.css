@@ -603,3 +603,17 @@ form { display: flex; flex-direction: column; gap: 1.1rem; }
 /* Scena filmu hero: hero stoi przyklejone, az film dojedzie do konca (main.js) */
 .hero-scena { position: relative; }
 .hero.hero-przyklejone { position: sticky; top: 0; }
+/* Wyszukiwarka sterowana filmem (main.js): bez animacji wejscia, opacity/przesuniecie ustawia przewijanie */
+.hero.hero-sterowane .search-box { animation: none; transition: none; will-change: opacity, transform; }
+.hero.hero-sterowane:not(.szukaj-widac) .hero-podpowiedz { opacity: 1; }
+/* Sekcja "Doswiadczenie zbudowane na nieruchomosciach": tlo z ostatniego kadru filmu hero */
+.sekcja-pole { position: relative; overflow: hidden; isolation: isolate; }
+.sekcja-pole .pole-tlo { position: absolute; inset: -12% 0; z-index: -1; background: url('pole-tlo.jpg') center 60% / cover no-repeat; transform: translate3d(0, var(--py, 0px), 0); will-change: transform; }
+.sekcja-pole .pole-tlo::after { content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(to bottom, var(--bg) 0%, rgba(11,12,10,0) 22%, rgba(11,12,10,0) 78%, var(--bg) 100%),
+    linear-gradient(to right, rgba(11,12,10,.45) 0%, rgba(11,12,10,.62) 45%, rgba(11,12,10,.86) 60%, rgba(11,12,10,.9) 100%); }
+@media (max-width: 899px) {
+  .sekcja-pole .pole-tlo { inset: 0; transform: none; }
+  .sekcja-pole .pole-tlo::after { background: linear-gradient(to bottom, var(--bg) 0%, rgba(11,12,10,.72) 18%, rgba(11,12,10,.82) 100%); }
+}

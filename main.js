@@ -136,7 +136,7 @@
     });
   });
 
-  // ===== HERO: najazd kamery za kursorem; wyszukiwarka wysuwa sie po chwili ruchu kursorem =====
+  // ===== HERO: film przewijany kolkiem; wyszukiwarka pojawia sie razem z przewijaniem =====
   (function () {
     const hero = document.querySelector('.hero');
     const sb = document.getElementById('search-box');
@@ -144,8 +144,9 @@
     const bg = hero.querySelector('.hero-bg');
     const malo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const mysz = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    let wysunieta = false;
+    let wysunieta = false, filmSteruje = false, wymusPelna = false;
     const wysun = function () {
+      if (filmSteruje) { wymusPelna = true; return; }        // przy filmie wyszukiwarka idzie za kolkiem
       if (wysunieta) return; wysunieta = true;
       hero.classList.remove('hero-czeka'); sb.classList.add('wysuwa');
     };
@@ -153,8 +154,7 @@
     if (!mysz || malo || /#szukaj|#search-box/.test(location.hash)) { wysun(); }
     else {
       hero.classList.add('hero-czeka');
-      setTimeout(wysun, 6000);                       // zabezpieczenie: najpozniej po 6 s
-      window.addEventListener('scroll', function () { if (window.scrollY > 40) wysun(); }, { passive: true });
+      window.addEventListener('scroll', function () { if (window.scrollY > 40 && !filmSteruje) wysun(); }, { passive: true });
       document.addEventListener('keydown', function (e) { if (e.key === 'Tab') wysun(); });
       document.querySelectorAll('[data-do-wyszukiwarki]').forEach(function (a) { a.addEventListener('click', wysun); });
     }
@@ -188,7 +188,17 @@
           };
           uloz(); window.addEventListener('resize', uloz);
           if (window.ResizeObserver) new ResizeObserver(function () { uloz(); }).observe(hero);
-          let cel = 0, cur = 0, petla = null, szuka = false;
+          let cel = 0, cur = 0, petla = null, szuka = false, sw = 0;
+          // Od teraz wyszukiwarka wyjezdza plynnie razem z filmem (kolko w dol), chowa sie przy powrocie na sama gore
+          filmSteruje = true;
+          if (wysunieta) { wymusPelna = true; }
+          hero.classList.remove('hero-czeka'); hero.classList.add('hero-sterowane'); sb.classList.remove('wysuwa');
+          const pokazSzukaj = function (o) {
+            sb.style.opacity = o.toFixed(3);
+            sb.style.transform = 'translateY(' + ((1 - o) * 46).toFixed(1) + 'px)';
+            sb.style.pointerEvents = o > 0.4 ? 'auto' : 'none';
+            hero.classList.toggle('szukaj-widac', o > 0.02);
+          };
           const t0 = performance.now();
           const postep = function () {
             const y = window.scrollY - (scena.offsetTop - gora);
@@ -198,37 +208,30 @@
             const a = Math.min(1, (now - t0) / 2600);
             const intro = 0.12 * (1 - Math.pow(1 - a, 3));             // kamera sama lekko rusza na wejsciu
             const p = postep();
-            if (p > 0.01) wysun();                                     // pierwszy ruch kolkiem = wyszukiwarka
+            const ps = Math.max(0, Math.min(1, (window.scrollY - scena.offsetTop) / droga));   // od pierwszego ruchu kolkiem
+            sw += (ps - sw) * 0.14; if (Math.abs(ps - sw) < 0.0008) sw = ps;
+            pokazSzukaj(wymusPelna ? 1 : Math.max(0, Math.min(1, (sw - 0.02) / 0.3)));
             cel = Math.max(intro, p);
             cur += (cel - cur) * 0.1;
             if (Math.abs(cel - cur) < 0.0008) cur = cel;
             const t = Math.min(dl - 0.04, cur * dl);
             if (!szuka && Math.abs(film.currentTime - t) > 1 / 48) { szuka = true; film.currentTime = t; }
-            if (cur === cel && a >= 1 && !szuka) { petla = null; return; }
+            if (cur === cel && sw === ps && a >= 1 && !szuka) { petla = null; return; }
             petla = requestAnimationFrame(krok);
           };
           const budz = function () { if (!petla) petla = requestAnimationFrame(krok); };
           film.addEventListener('seeked', function () { szuka = false; budz(); });
           window.addEventListener('scroll', function () { if (window.scrollY < scena.offsetTop + scena.offsetHeight) budz(); }, { passive: true });
           film.currentTime = 0;
+          pokazSzukaj(wymusPelna ? 1 : 0);
           film.classList.add('gotowy');
           budz();
         }, { once: true });
       }).catch(function () { /* zostaje zdjecie */ });
     }
 
-    // Tlo w osobnej warstwie: lekki najazd kamery w strone kursora; wyszukiwarka wysuwa sie po chwili ruchu
+    // Tlo w osobnej warstwie (pod filmem); bez zblizenia za kursorem
     hero.classList.add('hero-ruch');
-    let ruch = 0, ostatni = null;
-    hero.addEventListener('mousemove', function (e) {
-      const r = hero.getBoundingClientRect();
-      bg.style.transformOrigin = ((e.clientX - r.left) / r.width * 100).toFixed(1) + '% ' + ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%';
-      bg.style.transform = 'scale(1.08)';
-      if (ostatni) ruch += Math.hypot(e.clientX - ostatni.x, e.clientY - ostatni.y);
-      ostatni = { x: e.clientX, y: e.clientY };
-      if (!wysunieta && ruch > 600) setTimeout(wysun, 400);
-    });
-    hero.addEventListener('mouseleave', function () { bg.style.transform = 'scale(1)'; ostatni = null; });
   })();
 
   // Pośrednik ULDK - ustala identyfikator działki z współrzędnych pinezki (ten sam co w raport.js)
@@ -738,4 +741,21 @@
     });
     animujLiczniki();
   }, 2500);
+})();
+
+// Sekcja z tlem pola: delikatna paralaksa tla przy przewijaniu (tylko komputer, bez ograniczonego ruchu)
+(function () {
+  const sek = document.querySelector('.sekcja-pole'); if (!sek) return;
+  const tlo = sek.querySelector('.pole-tlo');
+  if (!tlo || window.innerWidth < 900 || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+  let rys = false;
+  const ustaw = function () {
+    rys = false;
+    const r = sek.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > window.innerHeight) return;
+    const k = (r.top + r.height / 2 - window.innerHeight / 2) / window.innerHeight;   // -1..1 wokol srodka ekranu
+    tlo.style.setProperty('--py', (k * -60).toFixed(1) + 'px');
+  };
+  window.addEventListener('scroll', function () { if (!rys) { rys = true; requestAnimationFrame(ustaw); } }, { passive: true });
+  ustaw();
 })();
