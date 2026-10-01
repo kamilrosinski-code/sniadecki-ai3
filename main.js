@@ -160,37 +160,56 @@
     }
     if (!mysz || malo || !bg) return;
 
-    // Film hero: kamera wjezdza w pole przy przewijaniu w dol, cofa sie przy przewijaniu w gore.
-    // Tylko komputer; telefon, oszczedzanie danych albo blad pobierania = zostaje zdjecie.
+    // Film hero: strona stoi w miejscu, a kolko myszy najpierw wysuwa wyszukiwarke i prowadzi kamere w pole;
+    // dopiero po dojechaniu do konca filmu strona przewija sie dalej. W gore - film cofa sie.
+    // Tylko komputer; telefon, oszczedzanie danych albo blad pobierania = zostaje zdjecie i zwykle przewijanie.
     const film = bg.querySelector('.hero-film');
     const oszczedza = navigator.connection && navigator.connection.saveData;
     if (film && window.innerWidth >= 900 && !oszczedza && window.fetch && window.URL) {
-      fetch(film.canPlayType('video/mp4; codecs="avc1.42E01E"') ? 'hero-pole.mp4' : 'hero-pole.webm').then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
+      fetch(film.canPlayType('video/mp4; codecs="avc1.42E01E"') ? 'hero-pole.mp4' : 'hero-pole.webm')
+        .then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
         film.src = URL.createObjectURL(b);
         film.addEventListener('loadeddata', function () {
           const dl = film.duration || 5.8;
-          let cel = 0, cur = 0, intro = 0, petla = null, szuka = false;
+          // Scena: hero przyklejone do gory ekranu przez dodatkowy odcinek przewijania
+          const scena = document.createElement('div');
+          scena.className = 'hero-scena';
+          hero.parentNode.insertBefore(scena, hero); scena.appendChild(hero);
+          hero.classList.add('hero-przyklejone');
+          let droga = 0, gora = 0;
+          const uloz = function () {
+            droga = Math.round(window.innerHeight * 1.1);              // ile przewijania "zjada" film
+            const hH = hero.offsetHeight;
+            // wyszukiwarka ma byc w calosci widoczna, gdy hero stoi
+            const sbDol = sb.getBoundingClientRect().bottom - hero.getBoundingClientRect().top + 24;
+            gora = Math.min(0, window.innerHeight - Math.max(sbDol, Math.min(hH, window.innerHeight)));
+            hero.style.top = gora + 'px';
+            scena.style.height = (hH + droga) + 'px';
+          };
+          uloz(); window.addEventListener('resize', uloz);
+          if (window.ResizeObserver) new ResizeObserver(function () { uloz(); }).observe(hero);
+          let cel = 0, cur = 0, petla = null, szuka = false;
           const t0 = performance.now();
           const postep = function () {
-            const h = hero.offsetHeight || window.innerHeight;
-            return Math.max(0, Math.min(1, window.scrollY / (h * 0.6)));
+            const y = window.scrollY - (scena.offsetTop - gora);
+            return Math.max(0, Math.min(1, y / droga));
           };
           const krok = function (now) {
-            // Wejscie: kamera sama rusza na poczatek drogi (do 18% filmu), dalej prowadzi scroll
             const a = Math.min(1, (now - t0) / 2600);
-            intro = 0.18 * (1 - Math.pow(1 - a, 3));
-            cel = Math.max(intro, postep());
+            const intro = 0.12 * (1 - Math.pow(1 - a, 3));             // kamera sama lekko rusza na wejsciu
+            const p = postep();
+            if (p > 0.01) wysun();                                     // pierwszy ruch kolkiem = wyszukiwarka
+            cel = Math.max(intro, p);
             cur += (cel - cur) * 0.1;
             if (Math.abs(cel - cur) < 0.0008) cur = cel;
             const t = Math.min(dl - 0.04, cur * dl);
             if (!szuka && Math.abs(film.currentTime - t) > 1 / 48) { szuka = true; film.currentTime = t; }
-            // Petla odpoczywa, gdy obraz dogonil scroll i wejscie sie skonczylo
             if (cur === cel && a >= 1 && !szuka) { petla = null; return; }
             petla = requestAnimationFrame(krok);
           };
           const budz = function () { if (!petla) petla = requestAnimationFrame(krok); };
-          film.addEventListener('seeked', function () { szuka = false; });
-          window.addEventListener('scroll', function () { if (window.scrollY < (hero.offsetHeight || 0) * 1.1) budz(); }, { passive: true });
+          film.addEventListener('seeked', function () { szuka = false; budz(); });
+          window.addEventListener('scroll', function () { if (window.scrollY < scena.offsetTop + scena.offsetHeight) budz(); }, { passive: true });
           film.currentTime = 0;
           film.classList.add('gotowy');
           budz();

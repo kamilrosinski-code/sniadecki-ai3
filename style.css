@@ -259,7 +259,8 @@ form { display: flex; flex-direction: column; gap: 1.1rem; }
   .search-btn-gold { border-top-color: transparent; }
   .nav-burger { display: flex; }
 }
-@media (prefers-reduced-motion: reduce) { .hero-bg { transition: none; transform: none !important; } @media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) { .hero-bg { transition: none; transform: none !important; } }
+@media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 
@@ -599,3 +600,6 @@ form { display: flex; flex-direction: column; gap: 1.1rem; }
 @media(max-width:760px){ .haslo-box { grid-template-columns:1fr; padding:1.4rem 1.25rem; } .haslo-row { flex-direction:column; } .haslo-row .btn-gold { justify-content:center; } }
 #leaflet-map .leaflet-control-layers { font-size: .75rem; color: #14181a; }
 #leaflet-map .leaflet-control-layers label { margin: .1rem 0; }
+/* Scena filmu hero: hero stoi przyklejone, az film dojedzie do konca (main.js) */
+.hero-scena { position: relative; }
+.hero.hero-przyklejone { position: sticky; top: 0; }
