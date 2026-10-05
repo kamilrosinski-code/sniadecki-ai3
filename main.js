@@ -166,11 +166,11 @@
     const film = bg.querySelector('.hero-film');
     const oszczedza = navigator.connection && navigator.connection.saveData;
     if (film && window.innerWidth >= 900 && !oszczedza && window.fetch && window.URL) {
-      fetch(film.canPlayType('video/mp4; codecs="avc1.42E01E"') ? 'hero-pole.mp4?v=3' : 'hero-pole.webm?v=3')
+      fetch(film.canPlayType('video/mp4; codecs="avc1.42E01E"') ? 'hero-pole.mp4?v=5' : 'hero-pole.webm?v=5')
         .then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
         film.src = URL.createObjectURL(b);
         film.addEventListener('loadeddata', function () {
-          const dl = film.duration || 11.7;
+          const dl = film.duration || 5.875;
           // Scena: hero przyklejone do gory ekranu przez dodatkowy odcinek przewijania
           const scena = document.createElement('div');
           scena.className = 'hero-scena';
@@ -191,15 +191,15 @@
           let cel = 0, cur = 0, petla = null, szuka = false, sw = 0;
           // Od teraz wyszukiwarka wyjezdza plynnie razem z filmem (kolko w dol), chowa sie przy powrocie na sama gore
           filmSteruje = true;
-          // Film przenosimy na stala warstwe pod cala strona: gra za hero, za liczbami i za sekcja "Doswiadczenie...",
-          // a potem warstwa gasnie i zostaje czarne tlo
+          // Stala warstwa pod cala strona: najpierw film (hero stoi), potem za liczbami i sekcja "Doswiadczenie..."
+          // przenika w przekroj gleby, ktory przy przewijaniu przesuwa sie w gore (schodzimy w glab) i ciemnieje do czerni
           const warstwa = document.createElement('div'); warstwa.className = 'film-tlo'; warstwa.setAttribute('aria-hidden', 'true');
           warstwa.appendChild(film);
+          const gleba = document.createElement('div'); gleba.className = 'gleba-tlo'; warstwa.appendChild(gleba);
           const cien = document.createElement('div'); cien.className = 'hero-cien'; warstwa.appendChild(cien);
           document.body.insertBefore(warstwa, document.body.firstChild);
           document.body.classList.add('film-aktywny');               // wylacza rozmycia tla nad filmem (oszczedza GPU)
           const sekcja = document.querySelector('.sekcja-film');
-          const POLE = 0.5;                                          // pierwsza polowa filmu = lot nad polem (hero stoi)
           if (wysunieta) { wymusPelna = true; }
           hero.classList.remove('hero-czeka'); hero.classList.add('hero-sterowane'); sb.classList.remove('wysuwa');
           const pokazSzukaj = function (o) {
@@ -214,10 +214,9 @@
             const y2 = sekcja ? Math.max(y1 + 200, sekcja.offsetTop + sekcja.offsetHeight - window.innerHeight) : y1 + window.innerHeight;
             return { y0: y0, y1: y1, y2: y2, y3: y2 + window.innerHeight * 0.7 };     // y2..y3: gasniecie do czerni
           };
-          const postep = function () {
-            const z = zakres(), y = window.scrollY;
-            if (y <= z.y1) return Math.max(0, (y - z.y0) / droga) * POLE;
-            return POLE + (1 - POLE) * Math.min(1, (y - z.y1) / (z.y2 - z.y1));
+          const postep = function () {                               // film gra tylko, gdy hero stoi
+            const z = zakres();
+            return Math.max(0, Math.min(1, (window.scrollY - z.y0) / droga));
           };
           let ostatniKrok = 0, ostKlatka = -1;
           const KL = 24;                                             // klatek na sekunde w filmie
@@ -226,7 +225,7 @@
             const dt = ostatniKrok ? Math.min(64, now - ostatniKrok) : 16; ostatniKrok = now;
             const k = 1 - Math.exp(-dt / 140);
             const a = Math.min(1, (now - t0) / 2600);
-            const intro = 0.06 * (1 - Math.pow(1 - a, 3));             // kamera sama lekko rusza na wejsciu
+            const intro = 0.12 * (1 - Math.pow(1 - a, 3));             // kamera sama lekko rusza na wejsciu
             const p = postep();
             const ps = Math.max(0, Math.min(1, (window.scrollY - scena.offsetTop) / droga));   // od pierwszego ruchu kolkiem
             sw += (ps - sw) * 0.14; if (Math.abs(ps - sw) < 0.0008) sw = ps;
@@ -235,12 +234,16 @@
             cur += (cel - cur) * k;
             if (Math.abs(cel - cur) < 0.0008) cur = cel;
             const t = Math.min(dl - 0.04, cur * dl);
-            // pod ziemia tekst lezy na ziarnistej glebie - przyciemniamy film, zeby napisy byly czytelne
-            const pz = Math.max(0, Math.min(1, (cur - 0.55) / 0.25));
-            const z = zakres(), y = window.scrollY;
-            // za tekstem sekcji "Doswiadczenie..." film mocniej przyciemniony
-            const ps2 = sekcja ? Math.max(0, Math.min(1, (y + window.innerHeight - sekcja.offsetTop) / (window.innerHeight * 0.8))) : 0;
-            cien.style.opacity = Math.max(0.45 * pz, 0.6 * ps2).toFixed(3);
+            const z = zakres(), y = window.scrollY, vh = window.innerHeight;
+            // przekroj gleby: wchodzi za liczbami (po zatrzymaniu hero), potem jedzie w gore - schodzimy w glab
+            const wej = Math.max(0, Math.min(1, (y - z.y1) / (vh * 0.45)));
+            gleba.style.opacity = wej.toFixed(3);
+            const glebaH = gleba.offsetHeight;
+            const q = Math.max(0, Math.min(1, (y - z.y1) / Math.max(1, z.y3 - z.y1)));
+            gleba.style.transform = 'translate3d(0,' + (-(glebaH - vh) * q).toFixed(1) + 'px,0)';
+            // za tekstem sekcji "Doswiadczenie..." lekkie przyciemnienie dla czytelnosci, a nizej coraz ciemniej
+            const ps2 = sekcja ? Math.max(0, Math.min(1, (y + vh - sekcja.offsetTop) / (vh * 0.8))) : 0;
+            cien.style.opacity = (0.5 * ps2).toFixed(3);
             warstwa.style.opacity = (1 - Math.max(0, Math.min(1, (y - z.y2) / (z.y3 - z.y2)))).toFixed(3);
             // przewijamy film tylko, gdy zmienia sie klatka, i nigdy dwa przewiniecia naraz
             const kl = Math.round(t * KL);

@@ -611,6 +611,8 @@ form { display: flex; flex-direction: column; gap: 1.1rem; }
 .film-tlo.widac { transition: none; }
 .film-tlo .hero-film { opacity: 1; }
 .hero-cien { position: absolute; inset: 0; background: #0b0c0a; opacity: 0; pointer-events: none; }
+/* Przekroj gleby (zdjecie: Pexels, licencja Pexels - darmowe, takze komercyjnie) przyciemniony ku dolowi */
+.gleba-tlo { position: absolute; left: 0; top: 0; width: 100%; height: max(150vw, 170vh); background: #0b0c0a url('gleba-przekroj.jpg') center top / cover no-repeat; opacity: 0; will-change: transform, opacity; }
 .hero.film-na-tle { background: none; }
 .hero.film-na-tle .hero-bg { opacity: 0; transition: opacity .9s ease; }
 .hero.film-na-tle::before { background: linear-gradient(to bottom, rgba(11,12,10,.30) 0%, rgba(11,12,10,.15) 20%, rgba(11,12,10,.40) 65%, rgba(11,12,10,.55) 100%); }
