@@ -629,3 +629,13 @@ html.lenis { scroll-behavior: auto; }
 .lenis.lenis-stopped { overflow: clip; }
 .lenis [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-smooth iframe { pointer-events: none; }
+/* Po przebudowie hero (film) napisy nie animuja sie drugi raz */
+.hero.wejscie-zrobione .hero-eyebrow, .hero.wejscie-zrobione .hero-headline, .hero.wejscie-zrobione .hero-sub, .hero.wejscie-zrobione .hero-partner { animation: none; opacity: 1; transform: none; }
+/* Sekcja "Doswiadczenie..." na komputerze: bez zdjecia, tekst na kafelku w stylu kart nizej (czytelny na tle gleby) */
+@media (min-width: 900px) {
+  .sekcja-film .photo-frame { display: none; }
+  .sekcja-film .intro-grid { grid-template-columns: minmax(0, 720px); }
+  .sekcja-film .intro-tekst { background: rgba(19,20,16,.9); border: 1px solid var(--brd); border-radius: 6px; padding: 2.75rem 3rem 2.25rem; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+  .sekcja-film .intro-tekst .pillars { margin-top: 1.75rem; }
+  .sekcja-film .intro-tekst .pillar:last-child { border-bottom: 0; padding-bottom: 0; }
+}

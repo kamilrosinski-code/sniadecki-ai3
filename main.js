@@ -170,6 +170,10 @@
         .then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
         film.src = URL.createObjectURL(b);
         film.addEventListener('loadeddata', function () {
+          // Przebudowa hero (przeniesienie do sceny) restartuje animacje wejscia napisow - dlatego czekamy,
+          // az napisy sie pojawia (ok. 1,7 s od wejscia), a potem wylaczamy ich animacje, zeby nie pojawily sie drugi raz
+          setTimeout(function () {
+          hero.classList.add('wejscie-zrobione');
           const dl = film.duration || 5.875;
           // Scena: hero przyklejone do gory ekranu przez dodatkowy odcinek przewijania
           const scena = document.createElement('div');
@@ -237,14 +241,10 @@
             const z = zakres(), y = window.scrollY, vh = window.innerHeight;
             // przekroj gleby zaczyna sie dokladnie pod paskiem z liczbami (dolna krawedz hero) - nad ta linia pole,
             // pod nia ziemia; gdy linia zniknie u gory ekranu, ziemia jedzie dalej wolniej (schodzimy w glab)
-            const B = hero.getBoundingClientRect().bottom;
-            gleba.style.opacity = B < vh ? '1' : '0';
-            const glebaH = gleba.offsetHeight;
-            const ty = B >= 0 ? B : Math.max(vh - glebaH, B * 0.75);
-            gleba.style.transform = 'translate3d(0,' + ty.toFixed(1) + 'px,0)';
+            ustawGlebe();
             // za tekstem sekcji "Doswiadczenie..." lekkie przyciemnienie dla czytelnosci, a nizej coraz ciemniej
             const ps2 = sekcja ? Math.max(0, Math.min(1, (y + vh - sekcja.offsetTop) / (vh * 0.8))) : 0;
-            cien.style.opacity = (0.5 * ps2).toFixed(3);
+            cien.style.opacity = (0.2 * ps2).toFixed(3);   // tekst ma juz wlasny kafelek, wiec tlo tylko lekko przyciemnione
             warstwa.style.opacity = (1 - Math.max(0, Math.min(1, (y - z.y2) / (z.y3 - z.y2)))).toFixed(3);
             // przewijamy film tylko, gdy zmienia sie klatka, i nigdy dwa przewiniecia naraz
             const kl = Math.round(t * KL);
@@ -253,6 +253,21 @@
             petla = requestAnimationFrame(krok);
           };
           const budz = function () { if (!petla) petla = requestAnimationFrame(krok); };
+          // Granica pole/gleba musi isc dokladnie z przewijaniem - ustawiamy ja w TEJ SAMEJ klatce co przewiniecie
+          // (zdarzenie Lenis / scroll), a nie w nastepnej klatce petli, bo wtedy przy szybkim przewijaniu robila sie szpara
+          let glebaH = 0;
+          function ustawGlebe() {
+            const vh = window.innerHeight;
+            const B = hero.getBoundingClientRect().bottom;
+            if (!glebaH) glebaH = gleba.offsetHeight;
+            gleba.style.opacity = B < vh ? '1' : '0';
+            const ty = B >= 0 ? B : Math.max(vh - glebaH, B * 0.75);
+            gleba.style.transform = 'translate3d(0,' + ty.toFixed(1) + 'px,0)';
+          }
+          window.addEventListener('resize', function () { glebaH = 0; ustawGlebe(); });
+          if (window.__lenis) window.__lenis.on('scroll', ustawGlebe);
+          window.addEventListener('scroll', ustawGlebe, { passive: true });
+          ustawGlebe();
           film.addEventListener('seeked', function () { szuka = false; budz(); });
           window.addEventListener('scroll', function () { if (window.scrollY < zakres().y3 + window.innerHeight) budz(); }, { passive: true });
           film.currentTime = 0;
@@ -261,6 +276,7 @@
           requestAnimationFrame(function () { warstwa.style.opacity = '1'; hero.classList.add('film-na-tle');
             setTimeout(function () { warstwa.classList.add('widac'); }, 950); });
           budz();
+          }, Math.max(0, 1700 - performance.now()));
         }, { once: true });
       }).catch(function () { /* zostaje zdjecie */ });
     }
@@ -617,8 +633,11 @@
       document.querySelectorAll('[data-cms]').forEach(function (el) {
         const key = el.getAttribute('data-cms');
         if (map[key] !== undefined && map[key] !== '') {
-          // Pozwól na <br> i <em> w treści z arkusza
-          el.innerHTML = map[key];
+          // Pozwól na <br> i <em> w treści z arkusza; ceny "69.0" -> "69", dlugie myslniki -> krotkie
+          let v = String(map[key]).replace(/^(\d+)\.0+$/, '$1').replace(/\s*—\s*/g, ' - ');
+          const norm = function (x) { return x.replace(/\s+/g, ' ').replace(/<br\s*\/?>/gi, '<br>').trim(); };
+          // podmieniamy tylko, gdy tresc naprawde sie rozni - inaczej napis "mrugal" po wczytaniu
+          if (norm(el.innerHTML) !== norm(v)) el.innerHTML = v;
         }
       });
     })
