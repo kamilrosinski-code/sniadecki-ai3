@@ -614,9 +614,12 @@ form { display: flex; flex-direction: column; gap: 1.1rem; }
 /* Przekroj gleby (zdjecie: Pexels, licencja Pexels - darmowe, takze komercyjnie) przyciemniony ku dolowi */
 .gleba-tlo { position: absolute; left: 0; top: 0; width: 100%; height: max(150vw, 170vh); background: #0b0c0a url('gleba-przekroj.jpg') center top / cover no-repeat; opacity: 0; will-change: transform, opacity; }
 .hero.film-na-tle { background: none; }
-.hero.film-na-tle .hero-bg { opacity: 0; transition: opacity .9s ease; }
-.hero.film-na-tle::before { background: linear-gradient(to bottom, rgba(11,12,10,.30) 0%, rgba(11,12,10,.15) 20%, rgba(11,12,10,.40) 65%, rgba(11,12,10,.55) 100%); }
-.hero.film-na-tle .hero-stats { background: rgba(11,12,10,.45); }
+.hero.film-na-tle .hero-bg { opacity: 0; transition: opacity .6s ease; }
+/* na komputerze od poczatku ta sama nakladka i pasek liczb - zeby nic nie przeskoczylo przy zamianie zdjecie -> film */
+@media (min-width: 900px) and (hover: hover) {
+.hero::before { background: linear-gradient(to bottom, rgba(11,12,10,.30) 0%, rgba(11,12,10,.15) 20%, rgba(11,12,10,.40) 65%, rgba(11,12,10,.55) 100%); }
+.hero .hero-stats { background: rgba(11,12,10,.45); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
 .sekcja-film { position: relative; }
 /* Plynnosc filmu: rozmycie tla (backdrop-filter) nad ruchomym filmem kosztuje GPU przy kazdej klatce -
    przy aktywnym filmie zastepujemy je mocniej kryjacym tlem */

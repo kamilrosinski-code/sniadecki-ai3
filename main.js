@@ -232,6 +232,7 @@
             const intro = 0;                                           // bez samoczynnego ruchu - kamera rusza dopiero od kolka
             const p = postep();
             const ps = Math.max(0, Math.min(1, (window.scrollY - scena.offsetTop) / droga));   // od pierwszego ruchu kolkiem
+            if (window.scrollY > 2) pokazFilm();
             sw += (ps - sw) * 0.14; if (Math.abs(ps - sw) < 0.0008) sw = ps;
             pokazSzukaj(wymusPelna ? 1 : Math.max(0, Math.min(1, (sw - 0.01) / 0.15)));
             cel = Math.max(intro, p);
@@ -253,6 +254,8 @@
             petla = requestAnimationFrame(krok);
           };
           const budz = function () { if (!petla) petla = requestAnimationFrame(krok); };
+          let filmWidac = false;
+          function pokazFilm() { if (filmWidac) return; filmWidac = true; hero.classList.add('film-na-tle'); }
           // Granica pole/gleba musi isc dokladnie z przewijaniem - ustawiamy ja w TEJ SAMEJ klatce co przewiniecie
           // (zdarzenie Lenis / scroll), a nie w nastepnej klatce petli, bo wtedy przy szybkim przewijaniu robila sie szpara
           let glebaH = 0;
@@ -273,8 +276,10 @@
           film.currentTime = 0;
           pokazSzukaj(wymusPelna ? 1 : 0);
           film.classList.add('gotowy');
-          requestAnimationFrame(function () { warstwa.style.opacity = '1'; hero.classList.add('film-na-tle');
-            setTimeout(function () { warstwa.classList.add('widac'); }, 950); });
+          // Warstwa z filmem stoi od razu POD zdjeciem hero (niewidoczna). Zdjecie znika dopiero przy pierwszym ruchu
+          // kolkiem - wtedy kamera i tak rusza, wiec zamiana zdjecie -> film jest niezauwazalna (bez przyciemnienia).
+          warstwa.classList.add('widac'); warstwa.style.opacity = '1';
+          if (window.scrollY > 5) pokazFilm();
           budz();
           }, Math.max(0, 1700 - performance.now()));
         }, { once: true });
