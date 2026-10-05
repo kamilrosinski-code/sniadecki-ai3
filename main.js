@@ -131,7 +131,7 @@
   document.querySelectorAll('[data-do-wyszukiwarki]').forEach(function (a) {
     a.addEventListener('click', function (e) {
       e.preventDefault();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      plynnieDo(0);
       setTimeout(function () { const i = document.getElementById('s-miasto'); if (i && i.offsetParent) i.focus({ preventScroll: true }); }, 600);
     });
   });
@@ -223,9 +223,9 @@
           const krok = function (now) {
             // wygladzanie zalezne od czasu (tak samo plynnie na monitorach 60 Hz i 144 Hz)
             const dt = ostatniKrok ? Math.min(64, now - ostatniKrok) : 16; ostatniKrok = now;
-            const k = 1 - Math.exp(-dt / 140);
+            const k = 1 - Math.exp(-dt / (window.__lenis ? 50 : 140));   // przy plynnym przewijaniu strony mniejsze opoznienie filmu
             const a = Math.min(1, (now - t0) / 2600);
-            const intro = 0.12 * (1 - Math.pow(1 - a, 3));             // kamera sama lekko rusza na wejsciu
+            const intro = 0;                                           // bez samoczynnego ruchu - kamera rusza dopiero od kolka
             const p = postep();
             const ps = Math.max(0, Math.min(1, (window.scrollY - scena.offsetTop) / droga));   // od pierwszego ruchu kolkiem
             sw += (ps - sw) * 0.14; if (Math.abs(ps - sw) < 0.0008) sw = ps;
@@ -235,12 +235,13 @@
             if (Math.abs(cel - cur) < 0.0008) cur = cel;
             const t = Math.min(dl - 0.04, cur * dl);
             const z = zakres(), y = window.scrollY, vh = window.innerHeight;
-            // przekroj gleby: wchodzi za liczbami (po zatrzymaniu hero), potem jedzie w gore - schodzimy w glab
-            const wej = Math.max(0, Math.min(1, (y - z.y1) / (vh * 0.45)));
-            gleba.style.opacity = wej.toFixed(3);
+            // przekroj gleby zaczyna sie dokladnie pod paskiem z liczbami (dolna krawedz hero) - nad ta linia pole,
+            // pod nia ziemia; gdy linia zniknie u gory ekranu, ziemia jedzie dalej wolniej (schodzimy w glab)
+            const B = hero.getBoundingClientRect().bottom;
+            gleba.style.opacity = B < vh ? '1' : '0';
             const glebaH = gleba.offsetHeight;
-            const q = Math.max(0, Math.min(1, (y - z.y1) / Math.max(1, z.y3 - z.y1)));
-            gleba.style.transform = 'translate3d(0,' + (-(glebaH - vh) * q).toFixed(1) + 'px,0)';
+            const ty = B >= 0 ? B : Math.max(vh - glebaH, B * 0.75);
+            gleba.style.transform = 'translate3d(0,' + ty.toFixed(1) + 'px,0)';
             // za tekstem sekcji "Doswiadczenie..." lekkie przyciemnienie dla czytelnosci, a nizej coraz ciemniej
             const ps2 = sekcja ? Math.max(0, Math.min(1, (y + vh - sekcja.offsetTop) / (vh * 0.8))) : 0;
             cien.style.opacity = (0.5 * ps2).toFixed(3);
@@ -317,7 +318,7 @@
       const t = document.querySelector(href);
       if (t) {
         e.preventDefault();
-        window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' });
+        plynnieDo(t.getBoundingClientRect().top + window.scrollY - 90);
       }
     });
   });
@@ -775,4 +776,24 @@
     });
     animujLiczniki();
   }, 2500);
+})();
+
+// Plynne przewijanie calej strony (jak na olchowezacisze.pl): kolko myszy przesuwa strone z lekkim "poslizgiem".
+// Biblioteka Lenis (licencja MIT, plik lenis.min.js w repo). Tylko komputer z myszka; telefon i ograniczony ruch - zwykle przewijanie.
+function plynnieDo(top) {
+  if (window.__lenis) window.__lenis.scrollTo(top, { duration: 1.2 });
+  else window.scrollTo({ top: top, behavior: 'smooth' });
+}
+(function () {
+  if (!window.Lenis || !window.matchMedia) return;
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  try {
+    window.__lenis = new Lenis({
+      lerp: 0.08,                 // im mniej, tym dluzszy poslizg
+      wheelMultiplier: 0.9,
+      autoRaf: true,
+      // w okienku konsultacji, na mapach i w menu kolko dziala normalnie (przewijanie listy, zoom mapy)
+      prevent: function (n) { return !!(n && n.closest && n.closest('#konsult-modal, .leaflet-container, .mobile-menu, [data-lenis-prevent]')); }
+    });
+  } catch (e) { window.__lenis = null; }
 })();
