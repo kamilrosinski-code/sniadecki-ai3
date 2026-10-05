@@ -25,7 +25,7 @@
 (function () {
   'use strict';
 
-  var RAPORT_JS = 'raport.js?v=20261002m';
+  var RAPORT_JS = 'raport.js?v=20261002q';
 
   var URL_KIMPZP = 'https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego';
   var URL_POG = 'https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin';
@@ -110,15 +110,15 @@
   // PRZYKLADOWY RAPORT (link ze strony glownej): dla JEDNEJ wybranej dzialki raport otwiera sie
   // bez hasla, z paskiem "to jest przyklad". Zmiana dzialki przykladowej: stala PRZYKLAD_ID
   // (i ten sam identyfikator w linku w index.html).
-  var PRZYKLAD_ID = '302105_2.0009.222/8';
+  var PRZYKLAD_ID = '302116_5.0005.78/3';
   var parametry = new URLSearchParams(window.location.search);
   var trybPrzykladu = parametry.get('przyklad') === '1' && parametry.get('id') === PRZYKLAD_ID;
   if (trybPrzykladu) {
     document.body.classList.add('tryb-przykladu');
     var pasek = document.createElement('div');
     pasek.className = 'pasek-przykladu';
-    pasek.innerHTML = '<div class="pp-tekst"><strong>To jest przykładowy raport rozszerzony</strong> - dla działki w gminie Dopiewo. ' +
-      'Tak samo wygląda raport dla Twojej działki. <a href="raport.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1">Zobacz też raport bezpłatny tej działki</a>, żeby porównać zakres.</div>' +
+    pasek.innerHTML = '<div class="pp-tekst"><strong>To jest przykładowy raport rozszerzony</strong> - dla działki w Janikowie (gm. Swarzędz). ' +
+      'Tak samo wygląda raport dla Twojej działki. <a href="raport.html?id=302116_5.0005.78%2F3&ok=1&przyklad=1">Zobacz też raport bezpłatny tej działki</a>, żeby porównać zakres.</div>' +
       '<div class="pp-akcje"><a href="raport.html?kup=1" class="btn btn-gold">Kup raport dla swojej działki - 69 zł</a>' +
       '<a href="index.html#haslo" class="btn">Mam hasło</a></div>';
     var hero = document.querySelector('#report .rep-hero');
@@ -147,7 +147,12 @@
   // Po powrocie z PayU powiadomienie moze dojsc z opoznieniem - pytamy kilka razy (co 3 s, do ~30 s)
   function czekajNaPlatnosc(id, ext, proba) {
     window.GruntowoPlatnosc.sprawdz(id, ext).then(function (w) {
-      if (w.oplacone) { otworzOplacony(id, ext); return; }
+      if (w.oplacone) {
+        // zakup (raz na zamowienie) - do statystyk Google Analytics, jesli uzytkownik sie zgodzil
+        try { const k = 'gruntowo_ga_zakup_' + ext; if (!localStorage.getItem(k)) { localStorage.setItem(k, '1');
+          window.gruntowoZdarzenie && window.gruntowoZdarzenie('purchase', { transaction_id: ext, currency: 'PLN', value: 69, items: [{ item_name: 'Raport rozszerzony' }] }); } } catch (e) {}
+        otworzOplacony(id, ext); return;
+      }
       if (proba < 10 && w.status !== 'CANCELED' && w.status !== 'BRAK') {
         zablokuj('Czekamy na potwierdzenie płatności z PayU… (' + (proba + 1) + ')');
         setTimeout(function () { czekajNaPlatnosc(id, ext, proba + 1); }, 3000);

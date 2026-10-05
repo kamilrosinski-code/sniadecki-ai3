@@ -612,7 +612,7 @@ form { display: flex; flex-direction: column; gap: 1.1rem; }
 .film-tlo .hero-film { opacity: 1; }
 .hero-cien { position: absolute; inset: 0; background: #0b0c0a; opacity: 0; pointer-events: none; }
 /* Przekroj gleby (zdjecie: Pexels, licencja Pexels - darmowe, takze komercyjnie) przyciemniony ku dolowi */
-.gleba-tlo { position: absolute; left: 0; top: 0; width: 100%; height: max(150vw, 170vh); background: #0b0c0a url('gleba-przekroj.jpg') center top / cover no-repeat; opacity: 0; will-change: transform, opacity; }
+.gleba-tlo { position: absolute; left: 0; top: 0; width: 100%; height: max(150vw, 170vh); background: #0b0c0a url('gleba-przekroj.jpg?v=2') center top / cover no-repeat; opacity: 0; will-change: transform, opacity; }
 .hero.film-na-tle { background: none; }
 .hero.film-na-tle .hero-bg { opacity: 0; transition: opacity .6s ease; }
 /* na komputerze od poczatku ta sama nakladka i pasek liczb - zeby nic nie przeskoczylo przy zamianie zdjecie -> film */
@@ -641,4 +641,16 @@ html.lenis { scroll-behavior: auto; }
   .sekcja-film .intro-tekst { background: rgba(19,20,16,.9); border: 1px solid var(--brd); border-radius: 6px; padding: 2.75rem 3rem 2.25rem; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
   .sekcja-film .intro-tekst .pillars { margin-top: 1.75rem; }
   .sekcja-film .intro-tekst .pillar:last-child { border-bottom: 0; padding-bottom: 0; }
+}
+/* Zgoda na kontakt (nieobowiazkowa) w formularzach */
+.zgoda-kontakt { display: flex; gap: .6rem; align-items: flex-start; margin-top: .9rem; font-size: .76rem; line-height: 1.55; color: rgba(242,240,235,.72); cursor: pointer; text-align: left; }
+.zgoda-kontakt input { margin-top: .22rem; accent-color: var(--gold); flex-shrink: 0; width: auto; }
+.ft-sub-sm { font-size: .68rem; opacity: .75; max-width: 520px; }
+.ft-sub-sm a { color: inherit; text-decoration: underline; }
+/* Koniec gleby: miekkie przejscie z sekcji "Zaawansowany model..." w ciemna sekcje ofert */
+@media (min-width: 900px) and (hover: hover) {
+  #sourcing { position: relative; }
+  #sourcing::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 260px; background: linear-gradient(to bottom, rgba(19,20,16,0), var(--surf)); pointer-events: none; z-index: 0; }
+  #sourcing > .container { position: relative; z-index: 1; }
+  #sourcing .lead, #sourcing .tag { text-shadow: 0 1px 12px rgba(0,0,0,.6); }
 }

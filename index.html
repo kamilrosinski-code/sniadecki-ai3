@@ -20,7 +20,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=20" />
+  <link rel="stylesheet" href="style.css?v=23" />
 </head>
 <body>
 
@@ -111,7 +111,8 @@
               <input type="tel" id="s-telefon" placeholder="Telefon (opcjonalnie)" autocomplete="tel" />
             </div>
           </div>
-          <p class="search-hint-sm" style="margin-top:.75rem;">Podając dane akceptujesz <a href="klauzula.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline;">klauzulę informacyjną</a>.</p>
+          <label class="zgoda-kontakt"><input type="checkbox" id="s-zgoda" /> <span>Chcę otrzymywać od Śniadecki S.A. informacje o usługach gruntowo.pl (oferty, nowości) e-mailem i telefonicznie. Zgoda jest dobrowolna - możesz ją w każdej chwili wycofać.</span></label>
+          <p class="search-hint-sm" style="margin-top:.6rem;">Administratorem Twoich danych jest Śniadecki S.A. Wykorzystamy je, aby przygotować raport i skontaktować się w jego sprawie. Szczegóły w <a href="klauzula.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline;">klauzuli informacyjnej</a>.</p>
         </div>
 
         <div class="search-step hidden" id="step-3">
@@ -261,7 +262,7 @@
             <li>Historyczne zdjęcia lotnicze</li>
           </ul>
           <a href="#szukaj" class="ofr-btn" data-do-wyszukiwarki>Sprawdź działkę za darmo</a>
-          <a href="raport.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1" target="_blank" rel="noopener" class="ofr-haslo-link">Zobacz przykładowy raport bezpłatny →</a>
+          <a href="raport.html?id=302116_5.0005.78%2F3&ok=1&przyklad=1" target="_blank" rel="noopener" class="ofr-haslo-link">Zobacz przykładowy raport bezpłatny →</a>
         </div>
 
         <!-- OFERTA 2 - 69 zł -->
@@ -277,7 +278,7 @@
             <li>Pozwolenia na budowę w okolicy</li>
           </ul>
           <a href="raport.html?kup=1" class="ofr-btn">Zamów raport rozszerzony - 69 zł</a>
-          <a href="raport-rozszerzony.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1" target="_blank" rel="noopener" class="ofr-haslo-link">Zobacz przykładowy raport rozszerzony →</a>
+          <a href="raport-rozszerzony.html?id=302116_5.0005.78%2F3&ok=1&przyklad=1" target="_blank" rel="noopener" class="ofr-haslo-link">Zobacz przykładowy raport rozszerzony →</a>
           <a href="#haslo" class="ofr-haslo-link">Masz hasło? Odblokuj raport za darmo →</a>
         </div>
 
@@ -313,10 +314,10 @@
 
       <div class="dataroom">
         <div class="dr-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-        <p data-cms="dataroom_text">Zobacz przykładowe raporty dla tej samej działki w Trzcielinie (gm. Dopiewo) - bezpłatny i rozszerzony, żeby porównać ich zakres.</p>
+        <p data-cms="dataroom_text">Zobacz przykładowe raporty dla tej samej działki w Janikowie (gm. Swarzędz) - bezpłatny i rozszerzony, żeby porównać ich zakres.</p>
         <div class="dr-btns">
-          <a href="raport.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1" target="_blank" rel="noopener" class="btn-gold btn-sm">Przykładowy raport bezpłatny →</a>
-          <a href="raport-rozszerzony.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1" target="_blank" rel="noopener" class="btn-gold btn-sm">Przykładowy raport rozszerzony →</a>
+          <a href="raport.html?id=302116_5.0005.78%2F3&ok=1&przyklad=1" target="_blank" rel="noopener" class="btn-gold btn-sm">Przykładowy raport bezpłatny →</a>
+          <a href="raport-rozszerzony.html?id=302116_5.0005.78%2F3&ok=1&przyklad=1" target="_blank" rel="noopener" class="btn-gold btn-sm">Przykładowy raport rozszerzony →</a>
         </div>
       </div>
     </div>
@@ -435,6 +436,8 @@
             </select>
           </div>
           <div class="fg"><label>Wiadomość</label><textarea id="c-msg" rows="4" placeholder="Opisz czego szukasz…"></textarea></div>
+          <label class="zgoda-kontakt"><input type="checkbox" id="c-zgoda" /> <span>Chcę otrzymywać od Śniadecki S.A. informacje o usługach gruntowo.pl (oferty, nowości) e-mailem i telefonicznie. Zgoda jest dobrowolna - możesz ją w każdej chwili wycofać.</span></label>
+          <p class="search-hint-sm" style="margin:.2rem 0 1rem;">Administratorem Twoich danych jest Śniadecki S.A. Wykorzystamy je, aby odpowiedzieć na Twoją wiadomość. Szczegóły w <a href="klauzula.html" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline;">klauzuli informacyjnej</a>.</p>
           <button type="submit" class="btn-gold">Wyślij wiadomość</button>
           <p class="form-note">Odpowiadamy w ciągu jednego dnia roboczego.</p>
         </form>
@@ -449,7 +452,7 @@
       <a href="https://gruntowo.com" target="_blank" rel="noopener">
         <img src="gruntowo-logo.png" alt="Gruntowo.com" />
       </a>
-      <span class="partner-desc">Największa baza gruntów inwestycyjnych w Polsce</span>
+      <span class="partner-desc">Najbardziej przejrzyste narzędzie do analizy gruntów w Polsce</span>
     </div>
   </div>
 
@@ -458,7 +461,10 @@
       <div>
         <a href="#" class="nav-logo"><img src="gruntowo-logo.png" alt="gruntowo.pl" class="ft-logo-img" /></a>
         <p class="ft-sub">Portal z gruntami</p>
-        <p class="ft-sub">NIP 7831774771 · REGON 369753222</p>
+        <p class="ft-sub">Śniadecki S.A., ul. Młyńska 12, 61-730 Poznań</p>
+        <p class="ft-sub">KRS 0001181879 · NIP 7831931207 · REGON 542155496</p>
+        <p class="ft-sub ft-sub-sm">Sąd Rejonowy Poznań - Nowe Miasto i Wilda w Poznaniu, VIII Wydział Gospodarczy KRS · kapitał zakładowy 113 750 zł, wpłacony w całości</p>
+        <p class="ft-sub ft-sub-sm">gruntowo.pl jest znakiem należącym do Śniadecki S.A. · <a href="klauzula.html">Klauzula informacyjna</a></p>
         <a href="https://gruntowo.com" target="_blank" rel="noopener" class="ft-partner">
           <img src="gruntowo-logo.png" alt="Gruntowo.com" />
           <span>Portal z gruntami</span>
@@ -474,13 +480,15 @@
       </nav>
       <div class="ft-legal">
         <p>© gruntowo.pl. Wszelkie prawa zastrzeżone.</p>
-        <a href="#">Polityka prywatności</a>
+        <a href="klauzula.html">Polityka prywatności</a>
+        <a href="#" data-ustawienia-cookies>Ustawienia cookies</a>
       </div>
     </div>
   </footer>
 
+  <script src="zgody.js?v=2"></script>
   <script src="haslo.js?v=20260925"></script>
   <script src="lenis.min.js?v=1"></script>
-  <script src="main.js?v=47"></script>
+  <script src="main.js?v=53"></script>
 </body>
 </html>

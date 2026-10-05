@@ -112,8 +112,8 @@
     wczytajLeaflet().then(function () {
       const mapa = L.map('pm-mapa', { center: [52.11, 19.42], zoom: 6 });
       const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(mapa);
-      const orto = L.tileLayer.wms('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution', { layers: 'Raster', format: 'image/jpeg', maxZoom: 20, attribution: 'GUGiK' });
-      const dzialki = L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20 }).addTo(mapa);
+      const orto = L.tileLayer('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}&TILEROW={y}&TILECOL={x}', { maxNativeZoom: 19, maxZoom: 20, attribution: 'GUGiK' })   // gotowe kafelki WMTS - kilka razy szybsze niz WMS;
+      const dzialki = L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20, tileSize: 512 }).addTo(mapa);
       L.control.layers({ 'Mapa': osm, 'Ortofotomapa': orto }, { 'Granice działek': dzialki }, { collapsed: false }).addTo(mapa);
       let znacznik = null;
       const info = $('pm-info');
@@ -185,12 +185,12 @@
     const id = params.get('id');
     const ok = params.get('ok');
     // Przykladowy raport bezplatny (ta sama dzialka co przykladowy rozszerzony) - pasek z wyjasnieniem
-    if (params.get('przyklad') === '1' && id === '302105_2.0009.222/8' && !document.getElementById('werdykt-gora')) {
+    if (params.get('przyklad') === '1' && id === '302116_5.0005.78/3' && !document.getElementById('werdykt-gora')) {
       const pasek = document.createElement('div');
       pasek.className = 'pasek-przykladu';
-      pasek.innerHTML = '<div class="pp-tekst"><strong>To jest przykładowy raport bezpłatny</strong> - dla działki w Trzcielinie (gm. Dopiewo). ' +
+      pasek.innerHTML = '<div class="pp-tekst"><strong>To jest przykładowy raport bezpłatny</strong> - dla działki w Janikowie (gm. Swarzędz). ' +
         'Tak samo wygląda raport dla Twojej działki. Pełną analizę z werdyktem 0-100 zobaczysz w przykładowym raporcie rozszerzonym tej samej działki.</div>' +
-        '<div class="pp-akcje"><a href="raport-rozszerzony.html?id=302105_2.0009.222%2F8&ok=1&przyklad=1" class="btn btn-gold">Przykładowy raport rozszerzony</a>' +
+        '<div class="pp-akcje"><a href="raport-rozszerzony.html?id=302116_5.0005.78%2F3&ok=1&przyklad=1" class="btn btn-gold">Przykładowy raport rozszerzony</a>' +
         '<a href="raport.html" class="btn">Sprawdź swoją działkę</a></div>';
       const hero = document.querySelector('#report .rep-hero');
       if (hero) hero.parentNode.insertBefore(pasek, hero);
@@ -233,11 +233,13 @@
       dane.append('dzialka', id);
       dane.append('email', email);
       dane.append('telefon', tel);
+      dane.append('zgoda_kontakt', $('r-zgoda') && $('r-zgoda').checked ? 'TAK' : 'NIE');
       dane.append('data', new Date().toLocaleString('pl-PL'));
       fetch(FORM_ENDPOINT, { method: 'POST', body: dane }).catch(function () {});
+      window.gruntowoZdarzenie && window.gruntowoZdarzenie('generate_lead', { formularz: 'raport_bezplatny_id' });
       // ...i do CRM
       fetch('https://sniadecki-development.pl/gruntowo-api/zgloszenie.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ zrodlo: 'raport_darmowy', email: email, telefon: tel, dzialka: id, strona: location.href }) }).catch(function () {});
+        body: JSON.stringify({ zrodlo: 'raport_darmowy', email: email, telefon: tel, dzialka: id, zgoda_kontakt: ($('r-zgoda') && $('r-zgoda').checked) ? 'TAK' : 'NIE', strona: location.href }) }).catch(function () {});
     }
 
     start.style.display = 'none';

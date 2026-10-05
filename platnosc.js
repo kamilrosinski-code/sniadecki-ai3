@@ -51,6 +51,8 @@
       '<label class="kup-label" for="kup-email">Adres e-mail (na potwierdzenie płatności)</label>' +
       '<input id="kup-email" class="id-input" type="email" autocomplete="email" placeholder="jan@firma.pl" required />' +
       '<label class="kup-zgoda"><input type="checkbox" id="kup-zgoda" required /> <span>Akceptuję <a href="regulamin.html" target="_blank" rel="noopener">regulamin</a> i chcę otrzymać raport od razu - wiem, że po jego dostarczeniu tracę prawo odstąpienia od umowy.</span></label>' +
+      '<label class="kup-zgoda"><input type="checkbox" id="kup-marketing" /> <span>Chcę otrzymywać od Śniadecki S.A. informacje o usługach gruntowo.pl (oferty, nowości) e-mailem i telefonicznie. Zgoda jest dobrowolna - możesz ją w każdej chwili wycofać.</span></label>' +
+      '<p class="kup-info" style="margin-top:.2rem">Administratorem Twoich danych jest Śniadecki S.A. Wykorzystamy je, aby zrealizować zamówienie. Szczegóły w <a href="klauzula.html" target="_blank" rel="noopener">klauzuli informacyjnej</a>.</p>' +
       '<div class="kup-msg" role="status" aria-live="polite"></div>' +
       '<button type="submit" class="btn btn-gold kup-btn">Przechodzę do płatności - ' + CENA + '</button>' +
       '<div class="kup-payu"><span>Bezpieczną płatność obsługuje</span>' + logoPayU() + '</div>' +
@@ -90,7 +92,8 @@
     if (!zgoda) { msg.textContent = 'Zaznacz akceptację regulaminu.'; return; }
     try { localStorage.setItem('gruntowo_email', email); } catch (e2) {}
     btn.disabled = true; msg.textContent = 'Łączymy z PayU…';
-    fetch(API + '/platnosc-start.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: biezaceId, email: email }) })
+    window.gruntowoZdarzenie && window.gruntowoZdarzenie('begin_checkout', { currency: 'PLN', value: 69, items: [{ item_name: 'Raport rozszerzony' }] });
+    fetch(API + '/platnosc-start.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: biezaceId, email: email, zgoda_kontakt: modal.querySelector('#kup-marketing').checked ? 'TAK' : 'NIE' }) })
       .then(function (r) { return r.json(); })
       .then(function (w) {
         if (w && w.ok && w.redirect) { msg.textContent = 'Przekierowujemy do płatności…'; window.location.href = w.redirect; return; }

@@ -26,6 +26,8 @@
         '#konsult-modal form{width:100%;max-width:440px;background:#131410;border:1px solid rgba(201,169,110,.35);border-radius:14px;padding:1.6rem;color:#f2f0eb;position:relative;max-height:92vh;overflow:auto}' +
         '#konsult-modal h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:1.7rem;margin:.2rem 0 .4rem;color:#dfc090}' +
         '#konsult-modal p{font-size:.88rem;color:#8a9a93;margin:0 0 1rem}#konsult-modal label{display:block;font-size:.78rem;color:#8a9a93;margin:.6rem 0 .25rem}' +
+        '#konsult-modal .km-zgoda{display:flex;gap:.55rem;align-items:flex-start;font-size:.76rem;line-height:1.5;color:#b9c2bc;margin:.9rem 0 .3rem;cursor:pointer}#konsult-modal .km-zgoda input{width:auto;margin-top:.2rem;accent-color:#c9a96e}' +
+        '#konsult-modal .km-rodo{font-size:.72rem;line-height:1.5;margin:.2rem 0 .8rem}#konsult-modal .km-rodo a{color:#c9a96e}' +
         '#konsult-modal input{width:100%;box-sizing:border-box;background:#1a1c17;border:1px solid #2a2c26;border-radius:8px;color:#f2f0eb;padding:.65rem .75rem;font:inherit}' +
         '#konsult-modal button[type=submit]{margin-top:1.1rem;width:100%;background:#c9a96e;color:#14181a;border:0;border-radius:8px;padding:.8rem;font-weight:600;font:inherit;cursor:pointer}' +
         '#konsult-modal .km-mapa-btn{margin-top:.5rem;background:none;border:0;color:#c9a96e;font:inherit;font-size:.8rem;text-decoration:underline;cursor:pointer;padding:0}' +
@@ -42,11 +44,13 @@
         '<label>Imię i nazwisko</label><input name="imie" autocomplete="name" required>' +
         '<label>E-mail</label><input name="email" type="email" autocomplete="email" required>' +
         '<label>Telefon</label><input name="telefon" type="tel" autocomplete="tel">' +
-        '<label>Numer działki lub adres (opcjonalnie)</label><input name="dzialka" placeholder="np. 302105_2.0009.222/8">' +
+        '<label>Numer działki lub adres (opcjonalnie)</label><input name="dzialka" placeholder="np. 302116_5.0005.78/3">' +
         '<button type="button" class="km-mapa-btn">Nie znasz numeru? Wskaż działkę na mapie</button>' +
         '<div class="km-mapa" hidden><div class="km-szukaj"><input type="text" placeholder="Miejscowość lub adres" autocomplete="off"><button type="button">Szukaj</button></div>' +
         '<div class="km-mapa-el"></div><p class="km-info">Wyszukaj miejscowość, przybliż mapę i kliknij w działkę.</p></div>' +
         '<input name="strona_www" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">' +
+        '<label class="km-zgoda"><input type="checkbox" name="zgoda_kontakt"> <span>Chcę otrzymywać od Śniadecki S.A. informacje o usługach gruntowo.pl (oferty, nowości) e-mailem i telefonicznie. Zgoda jest dobrowolna - możesz ją w każdej chwili wycofać.</span></label>' +
+        '<p class="km-rodo">Administratorem Twoich danych jest Śniadecki S.A. Wykorzystamy je, aby umówić i przeprowadzić konsultację. Szczegóły w <a href="klauzula.html" target="_blank" rel="noopener">klauzuli informacyjnej</a>.</p>' +
         '<div class="msg" role="status"></div><button type="submit">Dalej - wybierz termin →</button></form>';
       document.body.appendChild(m);
       m.addEventListener('click', function (e) { if (e.target === m || e.target.classList.contains('x')) m.style.display = 'none'; });
@@ -61,7 +65,7 @@
         if (typeof L === 'undefined') { el.innerHTML = '<p style="padding:1rem;font-size:.8rem;color:#8a9a93">Mapa chwilowo niedostępna - wpisz miejscowość i ulicę w polu powyżej.</p>'; return; }
         kmMapa = L.map(el, { center: [52.40, 16.92], zoom: 11 });
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(kmMapa);
-        L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20 }).addTo(kmMapa);
+        L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20, tileSize: 512 }).addTo(kmMapa);
         const szukajPole = box.querySelector('.km-szukaj input');
         const szukaj = function () {
           const q = szukajPole.value.trim(); if (!q) return;
@@ -98,7 +102,9 @@
         const okno = window.open('', '_blank');
         if (okno) { try { okno.document.title = 'Wybór terminu - gruntowo.pl'; okno.document.body.innerHTML = '<p style="font:16px sans-serif;padding:2rem">Otwieramy kalendarz…</p>'; } catch (e2) {} }
         const dz = v('dzialka'), jestId = /^\d{6}_\d\./.test(dz);
-        doCRM({ zrodlo: 'konsultacja', imie: v('imie'), email: v('email'), telefon: v('telefon'),
+        const zgodaK = !!(m.querySelector('[name=zgoda_kontakt]') && m.querySelector('[name=zgoda_kontakt]').checked);
+        window.gruntowoZdarzenie && window.gruntowoZdarzenie('generate_lead', { formularz: 'konsultacja' });
+        doCRM({ zrodlo: 'konsultacja', imie: v('imie'), email: v('email'), telefon: v('telefon'), zgoda_kontakt: zgodaK ? 'TAK' : 'NIE',
           dzialka: jestId ? dz : '', miejscowosc: jestId ? '' : dz, temat: 'Konsultacja z ekspertem - wybór terminu w Zencal',
           strona_www: v('strona_www'), strona: location.href })
           .then(function () {   // w Zencal i tak wybiera termin, nawet gdy CRM nie odpowie
@@ -204,6 +210,8 @@
           document.body.insertBefore(warstwa, document.body.firstChild);
           document.body.classList.add('film-aktywny');               // wylacza rozmycia tla nad filmem (oszczedza GPU)
           const sekcja = document.querySelector('.sekcja-film');
+          // gleba trwa za sekcja "Doswiadczenie..." i "Zaawansowany model analityczny...", potem przechodzi w czern
+          const koniec = document.getElementById('sourcing') || sekcja;
           if (wysunieta) { wymusPelna = true; }
           hero.classList.remove('hero-czeka'); hero.classList.add('hero-sterowane'); sb.classList.remove('wysuwa');
           const pokazSzukaj = function (o) {
@@ -215,7 +223,7 @@
           const t0 = performance.now();
           const zakres = function () {
             const y0 = scena.offsetTop - gora, y1 = y0 + droga;                // hero stoi: y0..y1
-            const y2 = sekcja ? Math.max(y1 + 200, sekcja.offsetTop + sekcja.offsetHeight - window.innerHeight) : y1 + window.innerHeight;
+            const y2 = koniec ? Math.max(y1 + 200, koniec.offsetTop + koniec.offsetHeight - window.innerHeight) : y1 + window.innerHeight;
             return { y0: y0, y1: y1, y2: y2, y3: y2 + window.innerHeight * 0.7 };     // y2..y3: gasniecie do czerni
           };
           const postep = function () {                               // film gra tylko, gdy hero stoi
@@ -245,7 +253,7 @@
             ustawGlebe();
             // za tekstem sekcji "Doswiadczenie..." lekkie przyciemnienie dla czytelnosci, a nizej coraz ciemniej
             const ps2 = sekcja ? Math.max(0, Math.min(1, (y + vh - sekcja.offsetTop) / (vh * 0.8))) : 0;
-            cien.style.opacity = (0.2 * ps2).toFixed(3);   // tekst ma juz wlasny kafelek, wiec tlo tylko lekko przyciemnione
+            cien.style.opacity = (0.32 * ps2).toFixed(3);   // tekst ma juz wlasny kafelek, wiec tlo tylko lekko przyciemnione
             warstwa.style.opacity = (1 - Math.max(0, Math.min(1, (y - z.y2) / (z.y3 - z.y2)))).toFixed(3);
             // przewijamy film tylko, gdy zmienia sie klatka, i nigdy dwa przewiniecia naraz
             const kl = Math.round(t * KL);
@@ -264,7 +272,14 @@
             const B = hero.getBoundingClientRect().bottom;
             if (!glebaH) glebaH = gleba.offsetHeight;
             gleba.style.opacity = B < vh ? '1' : '0';
-            const ty = B >= 0 ? B : Math.max(vh - glebaH, B * 0.75);
+            // po zniknieciu granicy zdjecie jedzie wolniej niz strona - dobrane tak, by dol zdjecia
+            // dojechal do dolu ekranu dokladnie na koncu sekcji "Zaawansowany model analityczny"
+            let k = 0.75;
+            if (koniec) {
+              const droga2 = (koniec.getBoundingClientRect().bottom - vh) - B;
+              if (droga2 > 0) k = Math.max(0.25, Math.min(0.9, (glebaH - vh) / droga2));
+            }
+            const ty = B >= 0 ? B : Math.max(vh - glebaH, B * k);
             gleba.style.transform = 'translate3d(0,' + ty.toFixed(1) + 'px,0)';
           }
           window.addEventListener('resize', function () { glebaH = 0; ustawGlebe(); });
@@ -414,8 +429,8 @@
         attribution: '&copy; OpenStreetMap'
       }).addTo(leafletMap);
       // Te same przelaczniki co w mapie raportu: ortofotomapa GUGiK i granice dzialek (KIEG, od duzego przyblizenia)
-      const orto = L.tileLayer.wms('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution', { layers: 'Raster', format: 'image/jpeg', maxZoom: 20, attribution: 'GUGiK' });
-      const dzialki = L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20 }).addTo(leafletMap);
+      const orto = L.tileLayer('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}&TILEROW={y}&TILECOL={x}', { maxNativeZoom: 19, maxZoom: 20, attribution: 'GUGiK' })   // gotowe kafelki WMTS - kilka razy szybsze niz WMS;
+      const dzialki = L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20, tileSize: 512 }).addTo(leafletMap);
       L.control.layers({ 'Mapa': osm, 'Ortofotomapa': orto }, { 'Granice działek': dzialki }, { collapsed: false }).addTo(leafletMap);
 
       // Zapisuj współrzędne środka przy każdym przesunięciu mapy
@@ -500,13 +515,16 @@
         dane.append('dzialka', '(z mapy)');
         dane.append('email', email);
         dane.append('telefon', telefon);
+        dane.append('zgoda_kontakt', document.getElementById('s-zgoda') && document.getElementById('s-zgoda').checked ? 'TAK' : 'NIE');
         dane.append('wspolrzedne', wsp);
         dane.append('mapa_link', 'https://www.google.com/maps?q=' + encodeURIComponent(wsp));
         dane.append('data', new Date().toLocaleString('pl-PL'));
         fetch(FORM_ENDPOINT, { method: 'POST', body: dane }).catch(function () {});
       }
       // ...i do CRM
-      doCRM({ zrodlo: 'raport_darmowy', email: email, telefon: telefon, miejscowosc: miasto, wspolrzedne: wsp,
+      const zgodaS = !!(document.getElementById('s-zgoda') && document.getElementById('s-zgoda').checked);
+      window.gruntowoZdarzenie && window.gruntowoZdarzenie('generate_lead', { formularz: 'raport_bezplatny_mapa' });
+      doCRM({ zrodlo: 'raport_darmowy', email: email, telefon: telefon, miejscowosc: miasto, wspolrzedne: wsp, zgoda_kontakt: zgodaS ? 'TAK' : 'NIE',
         mapa_link: 'https://www.google.com/maps?q=' + encodeURIComponent(wsp), strona: location.href });
 
       // Ustal identyfikator działki z współrzędnych (przez pośrednik ULDK), potem raport
@@ -571,8 +589,10 @@
       btn.disabled = true;
 
       const hp = form.querySelector('[name="strona_www"]');
+      window.gruntowoZdarzenie && window.gruntowoZdarzenie('generate_lead', { formularz: 'kontakt' });
       doCRM({
         zrodlo: 'kontakt', imie: name, email: email,
+        zgoda_kontakt: document.getElementById('c-zgoda') && document.getElementById('c-zgoda').checked ? 'TAK' : 'NIE',
         telefon: document.getElementById('c-tel') ? document.getElementById('c-tel').value.trim() : '',
         temat: document.getElementById('c-topic').value, wiadomosc: document.getElementById('c-msg').value.trim(),
         strona_www: hp ? hp.value : '', strona: location.href
