@@ -1813,6 +1813,20 @@
       '</g>';
   }
 
+  // Linia GABARYTU: jak linia wymiarowa, ale z wyrazna zlota etykieta (najwieksza dlugosc/szerokosc dzialki)
+  function liniaGabarytu(x1, y1, x2, y2, tekst) {
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len, k = 8;
+    const kres = function (x, y) { return 'M' + (x + nx * k).toFixed(1) + ',' + (y + ny * k).toFixed(1) + ' L' + (x - nx * k).toFixed(1) + ',' + (y - ny * k).toFixed(1); };
+    const sx = (x1 + x2) / 2, sy = (y1 + y2) / 2, szer = tekst.length * 10.5 + 18;
+    return '<g>' +
+      '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="#c9a961" stroke-width="2"/>' +
+      '<path d="' + kres(x1, y1) + ' ' + kres(x2, y2) + '" stroke="#c9a961" stroke-width="2"/>' +
+      '<rect x="' + (sx - szer / 2).toFixed(1) + '" y="' + (sy - 14).toFixed(1) + '" width="' + szer + '" height="27" rx="5" fill="rgba(176,141,62,0.96)" stroke="#0b0c0a" stroke-width="1"/>' +
+      '<text x="' + sx.toFixed(1) + '" y="' + (sy + 5).toFixed(1) + '" font-family="monospace" font-size="16" font-weight="700" fill="#14181a" text-anchor="middle">' + tekst + '</text>' +
+      '</g>';
+  }
+
   // Oblicz obwod dzialki w metrach
   function obliczObwod(punkty, mLon, mLat) {
     let obw = 0;
@@ -1832,7 +1846,7 @@
       '<div class="wym-item"><span class="wym-label">Długość (gabaryt)</span><span class="wym-val">' + w.dlugosc + ' m</span></div>' +
       '<div class="wym-item"><span class="wym-label">Szerokość (gabaryt)</span><span class="wym-val">' + w.szerokosc + ' m</span></div>' +
       '<div class="wym-item"><span class="wym-label">Obwód działki</span><span class="wym-val">' + w.obwod + ' m</span></div>' +
-      '<div class="wym-item"><span class="wym-label">Liczba boków</span><span class="wym-val">' + w.boki + '</span></div>';
+      '<div class="wym-item"><span class="wym-label">Liczba boków</span><span class="wym-val">' + w.boki + (w.najdluzszyBok ? ' <small>(najdłuższy ' + w.najdluzszyBok + ' m)</small>' : '') + '</span></div>';
     const sekcja = document.getElementById('sec-wymiary');
     if (sekcja) sekcja.style.display = 'block';
   }
@@ -1882,85 +1896,128 @@
       punkty.forEach(function (pt, i) { d += (i === 0 ? 'M' : 'L') + pt.x.toFixed(1) + ',' + pt.y.toFixed(1) + ' '; });
       paths += '<path d="' + d + 'Z" fill="rgba(201,169,110,0.18)" stroke="#c9a961" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>';
 
-      // WYMIARY jako LINIE WYMIAROWE na krawedziach prostokata otaczajacego dzialke.
-      // Prostokat zorientowany wzdluz najdluzszego boku - linie zawsze rownolegle do dzialki.
+      // WYMIARY: (1) gabaryt = najmniejszy prostokat opisany na dzialce (dowolnie obrocony) - najwieksza
+      //          dlugosc i szerokosc dzialki, z liniami wymiarowymi na jego krawedziach;
+      //          (2) dlugosci bokow dzialki - male etykiety przy kazdym wyraznym boku (boki prawie
+      //          wspolliniowe laczymy, krotkie i nakladajace sie etykiety pomijamy).
       if (pokazWymiary && punkty.length >= 3) {
         const lonSr = (minLon + maxLon) / 2, latSr = (minLat + maxLat) / 2;
-        const mp = punkty.map(function (pt) {
-          return {
-            mx: (pt.lon - lonSr) * M_NA_STOPIEN_LON,
-            my: (pt.lat - latSr) * M_NA_STOPIEN_LAT,
-            x: pt.x, y: pt.y
-          };
+        const doM = function (pt) { return { mx: (pt.lon - lonSr) * M_NA_STOPIEN_LON, my: (pt.lat - latSr) * M_NA_STOPIEN_LAT, x: pt.x, y: pt.y }; };
+        const doPx = function (mx, my) {
+          return { x: ((lonSr + mx / M_NA_STOPIEN_LON - minLon) / szerLon) * W, y: ((maxLat - (latSr + my / M_NA_STOPIEN_LAT)) / szerLat) * H };
+        };
+        let mp = punkty.map(doM);
+        if (mp.length > 1 && Math.hypot(mp[0].mx - mp[mp.length - 1].mx, mp[0].my - mp[mp.length - 1].my) < 0.01) mp = mp.slice(0, -1);   // bez powtorzonego punktu zamykajacego
+        const n = mp.length;
+        const cx = mp.reduce(function (s, m) { return s + m.x; }, 0) / n;
+        const cy = mp.reduce(function (s, m) { return s + m.y; }, 0) / n;
+
+        // (1) Gabaryt - otoczka wypukla + obracany prostokat (min. pole)
+        const otoczka = (function (pkt) {
+          const p = pkt.slice().sort(function (a, b) { return a.mx - b.mx || a.my - b.my; });
+          const kr = function (o, a, b) { return (a.mx - o.mx) * (b.my - o.my) - (a.my - o.my) * (b.mx - o.mx); };
+          const dol = [], gora = [];
+          p.forEach(function (q) { while (dol.length >= 2 && kr(dol[dol.length - 2], dol[dol.length - 1], q) <= 0) dol.pop(); dol.push(q); });
+          p.slice().reverse().forEach(function (q) { while (gora.length >= 2 && kr(gora[gora.length - 2], gora[gora.length - 1], q) <= 0) gora.pop(); gora.push(q); });
+          return dol.slice(0, -1).concat(gora.slice(0, -1));
+        })(mp);
+        let best = null;
+        for (let i = 0; i < otoczka.length; i++) {
+          const a = otoczka[i], b2 = otoczka[(i + 1) % otoczka.length];
+          const kat = Math.atan2(b2.my - a.my, b2.mx - a.mx);
+          const ux = Math.cos(kat), uy = Math.sin(kat);
+          let u0 = 1e12, u1 = -1e12, v0 = 1e12, v1 = -1e12;
+          otoczka.forEach(function (q) { const u = q.mx * ux + q.my * uy, v = -q.mx * uy + q.my * ux; if (u < u0) u0 = u; if (u > u1) u1 = u; if (v < v0) v0 = v; if (v > v1) v1 = v; });
+          const pole = (u1 - u0) * (v1 - v0);
+          if (!best || pole < best.pole) best = { pole: pole, ux: ux, uy: uy, u0: u0, u1: u1, v0: v0, v1: v1 };
+        }
+        // wierzcholki prostokata (metry -> piksele); dluzszy bok = dlugosc
+        const rog = function (u, v) { return doPx(u * best.ux - v * best.uy, u * best.uy + v * best.ux); };
+        const R = [rog(best.u0, best.v0), rog(best.u1, best.v0), rog(best.u1, best.v1), rog(best.u0, best.v1)];
+        const bokU = best.u1 - best.u0, bokV = best.v1 - best.v0;
+        const dlugosc = Math.max(bokU, bokV), szerokosc = Math.min(bokU, bokV);
+        paths += '<path d="M' + R.map(function (q) { return q.x.toFixed(1) + ',' + q.y.toFixed(1); }).join(' L') + ' Z" fill="none" stroke="#f3efe6" stroke-opacity="0.55" stroke-width="1.3" stroke-dasharray="7 6" vector-effect="non-scaling-stroke"/>';
+
+        // linia wymiarowa wzdluz krawedzi prostokata, odsunieta na zewnatrz (od srodka prostokata)
+        const rcx = (R[0].x + R[2].x) / 2, rcy = (R[0].y + R[2].y) / 2;
+        const naZewnatrz = function (p1, p2, off) {
+          const dx = p2.x - p1.x, dy = p2.y - p1.y, l = Math.hypot(dx, dy) || 1;
+          let nx = -dy / l, ny = dx / l;
+          if (((p1.x + p2.x) / 2 - rcx) * nx + ((p1.y + p2.y) / 2 - rcy) * ny < 0) { nx = -nx; ny = -ny; }
+          return { a: { x: p1.x + nx * off, y: p1.y + ny * off }, b: { x: p2.x + nx * off, y: p2.y + ny * off } };
+        };
+        // z dwoch krawedzi o danej dlugosci wybieramy te nizej (dlugosc) / bardziej w prawo (szerokosc) - czytelny uklad
+        const krawedzie = [[R[0], R[1], bokU], [R[1], R[2], bokV], [R[2], R[3], bokU], [R[3], R[0], bokV]];
+        const wybierz = function (dl, klucz) {
+          const kand = krawedzie.filter(function (k) { return Math.abs(k[2] - dl) < 0.01; });
+          kand.sort(function (a, b) { return klucz(b) - klucz(a); });
+          return kand[0];
+        };
+        const kDl = wybierz(dlugosc, function (k) { return (k[0].y + k[1].y) / 2; });
+        const kSz = wybierz(szerokosc, function (k) { return (k[0].x + k[1].x) / 2; });
+        const zajete = [];   // prostokaty etykiet (do pomijania nakladajacych sie)
+        const zajmij = function (x, y, w, h) { zajete.push([x - w / 2, y - h / 2, x + w / 2, y + h / 2]); };
+        const wolne = function (x, y, w, h) {
+          const a = [x - w / 2, y - h / 2, x + w / 2, y + h / 2];
+          if (a[0] < 2 || a[1] < 2 || a[2] > W - 2 || a[3] > H - 2) return false;
+          return !zajete.some(function (z) { return a[0] < z[2] && a[2] > z[0] && a[1] < z[3] && a[3] > z[1]; });
+        };
+        [[kDl, dlugosc], [kSz, szerokosc]].forEach(function (e) {
+          if (!e[0]) return;
+          const L = naZewnatrz(e[0][0], e[0][1], 26);
+          const t = 'gabaryt ' + Math.round(e[1]) + ' m';
+          etykiety += liniaGabarytu(L.a.x, L.a.y, L.b.x, L.b.y, t);
+          zajmij((L.a.x + L.b.x) / 2, (L.a.y + L.b.y) / 2, t.length * 11 + 20, 30);
         });
 
-        // === WYMIARY: linie leza WZDLUZ dwoch najdluzszych bokow samej dzialki ===
-        // (nie wzdluz prostokata otaczajacego - to eliminuje przesuniecie).
-
-        // Srodek dzialki w pikselach (do odsuniecia linii na wlasciwa strone)
-        const cx = mp.reduce(function (s, m) { return s + m.x; }, 0) / mp.length;
-        const cy = mp.reduce(function (s, m) { return s + m.y; }, 0) / mp.length;
-
-        // Dlugosc kazdego boku (w metrach) + zapamietaj indeksy
-        const boki = [];
-        for (let i = 0; i < mp.length - 1; i++) {
-          const dmx = mp[i + 1].mx - mp[i].mx, dmy = mp[i + 1].my - mp[i].my;
-          boki.push({ i: i, dlug: Math.hypot(dmx, dmy), kat: Math.atan2(dmy, dmx) });
+        // (2) Boki dzialki - laczymy prawie wspolliniowe odcinki (zmiana kierunku < 7°)
+        let wierz = mp.slice();
+        for (let zmiana = true, it = 0; zmiana && wierz.length > 3 && it < 500; it++) {
+          zmiana = false;
+          for (let i = 0; i < wierz.length && wierz.length > 3; i++) {
+            const a = wierz[(i - 1 + wierz.length) % wierz.length], b2 = wierz[i], c = wierz[(i + 1) % wierz.length];
+            const k1 = Math.atan2(b2.my - a.my, b2.mx - a.mx), k2 = Math.atan2(c.my - b2.my, c.mx - b2.mx);
+            let d = Math.abs(k1 - k2); if (d > Math.PI) d = 2 * Math.PI - d;
+            if (d < 7 * Math.PI / 180 || Math.hypot(c.mx - b2.mx, c.my - b2.my) < 0.3) { wierz.splice(i, 1); zmiana = true; break; }
+          }
         }
-        boki.sort(function (a, b) { return b.dlug - a.dlug; });
-
-        // BOK 1 = najdluzszy (to bedzie "dlugosc")
-        const bok1 = boki[0];
-        // BOK 2 = najdluzszy bok najbardziej PROSTOPADLY do bok1 (to "szerokosc")
-        let bok2 = null, bestPerp = -1;
-        for (let k = 1; k < boki.length; k++) {
-          let dk = Math.abs(boki[k].kat - bok1.kat);
-          while (dk > Math.PI) dk -= Math.PI;             // roznica katow 0..PI
-          const perp = Math.abs(Math.sin(dk)) * boki[k].dlug; // im blizej 90°, tym wieksza
-          if (perp > bestPerp) { bestPerp = perp; bok2 = boki[k]; }
-        }
-        if (!bok2) bok2 = boki[1] || boki[0];
-
-        // Gabaryty (dlugosc x szerokosc) - rzuty na osie bok1
-        const uMx = Math.cos(bok1.kat), uMy = Math.sin(bok1.kat);
-        const pMx = -uMy, pMy = uMx;
-        let minU = 1e9, maxU = -1e9, minP = 1e9, maxP = -1e9;
-        mp.forEach(function (m) {
-          const u = m.mx * uMx + m.my * uMy, pr = m.mx * pMx + m.my * pMy;
-          if (u < minU) minU = u; if (u > maxU) maxU = u;
-          if (pr < minP) minP = pr; if (pr > maxP) maxP = pr;
+        const boki = wierz.map(function (a, i) {
+          const b2 = wierz[(i + 1) % wierz.length];
+          return { a: a, b: b2, dl: Math.hypot(b2.mx - a.mx, b2.my - a.my), px: Math.hypot(b2.x - a.x, b2.y - a.y) };
         });
-        const dlugosc = maxU - minU, szerokosc = maxP - minP;
+        const obwod = boki.reduce(function (s, b2) { return s + b2.dl; }, 0);
+        boki.slice().sort(function (a, b2) { return b2.dl - a.dl; }).slice(0, 16).forEach(function (bk) {
+          if (bk.px < 38 || bk.dl < 2) return;   // za krotki na etykiete
+          const t = (bk.dl < 100 ? bk.dl.toFixed(1).replace('.', ',') : Math.round(bk.dl)) + ' m';
+          const dx = bk.b.x - bk.a.x, dy = bk.b.y - bk.a.y, l = Math.hypot(dx, dy) || 1;
+          let nx = -dy / l, ny = dx / l;
+          const sx0 = (bk.a.x + bk.b.x) / 2, sy0 = (bk.a.y + bk.b.y) / 2;
+          if ((sx0 - cx) * nx + (sy0 - cy) * ny < 0) { nx = -nx; ny = -ny; }
+          const w = t.length * 8.6 + 10;
+          const bw = w * Math.abs(dx / l) + 20 * Math.abs(dy / l), bh = w * Math.abs(dy / l) + 20 * Math.abs(dx / l);
+          // etykieta po WEWNETRZNEJ stronie boku (na zewnatrz sa linie gabarytu); gdy srodek boku zajety - probujemy obok
+          let x = null, y = null;
+          [0.5, 0.35, 0.65, 0.22, 0.78].some(function (f) {
+            const px = bk.a.x + dx * f - nx * 15, py = bk.a.y + dy * f - ny * 15;
+            if (bk.px * Math.min(f, 1 - f) * 2 < w * 0.7 && f !== 0.5) return false;   // etykieta musi zmiescic sie na boku
+            if (wolne(px, py, bw, bh)) { x = px; y = py; return true; }
+            return false;
+          });
+          if (x === null) return;
+          zajmij(x, y, bw, bh);
+          let kat = Math.atan2(dy, dx) * 180 / Math.PI; if (kat > 90) kat -= 180; if (kat < -90) kat += 180;
+          etykiety += '<g transform="translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ') rotate(' + kat.toFixed(1) + ')">' +
+            '<rect x="' + (-w / 2).toFixed(1) + '" y="-10" width="' + w.toFixed(1) + '" height="19" rx="3" fill="rgba(11,12,10,0.78)"/>' +
+            '<text x="0" y="4.5" font-family="monospace" font-size="13.5" font-weight="600" fill="#f3efe6" text-anchor="middle">' + t + '</text></g>';
+        });
 
         window._wymiaryDzialki = {
           dlugosc: Math.round(dlugosc),
           szerokosc: Math.round(szerokosc),
-          obwod: obliczObwod(punkty, M_NA_STOPIEN_LON, M_NA_STOPIEN_LAT),
-          boki: punkty.length - 1
+          obwod: Math.round(obwod),
+          boki: boki.length,
+          najdluzszyBok: Math.round(Math.max.apply(null, boki.map(function (b2) { return b2.dl; })))
         };
-
-        // Rysuje linie wymiarowa wzdluz danego BOKU dzialki (w pikselach),
-        // odsunieta prostopadle NA ZEWNATRZ (od srodka dzialki), z podana etykieta.
-        const liniaWzdluzBoku = function (bok, etykieta) {
-          const p1 = mp[bok.i], p2 = mp[bok.i + 1];
-          // wektor boku w pikselach + normalna
-          const bdx = p2.x - p1.x, bdy = p2.y - p1.y;
-          const blen = Math.hypot(bdx, bdy) || 1;
-          let nx = -bdy / blen, ny = bdx / blen;       // normalna
-          // skieruj normalna NA ZEWNATRZ (od srodka dzialki)
-          const midX = (p1.x + p2.x) / 2, midY = (p1.y + p2.y) / 2;
-          if ((midX + nx - cx) * nx + (midY + ny - cy) * ny < 0) { nx = -nx; ny = -ny; }
-          const off = 16;
-          return liniaWymiarowa(
-            p1.x + nx * off, p1.y + ny * off,
-            p2.x + nx * off, p2.y + ny * off,
-            etykieta
-          );
-        };
-
-        // Linia dlugosci wzdluz najdluzszego boku; szerokosci wzdluz boku prostopadlego.
-        etykiety += liniaWzdluzBoku(bok1, Math.round(dlugosc) + ' m');
-        etykiety += liniaWzdluzBoku(bok2, Math.round(szerokosc) + ' m');
       }
     });
     if (!paths) return;
