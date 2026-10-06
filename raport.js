@@ -1994,9 +1994,20 @@
     }
     return [a, b, c, d];
   }
+  // Kadr mapy: dzialka + margines, ROZSZERZONY do proporcji ramki mapy (16:10 na ekranie, 16:8,5 w druku).
+  // Ramka przycina obraz (object-fit:cover), wiec kadr o innych proporcjach - np. wydluzonej, duzej
+  // dzialki - tracil gore i dol razem z czescia dzialki i wymiarami. Teraz obraz ma proporcje ramki,
+  // a wysokosc ma zapas na wezsza ramke wydruku - cala dzialka miesci sie zawsze.
   function margines(b, f) {
-    const dx = (b[2]-b[0])*f, dy = (b[3]-b[1])*f, m = Math.max(dx, dy, 0.0008);
-    return [b[0]-m, b[1]-m, b[2]+m, b[3]+m];
+    const PROPORCJA_RAMKI = 16 / 10, ZAPAS_DRUKU = (16 / 8.5) / (16 / 10);
+    const cLon = (b[0] + b[2]) / 2, cLat = (b[1] + b[3]) / 2;
+    const mLat = 111132, mLon = 111320 * Math.cos(cLat * Math.PI / 180);
+    const wD = (b[2] - b[0]) * mLon, hD = (b[3] - b[1]) * mLat;        // dzialka w metrach
+    // margines w metrach: min. 60 m (male dzialki jak dotad), przy duzych proporcjonalny do dluzszego boku
+    const m = Math.max(60, f * 0.4 * Math.max(wD, hD));
+    const w = wD + 2 * m, h = hD + 2 * m;
+    const hR = Math.max(h * ZAPAS_DRUKU, w / PROPORCJA_RAMKI), wR = hR * PROPORCJA_RAMKI;
+    return [cLon - wR / 2 / mLon, cLat - hR / 2 / mLat, cLon + wR / 2 / mLon, cLat + hR / 2 / mLat];
   }
   function srodek(b) { return { lon:(b[0]+b[2])/2, lat:(b[1]+b[3])/2 }; }
 

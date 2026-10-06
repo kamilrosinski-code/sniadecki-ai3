@@ -192,7 +192,26 @@ body.tryb-oplacony #btn-nowa{display:none!important;}
 .ust-wszystkie > summary, .ust-teren > summary { cursor: pointer; color: #dfc090; padding: .3rem 0; }
 .ust-teren { margin: .2rem 0 .2rem .8rem; }
 .ust-uwaga { margin-top: .8rem; font-size: .8rem; color: #8a9a93; }
-@media print { .ust-wszystkie, .ust-teren { display: block; } .ust-kropka { animation: none; } }
+@media print { .ust-wszystkie, .ust-teren { display: block; } .ust-kropka { animation: none; } .ust-wybor { display: none; } }
+.ust-karta { border: 1px solid rgba(201,169,110,.28); border-radius: 10px; padding: 1rem 1.1rem; margin-bottom: .9rem; background: rgba(201,169,110,.04); }
+.ust-glowa { display: flex; gap: .9rem; align-items: center; margin-bottom: .9rem; }
+.ust-sym { flex: 0 0 auto; font-family: var(--ff-m); font-size: 1.15rem; font-weight: 600; color: #14181a; background: #c9a96e; border-radius: 6px; padding: .35rem .7rem; }
+.ust-przezn { font-size: 1rem; color: var(--cream); line-height: 1.35; }
+.ust-zrodlo { font-size: .76rem; color: var(--sage); margin-top: .2rem; }
+.ust-kafle { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .55rem; margin-bottom: .8rem; }
+.ust-kafel { border: 1px solid var(--line); border-radius: 8px; padding: .55rem .7rem; background: rgba(0,0,0,.15); }
+.ust-kafel span { display: block; font-family: var(--ff-m); font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--sage); margin-bottom: .2rem; }
+.ust-kafel strong { display: block; font-weight: 400; font-size: .86rem; color: var(--cream); line-height: 1.35; }
+.ust-karta .legenda-row { display: grid; grid-template-columns: 150px 1fr; gap: 1rem; }
+.ust-karta .legenda-row strong { font-family: var(--ff-b); font-weight: 400; text-align: left; }
+.ust-inne-t { margin-top: .8rem; font-family: var(--ff-m); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold, #c9a96e); }
+.ust-rysunek { display: flex; gap: .9rem; align-items: flex-start; margin: 0 0 .9rem; font-size: .82rem; color: var(--cream2); }
+.ust-rysunek img { width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.ust-rysunek p { margin: 0; } .ust-rysunek span { display: block; color: var(--sage); margin-top: .3rem; font-size: .76rem; }
+.ust-wybor { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .4rem 0 .6rem; font-size: .85rem; color: var(--sage); }
+.ust-wybor select { flex: 1 1 260px; max-width: 100%; background: var(--panel2, #20262a); color: var(--cream); border: 1px solid var(--line); border-radius: 6px; padding: .45rem .6rem; font: inherit; }
+#ust-wybrany .ust-karta { margin-top: .4rem; }
+@media (max-width: 560px) { .ust-rysunek { flex-direction: column; } .ust-rysunek img { width: 100%; height: auto; } .ust-karta .legenda-row { grid-template-columns: 1fr; gap: .2rem; } }
 
 /* Wartosc szacunkowa na poczatku raportu (przed werdyktem) */
 .wycena-gora { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap;

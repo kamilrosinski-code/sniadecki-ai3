@@ -1,64 +1,90 @@
 /*
- * gruntowo.pl - dostep do raportu rozszerzonego haslem (etap przejsciowy, przed Przelewy24).
+ * gruntowo.pl - DOSTEP do raportu rozszerzonego (haslo, zakup, raport przykladowy).
  *
- * UWAGA: to zabezpieczenie po stronie przegladarki - wystarcza na akcje promocyjna
- * ("wklej haslo, dostan raport rozszerzony za darmo"), ale NIE chroni tresci przed kims,
- * kto zna JavaScript. Docelowo dostep ma nadawac backend (PHP na LH) po oplaceniu raportu.
+ * Od tej wersji dostep nadaje SERWER (dostep.php na LH): sprawdza haslo albo oplacone zamowienie
+ * i wydaje podpisany token. Dane platne (pozwolenia na budowe, zapisy planu, mapa sieci) serwer
+ * wydaje tylko z waznym tokenem - "odblokowanie" raportu w przegladarce nic nie daje bez niego.
+ * Strona nie zna juz hasla ani jego skrotu (zmiana hasla: tylko w dostep.php na serwerze).
  *
- * Haslo nie jest zapisane jawnie - trzymamy tylko jego skrot SHA-256.
- * Zmiana hasla: policz nowy skrot, np. w terminalu:
- *     echo -n "noweHaslo" | sha256sum
- * i wklej wynik do HASLO_SHA256 ponizej.
+ * window.GruntowoHaslo:
+ *   sprawdz(haslo)            -> Promise<bool>   (poprawne haslo = token na wszystkie dzialki)
+ *   czyOdblokowane()          -> bool            (jest wazny token z hasla)
+ *   token(id)                 -> string          (wazny token dla dzialki albo z hasla; '' gdy brak)
+ *   tokenZamowienia(id, ext)  -> Promise<string> (token po oplaceniu; '' gdy nieoplacone)
+ *   tokenPrzykladu(id)        -> Promise<string> (token dla dzialki przykladowej)
+ *   podlacz(form, opcje), adresRaportu(id)
  */
 (function () {
   'use strict';
 
-  // SHA-256 z "gruntowo2026"
-  var HASLO_SHA256 = 'e210a372cac86f342a8dbf04c3a558a617abb7333a6db3e8cb98fa87d34ee0e8';
-  var KLUCZ = 'gruntowo_rozszerzony_v1';
+  var API = 'https://sniadecki-development.pl/gruntowo-api/dostep.php';
+  var KLUCZ = 'gruntowo_dostep_v2';          // { haslo: {t, e}, d: { idDzialki: {t, e} } }  e = ms
   var STRONA_ROZSZERZONA = 'raport-rozszerzony.html';
+  var ZAPAS_MS = 5 * 60 * 1000;               // token konczacy sie za < 5 min traktujemy jak wygasly
 
-  function sha256(tekst) {
-    if (!window.crypto || !window.crypto.subtle) {
-      return Promise.reject(new Error('Przeglądarka nie obsługuje crypto.subtle (wymagany HTTPS).'));
-    }
-    var dane = new TextEncoder().encode(tekst);
-    return window.crypto.subtle.digest('SHA-256', dane).then(function (buf) {
-      return Array.prototype.map.call(new Uint8Array(buf), function (b) {
-        return ('0' + b.toString(16)).slice(-2);
-      }).join('');
+  function pamiec() {
+    var p = null;
+    try { p = JSON.parse(localStorage.getItem(KLUCZ) || 'null'); } catch (e) {}
+    if (!p || typeof p !== 'object') p = {};
+    if (!p.d || typeof p.d !== 'object') p.d = {};
+    return p;
+  }
+  function zapiszPamiec(p) { try { localStorage.setItem(KLUCZ, JSON.stringify(p)); } catch (e) { /* bez pamieci - trudno */ } }
+  function wazny(w) { return !!(w && w.t && w.e && w.e - ZAPAS_MS > Date.now()); }
+
+  function zapiszToken(id, token, wygasaSek) {
+    var p = pamiec(), w = { t: token, e: (wygasaSek || 0) * 1000 };
+    if (id === '*') p.haslo = w; else p.d[id] = w;
+    zapiszPamiec(p);
+  }
+  function token(id) {
+    var p = pamiec();
+    if (id && wazny(p.d[id])) return p.d[id].t;
+    if (wazny(p.haslo)) return p.haslo.t;
+    return '';
+  }
+  function czyOdblokowane() { return wazny(pamiec().haslo); }
+
+  function zapytaj(dane) {
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dane), cache: 'no-store' })
+      .then(function (r) { return r.json(); });
+  }
+
+  // Haslo sprawdza serwer. Zbyt wiele blednych prob z jednego adresu -> chwilowa blokada (blad 'limit').
+  function sprawdz(haslo) {
+    return zapytaj({ haslo: String(haslo || '').trim() }).then(function (w) {
+      if (w && w.ok && w.token) { zapiszToken('*', w.token, w.wygasa); return true; }
+      if (w && w.blad === 'limit') { var e = new Error('limit'); e.limit = true; throw e; }
+      return false;
     });
   }
-
-  function sprawdz(haslo) {
-    return sha256(String(haslo || '').trim()).then(function (h) { return h === HASLO_SHA256; });
+  function tokenZamowienia(id, ext) {
+    var t = token(id);
+    if (t) return Promise.resolve(t);
+    return zapytaj({ id: id, zamowienie: ext }).then(function (w) {
+      if (w && w.ok && w.token) { zapiszToken(id, w.token, w.wygasa); return w.token; }
+      return '';
+    }, function () { return ''; });
   }
-
-  // Zapamietanie odblokowania (per przegladarka). Pamiec przegladarki moze byc wylaczona -
-  // wtedy dzialamy dalej, tylko klient poda haslo ponownie przy nastepnej wizycie.
-  function zapamietaj() {
-    try { localStorage.setItem(KLUCZ, '1'); } catch (e) { /* brak pamieci - trudno */ }
-    try { sessionStorage.setItem(KLUCZ, '1'); } catch (e) { /* j.w. */ }
+  function tokenPrzykladu(id) {
+    var t = token(id);
+    if (t) return Promise.resolve(t);
+    return zapytaj({ id: id, przyklad: 1 }).then(function (w) {
+      if (w && w.ok && w.token) { zapiszToken(id, w.token, w.wygasa); return w.token; }
+      return '';
+    }, function () { return ''; });
   }
-  function czyOdblokowane() {
-    try { if (localStorage.getItem(KLUCZ) === '1') return true; } catch (e) {}
-    try { if (sessionStorage.getItem(KLUCZ) === '1') return true; } catch (e) {}
-    return false;
-  }
+  // zgodnosc ze starszym kodem - zapamietanie robi teraz sprawdz()
+  function zapamietaj() {}
 
-  // Adres raportu rozszerzonego; z identyfikatorem dzialki od razu generuje raport.
   function adresRaportu(idDzialki) {
     if (!idDzialki) return STRONA_ROZSZERZONA;
     return STRONA_ROZSZERZONA + '?id=' + encodeURIComponent(idDzialki) + '&ok=1';
   }
 
   /*
-   * Podlacza formularz hasla. Oczekiwany HTML (klasy dowolne, liczy sie atrybut data-haslo):
-   *   <form data-haslo>
-   *     <input data-haslo-pole type="password">
-   *     <button type="submit">Odblokuj</button>
-   *     <div data-haslo-msg></div>
-   *   </form>
+   * Podlacza formularz hasla:
+   *   <form data-haslo><input data-haslo-pole type="password"><button type="submit">Odblokuj</button><div data-haslo-msg></div></form>
    * opcje.onOk(): co zrobic po poprawnym hasle (domyslnie przejscie do raportu rozszerzonego).
    * opcje.idDzialki(): funkcja zwracajaca identyfikator dzialki do przekazania (opcjonalnie).
    */
@@ -77,16 +103,17 @@
       e.preventDefault();
       var wartosc = pole ? pole.value : '';
       if (!wartosc.trim()) { pokaz('Wklej hasło, które otrzymałeś.', true); if (pole) pole.focus(); return; }
+      pokaz('Sprawdzamy hasło…', false);
       sprawdz(wartosc).then(function (ok) {
         if (!ok) { pokaz('Nieprawidłowe hasło. Sprawdź, czy wklejasz je bez spacji.', true); if (pole) pole.select(); return; }
-        zapamietaj();
         pokaz('Hasło poprawne - otwieramy raport rozszerzony...', false);
         if (opcje.onOk) { opcje.onOk(); return; }
         var id = opcje.idDzialki ? opcje.idDzialki() : '';
         window.location.href = adresRaportu(id);
       }).catch(function (err) {
+        if (err && err.limit) { pokaz('Zbyt wiele prób. Spróbuj ponownie za kilkanaście minut.', true); return; }
         console.warn('Hasło:', err);
-        pokaz('Nie udało się sprawdzić hasła w tej przeglądarce. Otwórz stronę przez https://', true);
+        pokaz('Nie udało się połączyć z serwerem. Sprawdź internet i spróbuj ponownie.', true);
       });
     });
   }
@@ -95,12 +122,13 @@
     sprawdz: sprawdz,
     zapamietaj: zapamietaj,
     czyOdblokowane: czyOdblokowane,
+    token: token,
+    tokenZamowienia: tokenZamowienia,
+    tokenPrzykladu: tokenPrzykladu,
     adresRaportu: adresRaportu,
     podlacz: podlacz
   };
 
-  // Automatyczne podlaczenie wszystkich formularzy z atrybutem data-haslo
-  // (strona glowna; w raporcie darmowym formularz podlacza raport.html z id dzialki).
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('form[data-haslo]:not([data-haslo-reczne])').forEach(function (f) {
       podlacz(f);

@@ -214,9 +214,18 @@
           const koniec = document.getElementById('sourcing') || sekcja;
           if (wysunieta) { wymusPelna = true; }
           hero.classList.remove('hero-czeka'); hero.classList.add('hero-sterowane'); sb.classList.remove('wysuwa');
+          let ostO = -1;
           const pokazSzukaj = function (o) {
-            sb.style.opacity = o.toFixed(3);
-            sb.style.transform = 'translateY(' + ((1 - o) * 46).toFixed(1) + 'px)';
+            if (o === ostO) return; ostO = o;
+            if (o >= 1) {
+              // w pelni widoczna: bez transformacji i warstwy GPU - inaczej tekst bywa rozmyty
+              // (zwlaszcza przy skalowaniu ekranu 125%/150% w Windows)
+              sb.style.opacity = ''; sb.style.transform = ''; sb.style.willChange = 'auto';
+            } else {
+              sb.style.willChange = 'opacity, transform';
+              sb.style.opacity = o.toFixed(3);
+              sb.style.transform = 'translate3d(0,' + Math.round((1 - o) * 46) + 'px,0)';
+            }
             sb.style.pointerEvents = o > 0.4 ? 'auto' : 'none';
             hero.classList.toggle('szukaj-widac', o > 0.02);
           };
@@ -838,6 +847,16 @@ function plynnieDo(top) {
       autoRaf: true,
       // w okienku konsultacji, na mapach i w menu kolko dziala normalnie (przewijanie listy, zoom mapy)
       prevent: function (n) { return !!(n && n.closest && n.closest('#konsult-modal, .leaflet-container, .mobile-menu, [data-lenis-prevent]')); }
+    });
+    // Po zatrzymaniu przewijania ustawiamy strone na pelny piksel. Plynne przewijanie konczy sie czasem
+    // na ulamku piksela (np. przy skalowaniu ekranu 125%) i wtedy tekst w przyklejonym hero byl lekko rozmyty.
+    let tPiksel = null;
+    window.__lenis.on('scroll', function () {
+      clearTimeout(tPiksel);
+      tPiksel = setTimeout(function () {
+        const y = window.scrollY;
+        if (Math.abs(y - Math.round(y)) > 0.01 && window.__lenis) window.__lenis.scrollTo(Math.round(y), { immediate: true, force: true });
+      }, 150);
     });
   } catch (e) { window.__lenis = null; }
 })();
