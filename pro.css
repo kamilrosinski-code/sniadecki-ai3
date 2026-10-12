@@ -62,3 +62,39 @@
 .kolor-kropka{display:inline-block;width:.7rem;height:.7rem;border-radius:2px;margin-right:.4rem;vertical-align:middle;}
 .wczyt{color:var(--sage);font-size:.8rem;}
 @media print{.topbar,.pro-akcje,.no-print{display:none!important}.pro-karta,.teren-kafel{background:#fff;color:#000;border-color:#ccc}}
+/* chlonnosc terenu i wycena rezydualna (teren.html) */
+.chl-naglowek{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.4rem;}
+.chl-typ-l{font-size:.8rem;color:var(--sage);display:flex;gap:.5rem;align-items:center;}
+.chl-typ-l select{background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--cream);font:inherit;font-size:.85rem;padding:.4rem .6rem;}
+.chl-in{width:5.2rem;background:var(--panel2);border:1px solid var(--line);border-radius:5px;color:var(--cream);font-family:var(--ff-m);font-size:.8rem;padding:.3rem .4rem;}
+.chl-in.recz{border-color:var(--goldl);}
+.chl-tab tr.chl-opis td{font-size:.74rem;color:var(--sage);padding-top:0;border-bottom:1px solid var(--line);}
+.chl-tab tbody tr:not(.chl-opis) td{border-bottom:0;}
+.rez-siatka{display:grid;grid-template-columns:minmax(260px,1fr) minmax(300px,1.2fr);gap:1.5rem;align-items:start;}
+@media(max-width:820px){.rez-siatka{grid-template-columns:1fr;}}
+.rez-suwak{display:grid;grid-template-columns:1fr auto;gap:.15rem .6rem;margin-bottom:.8rem;font-size:.8rem;}
+.rez-suwak .rez-t{color:var(--cream2);}
+.rez-suwak .rez-v{color:var(--sage);white-space:nowrap;}
+.rez-suwak .rez-v input{width:5.4rem;background:var(--panel2);border:1px solid var(--line);border-radius:5px;color:var(--cream);font-family:var(--ff-m);font-size:.8rem;padding:.2rem .35rem;text-align:right;}
+.rez-suwak input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--goldl);}
+.rez-glowna{background:var(--panel2);border:1px solid rgba(201,169,97,.45);border-radius:10px;padding:1rem 1.1rem;margin-bottom:1rem;}
+.rez-glowna .k{font-size:.72rem;color:var(--sage);text-transform:uppercase;letter-spacing:.08em;}
+.rez-glowna .v{font-family:var(--ff-d);font-size:2.1rem;line-height:1.1;margin-top:.2rem;color:var(--goldl);}
+.rez-glowna .s{font-size:.8rem;color:var(--sage);margin-top:.25rem;}
+.rez-tab{width:100%;border-collapse:collapse;font-size:.82rem;}
+.rez-tab td{padding:.4rem .3rem;border-bottom:1px solid var(--line);}
+.rez-tab td.num{text-align:right;white-space:nowrap;font-family:var(--ff-m);font-size:.78rem;}
+.rez-tab td.op{color:var(--sage);font-size:.72rem;}
+.rez-tab tr.suma td{font-weight:500;border-bottom:0;border-top:1px solid rgba(201,169,97,.4);}
+.rez-wraz{margin-top:1rem;}
+.rez-wraz .k{font-size:.72rem;color:var(--sage);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;}
+.rez-wraz table{width:100%;border-collapse:collapse;font-size:.78rem;text-align:center;}
+.rez-wraz th,.rez-wraz td{padding:.35rem;border:1px solid var(--line);}
+.rez-wraz th{color:var(--sage);font-weight:500;}
+.rez-wraz td{font-family:var(--ff-m);}
+.rez-wraz td.biezaca{outline:1px solid var(--goldl);color:var(--goldl);}
+.rez-wraz td.ujemna{color:#e08a6a;}
+@media(max-width:720px){.chl-tab tr.chl-opis td:before{display:none}}
+@media print{.rez-glowna,.rez-wraz td,.rez-wraz th{background:#fff;color:#000;border-color:#ccc}.rez-suwak input[type=range]{display:none}}
+.rez-grupa{margin-bottom:.6rem;}
+.rez-grupa-t{font-size:.72rem;color:var(--goldl);text-transform:uppercase;letter-spacing:.08em;margin:.2rem 0 .5rem;}

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta name="robots" content="noindex, nofollow" />
 <meta charset="utf-8" />
+<meta name="robots" content="noindex, nofollow" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Analiza terenu (kilka działek) – gruntowo.pl PRO</title>
 <meta name="robots" content="noindex" />
@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <link rel="stylesheet" href="raport-style.css?v=20261009d" />
-<link rel="stylesheet" href="pro.css?v=1" />
+<link rel="stylesheet" href="pro.css?v=2" />
 </head>
 <body>
 <div class="bg-grid"></div>
@@ -39,7 +39,7 @@
     </div>
     <div id="uwagi"></div>
     <section class="pro-karta"><div class="pro-mapa" id="mapa" style="height:480px"></div>
-      <p style="font-size:.72rem;color:var(--sage);margin-top:.5rem">Ortofotomapa i granice działek: GUGiK (geoportal.gov.pl).</p></section>
+      <p style="font-size:.72rem;color:var(--sage);margin-top:.5rem">Mapa: © autorzy OpenStreetMap · ortofotomapa i granice działek: GUGiK (geoportal.gov.pl).</p></section>
     <section class="pro-karta">
       <h2 class="pro-h2">Działki w terenie</h2>
       <div style="overflow-x:auto"><table class="teren-tab" id="tabela">
@@ -48,13 +48,39 @@
       </table></div>
       <p style="font-size:.78rem;color:var(--sage);margin-top:.8rem" id="opis-wyceny"></p>
     </section>
+    <section class="pro-karta" id="sekcja-chlonnosc" style="display:none">
+      <div class="chl-naglowek">
+        <h2 class="pro-h2">Chłonność terenu</h2>
+        <label class="chl-typ-l no-print">Typ zabudowy <select id="chl-typ"></select></label>
+      </div>
+      <p style="font-size:.82rem;color:var(--sage);margin:-.3rem 0 .9rem">Ile da się zbudować według wskaźników planu: powierzchnia zabudowy, PUM i liczba domów lub mieszkań. Wskaźniki odczytujemy z planu miejscowego (AI czyta uchwałę) albo ze strefy planu ogólnego – każdą wartość możesz poprawić w tabeli.</p>
+      <div class="teren-kafle" id="chl-wyniki"></div>
+      <div id="chl-uwagi"></div>
+      <div style="overflow-x:auto"><table class="teren-tab chl-tab">
+        <thead><tr><th>Działka / źródło</th><th>Pow. budowlana</th><th>Maks. zabudowa %</th><th>Intensywność</th><th>Wysokość m</th><th>Kondygnacje</th><th>Biol. czynna %</th><th>Min. działka m²</th><th>PUM</th></tr></thead>
+        <tbody id="chl-wsk"></tbody>
+      </table></div>
+    </section>
+    <section class="pro-karta" id="sekcja-rezydualna" style="display:none">
+      <div class="chl-naglowek">
+        <h2 class="pro-h2">Wycena rezydualna – ile maksymalnie zapłacić za grunt</h2>
+        <button class="btn pro-mini no-print" id="rez-reset">Przywróć domyślne</button>
+      </div>
+      <p style="font-size:.82rem;color:var(--sage);margin:-.3rem 0 .9rem">Przychód ze sprzedaży PUM minus koszty budowy, infrastruktury, koszty miękkie i marża = kwota, jaką projekt „udźwignie” za grunt. Ustaw założenia z Twojego rynku – zapamiętamy je w tej przeglądarce.</p>
+      <div class="rez-siatka">
+        <div class="rez-suwaki" id="rez-suwaki"></div>
+        <div id="rez-wynik"></div>
+      </div>
+    </section>
     <section class="pro-karta">
       <h2 class="pro-h2">Jak czytać tę analizę</h2>
-      <p style="font-size:.85rem;color:var(--cream2)">Wartość to szacunek: mediana cen działek niezabudowanych z transakcji w promieniu 1,5 km (Rejestr Cen Nieruchomości) × powierzchnia każdej działki × mnożnik przeznaczenia (drogi, zieleń, lasy i wody są warte ułamek ceny działki budowlanej). Przeznaczenie odczytujemy z planu miejscowego (KIMPZP) w kilkunastu punktach każdej działki, a gdy planu nie ma – ze strefy planu ogólnego. Scalenie działek bywa warte więcej niż suma części (większy, foremny teren), czego ta wycena nie uwzględnia. Szczegóły każdej działki – w raporcie rozszerzonym.</p>
+      <p style="font-size:.85rem;color:var(--cream2)">Wartość rynkowa to szacunek: mediana cen działek niezabudowanych z transakcji w promieniu 1,5 km (Rejestr Cen Nieruchomości) × powierzchnia każdej działki × mnożnik przeznaczenia (drogi, zieleń, lasy i wody są warte ułamek ceny działki budowlanej). Przeznaczenie odczytujemy z planu miejscowego (KIMPZP) w kilkunastu punktach każdej działki, a gdy planu nie ma – ze strefy planu ogólnego. Scalenie działek bywa warte więcej niż suma części (większy, foremny teren), czego ta wycena nie uwzględnia. Szczegóły każdej działki – w raporcie rozszerzonym.</p>
+      <p style="font-size:.85rem;color:var(--cream2);margin-top:.6rem">Chłonność i wycena rezydualna to szacunek koncepcyjny na etapie zakupu: nie uwzględniają linii zabudowy, odległości od granic, miejsc postojowych ani kształtu działek. Przed decyzją potwierdź je koncepcją architekta i wypisem z planu.</p>
     </section>
   </div>
 </main>
 <script src="pro-sledz.js?v=1"></script>
-<script src="teren.js?v=1"></script>
+<script src="teren-chlonnosc.js?v=1"></script>
+<script src="teren.js?v=3"></script>
 </body>
 </html>

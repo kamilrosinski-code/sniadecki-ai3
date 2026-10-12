@@ -11,6 +11,9 @@
   var URL_RU = 'https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/';
   var URL_POG = 'https://sniadecki-development.pl/gruntowo-api/pog-strefy.php';
   var URL_CENY = 'https://sniadecki-development.pl/gruntowo-api/ceny.php';
+  var URL_USTALENIA = 'https://sniadecki-development.pl/gruntowo-api/plan-ustalenia.php';
+  var STREFY_KODY = ['SW', 'SJ', 'SZ', 'SU', 'SH', 'SP', 'SR', 'SI', 'SN', 'SC', 'SG', 'SO', 'SK'];
+  var STATUSY_POG = ['PrawnieWiazacyLubRealizowany', 'WTrakciePrzyjmowania', 'WOpracowaniu'];
   var KOLORY = ['#c9a961', '#6fae8a', '#7aa7d6', '#d97a5b', '#b48ad6', '#e0c35a', '#5bc0be', '#d65b8f'];
   var MNOZNIKI = { droga: 0.3, zielen: 0.3, las: 0.2, wody: 0.1 };
   var NAZWY_KLAS = { droga: 'droga', zielen: 'zieleń', las: 'las', wody: 'wody' };
@@ -50,6 +53,7 @@
     }
     return k;
   }
+  window.TerenKlasa = klasa;
   function symbolZHtml(html) {
     if (!html) return '';
     var bez = html.replace(/<tr[^>]*>\s*<th[^>]*>\s*(?:nazwa planu|dziennik|tre[sś][cć] uchwa[łl]y|rysunek planu|us[łl]uga|legenda|identyfikator|uchwa[łl]a|zmiana|numer planu|poziom informatyzacji)[\s\S]*?<\/tr>/gi, ' ');
@@ -59,7 +63,11 @@
     var fs = html.match(/<FUN_SYMB>([^<]+)<\/FUN_SYMB>/i) || html.match(/>\s*(?:symbol|fun_symb)\s*<\/t[hd]>\s*<td[^>]*>([^<]+)</i);
     return fs ? fs[1].trim() : (m ? m[1] : '');
   }
-  function udzialyMPZP(rr) {
+  function linkZHtml(html) {
+    var m = String(html || '').match(/(https?:\/\/[^\s"'<>]+\.pdf)/i);
+    return m ? m[1].replace(/&amp;/g, '&') : '';
+  }
+  function udzialyMPZP(rr, dz) {
     var b = bbox(rr), pkt = [];
     for (var n = 5; n <= 12 && pkt.length < 12; n++) {
       pkt = [];
@@ -71,7 +79,7 @@
     var zapytaj = function (p) {
       var url = URL_KIMPZP + '?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&SRS=EPSG:4326&BBOX=' + [p[0] - d, p[1] - d, p[0] + d, p[1] + d].join(',')
         + '&WIDTH=11&HEIGHT=11&STYLES=&FORMAT=image/png&LAYERS=plany_granice,wektor-str&QUERY_LAYERS=plany_granice,wektor-str&INFO_FORMAT=text/html&FEATURE_COUNT=5&X=5&Y=5';
-      return ponow(url, 1).then(function (r) { return r.text(); }).then(function (h) { var s = symbolZHtml(h); return s || (/plany_granice|wektor/i.test(h) && /<td/i.test(h) ? '?' : ''); }).catch(function () { return null; });
+      return ponow(url, 1).then(function (r) { return r.text(); }).then(function (h) { if (dz && !dz.mpzpPdf) dz.mpzpPdf = linkZHtml(h); var s = symbolZHtml(h); return s || (/plany_granice|wektor/i.test(h) && /<td/i.test(h) ? '?' : ''); }).catch(function () { return null; });
     };
     var wyn = [], i2 = 0;
     var kolejne = function () { if (i2 >= pkt.length) return Promise.resolve(); var part = pkt.slice(i2, i2 + 4); i2 += 4; return Promise.all(part.map(zapytaj)).then(function (w) { wyn.push.apply(wyn, w); return kolejne(); }); };
@@ -84,18 +92,29 @@
   }
   // --- plan ogolny w srodku dzialki ---
   function pog(id, lon, lat) {
-    var L1 = ['APP.POG.PrawnieWiazacyLubRealizowany', 'APP.POG.WTrakciePrzyjmowania', 'APP.POG.WOpracowaniu'], d = 0.0003;
+    var L1 = STATUSY_POG.map(function (st) { return 'APP.POG.' + st; }), d = 0.0003;
+    STATUSY_POG.forEach(function (st) { STREFY_KODY.forEach(function (k) { L1.push('APP.POG.' + k + '.' + st); }); });
     var url = URL_RU + 'wms-pog/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&SRS=EPSG:4326&BBOX=' + [lon - d, lat - d, lon + d, lat + d].join(',')
       + '&WIDTH=101&HEIGHT=101&X=50&Y=50&LAYERS=' + L1.join(',') + '&QUERY_LAYERS=' + L1.join(',') + '&STYLES=&INFO_FORMAT=application/json&FEATURE_COUNT=20';
     var zSerwera = function (q) {
       return ponow(URL_POG + '?' + q + '&lon=' + lon.toFixed(6) + '&lat=' + lat.toFixed(6), 1).then(function (r) { return r.json(); })
-        .then(function (j) { return j && j.ok && j.strefa ? { kod: j.strefa.symbol, ozn: j.strefa.oznaczenie, projekt: !!(j.plan && j.plan.projekt) } : null; }).catch(function () { return null; });
+        .then(function (j) {
+          if (!j || !j.ok || !j.strefa) return null;
+          var w = j.strefa.wskazniki;
+          return { kod: j.strefa.symbol, ozn: j.strefa.oznaczenie, projekt: !!(j.plan && j.plan.projekt), wsk: w ? { i: w.i, pz: w.pz, h: w.h, pbc: w.pbc } : null };
+        }).catch(function () { return null; });
     };
     return ponow(url, 1).then(function (r) { return r.json(); }).then(function (j) {
       var f = j.features || [];
       var str = f.filter(function (x) { return /^APP\.POG\.S[A-Z]{1,2}\./.test(String(x.id)); })[0];
       var plan = f.filter(function (x) { return /^APP\.POG\.(PrawnieWiazacy|WTrakcie|WOpracowaniu)/.test(String(x.id)); })[0];
-      if (str) { var o = ''; Object.keys(str.properties || {}).forEach(function (k) { if (/^Oznaczenie/.test(k)) o = String(str.properties[k]); }); var km = (o.match(/(S[A-Z]{1,2})$/) || String(str.id).match(/APP\.POG\.(S[A-Z]{1,2})\./) || [])[1] || ''; return { kod: km, ozn: o, projekt: false }; }
+      if (str) {
+        var pp = str.properties || {}, pole = function (w) { var k = Object.keys(pp).filter(function (x) { return w.test(x); })[0]; var v = k ? String(pp[k]) : ''; return v === '-' || v === 'null' ? '' : v; };
+        var licz = function (w) { var m = pole(w).replace(',', '.').match(/\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+        var o = pole(/^Oznaczenie/), km = (o.match(/(S[A-Z]{1,2})$/) || String(str.id).match(/APP\.POG\.(S[A-Z]{1,2})\./) || [])[1] || '';
+        var wsk = { i: licz(/intensywno/i), pz: licz(/udzia. powierzchni zabudowy/i), h: licz(/wysoko/i), pbc: licz(/biologicznie/i) };
+        return { kod: km, ozn: o, projekt: !/PrawnieWiazacy/.test(String(str.id)), wsk: (wsk.i != null || wsk.pz != null || wsk.h != null || wsk.pbc != null) ? wsk : null };
+      }
       if (plan) {
         var link = ''; Object.keys(plan.properties || {}).forEach(function (k) { if (/^Link/.test(k)) link = String(plan.properties[k]); });
         var idA = (link.match(/details\/(?:mpzp|pog)\/(\d+)/) || [])[1];
@@ -104,6 +123,56 @@
       }
       return zSerwera('teryt=' + id.slice(0, 6));
     }).catch(function () { return zSerwera('teryt=' + id.slice(0, 6)); });
+  }
+  // --- wskazniki MPZP dla terenu dzialki: plan z Rejestru Urbanistycznego (id) albo PDF z KIMPZP, symbol z probkowania,
+  //     zapisy odczytuje AI na serwerze (plan-ustalenia.php, wynik zapamietany w bazie - kolejne razy od razu) ---
+  function tokenPRO() { try { var p = JSON.parse(localStorage.getItem('gruntowo_dostep_v2') || 'null'); return p && p.haslo ? p.haslo.t : ''; } catch (e) { return ''; } }
+  function odpytuj(url, maxProb) {
+    return new Promise(function (ok, zle) {
+      var proby = 0;
+      var pytaj = function () {
+        fetch(url, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+          if (d.stan === 'gotowe' && d.wynik) return ok(d.wynik);
+          if (d.stan === 'w_toku' && ++proby < maxProb) return setTimeout(pytaj, 5000);
+          zle(new Error(d.blad || d.stan || 'brak odpowiedzi'));
+        }).catch(function () { if (++proby < maxProb) setTimeout(pytaj, 7000); else zle(new Error('serwer nie odpowiedział')); });
+      };
+      pytaj();
+    });
+  }
+  function planRU(lon, lat) {
+    var L = STATUSY_POG.map(function (st) { return 'APP.MPZP.' + st; }), d = 0.0003;
+    var url = URL_RU + 'wms-mpzp/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&SRS=EPSG:4326&BBOX=' + [lon - d, lat - d, lon + d, lat + d].join(',')
+      + '&WIDTH=101&HEIGHT=101&X=50&Y=50&LAYERS=' + L.join(',') + '&QUERY_LAYERS=' + L.join(',') + '&STYLES=&INFO_FORMAT=application/json&FEATURE_COUNT=10';
+    return ponow(url, 1).then(function (r) { return r.json(); }).then(function (j) {
+      var f = (j.features || []).filter(function (x) { return /PrawnieWiazacy/.test(String(x.id)); })[0]; if (!f) return '';
+      var link = ''; Object.keys(f.properties || {}).forEach(function (k) { if (/^Link/.test(k)) link = String(f.properties[k]); });
+      return (link.match(/details\/mpzp\/(\d+)/) || [])[1] || '';
+    }).catch(function () { return ''; });
+  }
+  function wskaznikiMPZP(d, gotowe) {
+    var budowlane = (d.udzialy || []).filter(function (u) { return u.symbol && !klasa(u.symbol); });
+    if (!budowlane.length) return Promise.resolve();          // brak planu albo same drogi/zielen
+    var sym = budowlane[0].symbol;
+    return planRU(d.srodek[0], d.srodek[1]).then(function (idRU) {
+      var baza = idRU ? URL_USTALENIA + '?id=' + idRU : d.mpzpPdf ? URL_USTALENIA + '?pdf=' + encodeURIComponent(d.mpzpPdf) : '';
+      if (!baza) { d.wskStan = 'plan miejscowy bez dostępnej uchwały'; gotowe(); return; }
+      return PRO.zapewnijDostep().then(function () {
+        var t = '&t=' + encodeURIComponent(tokenPRO());
+        var symbol = sym !== '?' ? Promise.resolve([sym]) : (d.wskStan = 'ustalamy teren na rysunku planu…', gotowe(),
+          odpytuj(baza + '&dzialka=' + encodeURIComponent(d.id) + t, 30).then(function (w) { return (w.symbole || []).map(function (s) { return s.symbol; }).filter(Boolean); }));
+        return symbol.then(function (lista) {
+          if (!lista.length) throw new Error('nie ustalono terenu planu');
+          d.wskStan = 'czytamy zapisy planu ' + lista[0] + '…'; gotowe();
+          return odpytuj(baza + '&symbol=' + encodeURIComponent(lista[0]) + t, 30);
+        }).then(function (w) {
+          var teren = (w.tereny || [])[0];
+          var p = window.TerenChlonnosc && TerenChlonnosc._parsuj(teren);
+          if (p) { p.symbol = teren.symbol; d.wskMPZP = p; d.wskStan = ''; } else d.wskStan = 'w uchwale brak wskaźników terenu';
+          gotowe();
+        });
+      });
+    }).catch(function (e) { d.wskStan = 'zapisy planu: ' + (e && e.message || 'błąd'); gotowe(); });
   }
   function mnoznik(dz) {
     if (dz.udzialy && dz.udzialy.some(function (u) { return u.symbol && u.symbol !== '?'; })) {
@@ -142,8 +211,10 @@
   function rysujMape() {
     if (typeof L === 'undefined') { $('mapa').innerHTML = '<p class="pro-pusto" style="padding:1rem">Mapa chwilowo niedostępna.</p>'; return; }
     var mapa = L.map('mapa');
-    L.tileLayer('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}&TILEROW={y}&TILECOL={x}', { maxNativeZoom: 19, maxZoom: 20, attribution: 'Ortofotomapa: GUGiK' }).addTo(mapa);
-    L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 15, maxZoom: 20, tileSize: 512 }).addTo(mapa);
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">autorzy OpenStreetMap</a>' }).addTo(mapa);
+    var orto = L.tileLayer('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}&TILEROW={y}&TILECOL={x}', { maxNativeZoom: 19, maxZoom: 20, attribution: 'Ortofotomapa: GUGiK' });
+    var dz = L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 15, maxZoom: 20, tileSize: 512 }).addTo(mapa);
+    L.control.layers({ 'Mapa': osm, 'Ortofotomapa': orto }, { 'Granice działek': dz }, { collapsed: false }).addTo(mapa);
     var grupa = L.featureGroup().addTo(mapa);
     D.forEach(function (d, i) {
       L.polygon(d.rr.map(function (r) { return r.map(function (p) { return [p[1], p[0]]; }); }), { color: KOLORY[i % KOLORY.length], weight: 3, fillOpacity: 0.28 })
@@ -174,6 +245,7 @@
   var mediana = 0, liczbaTrans = 0;
   function odswiez() {
     var s = rysujTabele(mediana);
+    if (window.TerenChlonnosc) TerenChlonnosc.odswiez(mediana);
     if (mediana) {
       $('k-wart').textContent = zl(s.wart);
       $('k-wart-s').textContent = 'mediana ' + Math.round(mediana).toLocaleString('pl-PL') + ' zł/m² z ' + liczbaTrans + ' transakcji' + (s.bazowa > s.wart + 1 ? ' · bez korekt: ' + zl(s.bazowa) : '');
@@ -223,6 +295,7 @@
       }
       $('uwagi').innerHTML = uw;
       try { rysujMape(); } catch (e) { console.warn('mapa', e); }
+      if (window.TerenChlonnosc) TerenChlonnosc.start(D);
       odswiez();
       ids = D.map(function (d) { return d.id; });
       D.forEach(function (d) { PRO.historia(d.id, 'gm. ' + d.gmina + ' · w analizie terenu'); });
@@ -241,8 +314,15 @@
       // przeznaczenie kazdej dzialki (po kolei - nie obciazamy uslug panstwowych)
       var kolejna = function (i) {
         if (i >= D.length) return;
-        Promise.all([udzialyMPZP(D[i].rr).catch(function () { return null; }), pog(D[i].id, D[i].srodek[0], D[i].srodek[1]).catch(function () { return null; })])
-          .then(function (w) { D[i].udzialy = w[0]; D[i].pog = w[1]; odswiez(); kolejna(i + 1); });
+        Promise.all([udzialyMPZP(D[i].rr, D[i]).catch(function () { return null; }), pog(D[i].id, D[i].srodek[0], D[i].srodek[1]).catch(function () { return null; })])
+          .then(function (w) { D[i].udzialy = w[0]; D[i].pog = w[1]; odswiez(); kolejkaAI.push(D[i]); dalejAI(); kolejna(i + 1); });
+      };
+      // zapisy planow przez AI - po jednej dzialce naraz
+      var kolejkaAI = [], pracujeAI = false;
+      var dalejAI = function () {
+        if (pracujeAI || !kolejkaAI.length) return;
+        pracujeAI = true;
+        wskaznikiMPZP(kolejkaAI.shift(), odswiez).then(function () { pracujeAI = false; odswiez(); dalejAI(); });
       };
       kolejna(0);
     });

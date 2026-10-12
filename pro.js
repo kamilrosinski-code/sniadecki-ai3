@@ -72,53 +72,103 @@
   }
 
   // --- mapa i wybor dzialek ---
+  // Klikniecie od razu zaznacza miejsce (numerowana pinezka); numer dzialki ustalamy w tle (ULDK),
+  // wiec mozna szybko klikac kolejne dzialki. Klikniecie w zaznaczona dzialke - odznacza ja.
+  var licznik = 0;
   function startMapy() {
     if (mapa || typeof L === 'undefined') { if (typeof L === 'undefined') $('mapa').innerHTML = '<p class="pro-pusto" style="padding:1rem">Mapa chwilowo niedostępna – dodawaj działki identyfikatorem.</p>'; return; }
     mapa = L.map('mapa', { center: [52.40, 16.92], zoom: 11 });
-    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">autorzy OpenStreetMap</a>' });
-    var orto = L.tileLayer('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}&TILEROW={y}&TILECOL={x}', { maxNativeZoom: 19, maxZoom: 20, attribution: 'Ortofotomapa: GUGiK' }).addTo(mapa);
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">autorzy OpenStreetMap</a>' }).addTo(mapa);
+    var orto = L.tileLayer('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}&TILEROW={y}&TILECOL={x}', { maxNativeZoom: 19, maxZoom: 20, attribution: 'Ortofotomapa: GUGiK' });
     var dz = L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 15, maxZoom: 20, tileSize: 512, attribution: 'Działki: GUGiK' }).addTo(mapa);
-    L.control.layers({ 'Ortofotomapa': orto, 'Mapa': osm }, { 'Granice działek': dz }, { collapsed: true }).addTo(mapa);
-    mapa.on('click', function (e) {
-      if (mapa.getZoom() < 15) { info('Przybliż mapę do granic działek, potem kliknij działkę.'); return; }
-      info('Ustalamy numer działki…', true);
-      fetch(ULDK_PROXY + '?xy=' + encodeURIComponent(e.latlng.lng.toFixed(6) + ',' + e.latlng.lat.toFixed(6)))
-        .then(function (r) { return r.json(); }).then(function (d) {
-          if (!d || !d.id) { info('W tym miejscu nie ma działki ewidencyjnej.'); return; }
-          przelacz(String(d.id));
-        }).catch(function () { info('Usługa działek GUGiK nie odpowiada – spróbuj za chwilę.'); });
+    L.control.layers({ 'Mapa': osm, 'Ortofotomapa': orto }, { 'Granice działek': dz }, { collapsed: false }).addTo(mapa);
+    // pojedyncze klikniecie = zaznaczenie; podwojne (przyblizanie) nie zaznacza
+    var oczekujace = [];   // klikniecia czekajace 300 ms - podwojne klikniecie w tym samym miejscu je anuluje
+    mapa.on('dblclick', function (e) {
+      oczekujace = oczekujace.filter(function (o) { if (o.p.distanceTo(e.containerPoint) < 12) { clearTimeout(o.t); return false; } return true; });
     });
+    mapa.on('click', function (e) {
+      var o = { p: e.containerPoint }; o.t = setTimeout(function () { oczekujace = oczekujace.filter(function (x) { return x !== o; }); klik(e); }, 300);
+      oczekujace.push(o);
+    });
+    var klik = function (e) {
+      if (mapa.getZoom() < 15) { info('Przybliż mapę do granic działek (widoczne od tej skali), potem klikaj działki.'); return; }
+      // klikniecie w juz zaznaczona dzialke = odznaczenie
+      var traf = wybrane.filter(function (w) { return w.warstwa && wPolygonie(e.latlng, w.warstwa); })[0];
+      if (traf) { usun(traf.k); return; }
+      dodajPunkt(e.latlng);
+    };
+  }
+  function wPolygonie(ll, warstwa) {
+    var x = ll.lng, y = ll.lat, w = false;
+    warstwa.getLatLngs().forEach(function (r) { r = Array.isArray(r[0]) ? r[0] : r; for (var i = 0, j = r.length - 1; i < r.length; j = i++) { if ((r[i].lat > y) !== (r[j].lat > y) && x < (r[j].lng - r[i].lng) * (y - r[i].lat) / ((r[j].lat - r[i].lat) || 1e-12) + r[i].lng) w = !w; } });
+    return w;
   }
   function info(t, ok) { $('mapa-info').textContent = t || ''; $('mapa-info').className = 'pro-msg ' + (ok ? 'ok' : 'zle'); }
-  var KOLORY = ['#c9a961', '#6fae8a', '#7aa7d6', '#d97a5b', '#b48ad6', '#e0c35a', '#5bc0be', '#d65b8f'];
-  function przelacz(id) {
-    var i = wybrane.indexOf(id);
-    if (i >= 0) { wybrane.splice(i, 1); if (warstwy[id]) { mapa.removeLayer(warstwy[id]); delete warstwy[id]; } rysujWybrane(); info('Usunięto ' + id + ' z wyboru.', true); return; }
+  var KOLORY = ['#c9a961', '#2e8b57', '#3a6fb0', '#d0542f', '#8e5bb8', '#b8860b', '#1f9e9a', '#c2416f'];
+  function kolor(w) { return KOLORY[wybrane.indexOf(w) % KOLORY.length]; }
+  function ikona(n, kol) { return L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 13], html: '<div style="width:26px;height:26px;border-radius:50%;background:' + kol + ';color:#fff;font:600 13px Inter,sans-serif;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">' + n + '</div>' }); }
+  function dodajPunkt(ll) {
     if (wybrane.length >= MAKS) { info('Najwyżej ' + MAKS + ' działek naraz.'); return; }
-    wybrane.push(id); rysujWybrane(); info('Dodano ' + id + '.', true);
-    obrysuj(id);
+    var w = { k: 'p' + (++licznik), id: '', stan: 'szuka' };
+    wybrane.push(w);
+    w.znacznik = L.marker(ll, { icon: ikona(wybrane.length, kolor(w)) }).addTo(mapa);
+    rysujWybrane(); info('Zaznaczono – możesz klikać kolejne działki. Numery ustalamy w tle.', true);
+    w.obietnica = fetch(ULDK_PROXY + '?xy=' + encodeURIComponent(ll.lng.toFixed(6) + ',' + ll.lat.toFixed(6)))
+      .then(function (r) { return r.json(); }).then(function (d) {
+        if (wybrane.indexOf(w) < 0) return;
+        var id = d && d.id ? String(d.id) : '';
+        if (!id) { w.stan = 'brak'; rysujWybrane(); return; }
+        if (wybrane.some(function (x) { return x !== w && x.id === id; })) { usun(w.k); info('Ta działka jest już zaznaczona (' + id + ').'); return; }
+        w.id = id; w.stan = 'ok'; rysujWybrane(); obrysuj(w);
+      }).catch(function () { if (wybrane.indexOf(w) >= 0) { w.stan = 'blad'; rysujWybrane(); } });
+  }
+  function dodajId(id) {
+    if (wybrane.some(function (x) { return x.id === id; })) return;
+    if (wybrane.length >= MAKS) { info('Najwyżej ' + MAKS + ' działek naraz.'); return; }
+    var w = { k: id, id: id, stan: 'ok' }; wybrane.push(w); rysujWybrane(); obrysuj(w, true);
+  }
+  function usun(k) {
+    var w = wybrane.filter(function (x) { return x.k === k; })[0]; if (!w) return;
+    if (w.znacznik) mapa.removeLayer(w.znacznik); if (w.warstwa) mapa.removeLayer(w.warstwa);
+    wybrane.splice(wybrane.indexOf(w), 1);
+    wybrane.forEach(function (x, i) { if (x.znacznik) x.znacznik.setIcon(ikona(i + 1, kolor(x))); if (x.warstwa) x.warstwa.setStyle({ color: kolor(x) }); });
+    rysujWybrane();
   }
   function wktNaPierscienie(wkt) {
     return (String(wkt || '').match(/\(([^()]+)\)/g) || []).map(function (r) {
       return r.replace(/[()]/g, '').split(',').map(function (p) { var a = p.trim().split(/\s+/).map(Number); return [a[1], a[0]]; });
     }).filter(function (r) { return r.length >= 3; });
   }
-  function obrysuj(id) {
-    if (!mapa) return;
-    fetch(ULDK_PROXY + '?id=' + encodeURIComponent(id)).then(function (r) { return r.json(); }).then(function (d) {
-      if (!d || !d.geom_wkt || wybrane.indexOf(id) < 0) return;
-      var kol = KOLORY[wybrane.indexOf(id) % KOLORY.length];
-      warstwy[id] = L.polygon(wktNaPierscienie(d.geom_wkt), { color: kol, weight: 3, fillOpacity: 0.25 }).addTo(mapa).bindTooltip(id);
-      if (wybrane.length === 1 || !mapa.getBounds().intersects(warstwy[id].getBounds())) mapa.fitBounds(warstwy[id].getBounds(), { maxZoom: 18 });
+  function obrysuj(w, przybliz) {
+    if (!mapa || !w.id) return;
+    fetch(ULDK_PROXY + '?id=' + encodeURIComponent(w.id)).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.geom_wkt || wybrane.indexOf(w) < 0) return;
+      w.warstwa = L.polygon(wktNaPierscienie(d.geom_wkt), { color: kolor(w), weight: 3, fillOpacity: 0.3, interactive: false }).addTo(mapa);
+      w.pow = +d.powierzchnia || 0; rysujWybrane();
+      if (przybliz) mapa.fitBounds(w.warstwa.getBounds(), { maxZoom: 18 });
     }).catch(function () {});
   }
+  function ids() { return wybrane.filter(function (w) { return w.id; }).map(function (w) { return w.id; }); }
+  // czeka, az wszystkie zaznaczone punkty dostana numer dzialki (maks. 20 s)
+  function gotowe() {
+    var czeka = wybrane.filter(function (w) { return w.stan === 'szuka' && w.obietnica; }).map(function (w) { return w.obietnica; });
+    if (!czeka.length) return Promise.resolve(ids());
+    info('Kończymy ustalanie numerów działek…', true);
+    return Promise.race([Promise.all(czeka), new Promise(function (ok) { setTimeout(ok, 20000); })]).then(ids);
+  }
   function rysujWybrane() {
-    $('wybrane').innerHTML = wybrane.length ? wybrane.map(function (id, i) {
-      return '<span class="pro-chip"><b>' + (i + 1) + '</b>' + esc(id) + '<button title="Usuń" data-usun="' + esc(id) + '">×</button></span>';
-    }).join('') : '<span class="pro-pusto">Nie wybrano działek.</span>';
-    $('wybrane').querySelectorAll('[data-usun]').forEach(function (b) { b.onclick = function () { przelacz(b.dataset.usun); }; });
-    $('btn-teren').disabled = wybrane.length < 2; $('btn-raport').disabled = wybrane.length !== 1;
-    $('btn-zapisz-wybrane').disabled = !wybrane.length; $('btn-wyczysc').disabled = !wybrane.length;
+    var suma = 0;
+    $('wybrane').innerHTML = wybrane.length ? wybrane.map(function (w, i) {
+      if (w.pow) suma += w.pow;
+      var tekst = w.id ? esc(w.id) + (w.pow ? ' <span style="color:var(--sage)">· ' + Math.round(w.pow).toLocaleString('pl-PL') + ' m²</span>' : '')
+        : w.stan === 'szuka' ? '<em style="color:var(--sage)">ustalamy numer…</em>' : '<span style="color:#e08a6a">' + (w.stan === 'brak' ? 'to nie jest działka' : 'brak odpowiedzi GUGiK') + '</span>';
+      return '<span class="pro-chip"><b style="color:' + kolor(w) + '">' + (i + 1) + '</b>' + tekst + '<button title="Usuń" data-usun="' + esc(w.k) + '">×</button></span>';
+    }).join('') + (suma ? '<span class="pro-pusto" style="align-self:center">razem ' + Math.round(suma).toLocaleString('pl-PL') + ' m²</span>' : '') : '<span class="pro-pusto">Nie wybrano działek – kliknij je na mapie.</span>';
+    $('wybrane').querySelectorAll('[data-usun]').forEach(function (b) { b.onclick = function () { usun(b.dataset.usun); }; });
+    var n = wybrane.filter(function (w) { return w.stan === 'ok' || w.stan === 'szuka'; }).length;
+    $('btn-teren').disabled = n < 2; $('btn-raport').disabled = n !== 1;
+    $('btn-zapisz-wybrane').disabled = !n; $('btn-wyczysc').disabled = !wybrane.length;
   }
   function szukajMiejsca() {
     var q = $('szukaj-miejsce').value.trim(); if (!q || !mapa) return;
@@ -166,7 +216,7 @@
         PRO.api('dzialka_zapisz', { dzialka: id, nazwa: jest ? (zapisane[id].nazwa || '') : nazwa, zapisana: jest ? 0 : 1 }).then(odswiezListy);
       };
     });
-    document.querySelectorAll('[data-dodaj]').forEach(function (b) { b.onclick = function () { if (wybrane.indexOf(b.dataset.dodaj) < 0) przelacz(b.dataset.dodaj); $('mapa').scrollIntoView({ behavior: 'smooth', block: 'center' }); }; });
+    document.querySelectorAll('[data-dodaj]').forEach(function (b) { b.onclick = function () { dodajId(b.dataset.dodaj); $('mapa').scrollIntoView({ behavior: 'smooth', block: 'center' }); }; });
     document.querySelectorAll('[data-raport]').forEach(function (b) { b.onclick = function () { otworzRaport(b.dataset.raport); }; });
   }
 
@@ -229,12 +279,12 @@
     podepnijAuth();
     $('btn-wyloguj').onclick = function () { PRO.api('wyloguj').finally(function () { PRO.ustawSesje(''); try { var p = JSON.parse(localStorage.getItem('gruntowo_dostep_v2') || '{}'); if (p.haslo && p.haslo.pro) { delete p.haslo; localStorage.setItem('gruntowo_dostep_v2', JSON.stringify(p)); } } catch (e) {} location.href = 'pro.html'; }); };
     $('btn-szukaj-miejsce').onclick = szukajMiejsca; $('szukaj-miejsce').onkeydown = function (e) { if (e.key === 'Enter') szukajMiejsca(); };
-    var dodajId = function () { var v = $('dodaj-id').value.trim(); if (!/^\d{6}_\d\.[0-9A-Za-z_]{1,12}\.[0-9A-Za-z_\/.\-]{1,30}$/.test(v)) { info('Nieprawidłowy identyfikator – format: 302116_5.0005.78/3'); return; } if (wybrane.indexOf(v) < 0) przelacz(v); $('dodaj-id').value = ''; };
+    var dodajId = function () { var v = $('dodaj-id').value.trim(); if (!/^\d{6}_\d\.[0-9A-Za-z_]{1,12}\.[0-9A-Za-z_\/.\-]{1,30}$/.test(v)) { info('Nieprawidłowy identyfikator – format: 302116_5.0005.78/3'); return; } dodajId(v); $('dodaj-id').value = ''; };
     $('btn-dodaj-id').onclick = dodajId; $('dodaj-id').onkeydown = function (e) { if (e.key === 'Enter') dodajId(); };
-    $('btn-teren').onclick = function () { otworzTeren(wybrane); };
-    $('btn-raport').onclick = function () { otworzRaport(wybrane[0]); };
-    $('btn-zapisz-wybrane').onclick = function () { Promise.all(wybrane.map(function (id) { return PRO.api('dzialka_zapisz', { dzialka: id, nazwa: (zapisane[id] || {}).nazwa || '', zapisana: 1 }); })).then(function () { info('Zapisano ' + wybrane.length + ' dz.', true); odswiezListy(); }); };
-    $('btn-wyczysc').onclick = function () { wybrane.slice().forEach(przelacz); };
+    $('btn-teren').onclick = function () { gotowe().then(function (l) { if (l.length < 2) { info('Potrzebne są co najmniej 2 rozpoznane działki.'); return; } otworzTeren(l); }); };
+    $('btn-raport').onclick = function () { gotowe().then(function (l) { if (l[0]) otworzRaport(l[0]); }); };
+    $('btn-zapisz-wybrane').onclick = function () { gotowe().then(function (l) { return Promise.all(l.map(function (id) { return PRO.api('dzialka_zapisz', { dzialka: id, nazwa: (zapisane[id] || {}).nazwa || '', zapisana: 1 }); })); }).then(function (r) { info('Zapisano ' + (r || []).length + ' dz.', true); odswiezListy(); }); };
+    $('btn-wyczysc').onclick = function () { wybrane.slice().forEach(function (w) { usun(w.k); }); info(''); };
     $('f-konto').onsubmit = function (e) { e.preventDefault(); var f = this; PRO.api('konto_zapisz', dane(f)).then(function (j) { msg(f, j.ok ? 'Zapisano.' : (j.blad || 'Błąd.'), j.ok); }); };
     $('f-haslo').onsubmit = function (e) { e.preventDefault(); var f = this; PRO.api('haslo_zmien', dane(f)).then(function (j) { msg(f, j.ok ? 'Hasło zmienione (inne urządzenia wylogowane).' : (j.blad || 'Błąd.'), j.ok); if (j.ok) f.reset(); }); };
     rysujWybrane();
@@ -250,7 +300,7 @@
       if (!j.ok) { $('widok-auth').style.display = ''; pokazFormularz('logowanie'); return; }
       konto = j.konto; start();
       if (par.get('platnosc')) info('Dziękujemy! Gdy PayU potwierdzi płatność, abonament włączy się automatycznie (zwykle w ciągu minuty).', true);
-      var dz = par.get('dodaj'); if (dz) dz.split(',').forEach(function (id) { if (id && wybrane.indexOf(id) < 0) przelacz(id); });
+      var dz = par.get('dodaj'); if (dz) dz.split(',').forEach(function (id) { if (id) dodajId(id); });
     }).catch(function () { $('widok-auth').style.display = ''; msg($('f-logowanie'), 'Brak połączenia z serwerem.'); });
   });
 })();
