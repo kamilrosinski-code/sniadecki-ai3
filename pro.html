@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta name="robots" content="noindex, nofollow" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>gruntowo.pl PRO – analiza działek dla pośredników, deweloperów i inwestorów</title>
+<meta name="description" content="gruntowo.pl PRO: raporty rozszerzone bez limitu, analiza kilku sąsiednich działek jako jednego terenu, zapisane działki i historia. 3 dni za darmo." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="raport-style.css?v=20261009d" />
+<link rel="stylesheet" href="pro.css?v=1" />
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="topbar">
+  <a href="index.html"><img src="gruntowo-logo.png" alt="gruntowo.pl" class="brand-logo" /></a>
+  <div class="topbtns">
+    <span class="pro-znaczek" style="align-self:center">PRO</span>
+    <button class="btn" id="btn-wyloguj" style="display:none">Wyloguj</button>
+  </div>
+</div>
+
+<!-- ============ NIEZALOGOWANY ============ -->
+<main class="pro-wrap" id="widok-auth" style="display:none">
+  <div class="pro-siatka">
+    <div>
+      <div class="eyebrow">gruntowo.pl PRO</div>
+      <h1 class="pro-h1">Analiza działek dla pośredników, deweloperów i inwestorów</h1>
+      <p class="pro-lead">Jedno konto do codziennej pracy z gruntami.</p>
+      <ul class="pro-zalety">
+        <li><strong>Raporty rozszerzone bez kupowania pojedynczo</strong> – werdykt, plusy i minusy, plan ogólny i miejscowy, media, ceny.</li>
+        <li><strong>Kilka sąsiednich działek jako jeden teren</strong> – łączna powierzchnia, przyleganie, przeznaczenie i wycena całości.</li>
+        <li><strong>Zapisane działki i historia</strong> – wszystko, co sprawdzałeś, w jednym miejscu, z notatkami.</li>
+        <li><strong>3 dni za darmo</strong> – bez podawania karty.</li>
+      </ul>
+    </div>
+    <div class="pro-karta pro-auth">
+      <div class="pro-zakladki" id="zakladki">
+        <button data-z="logowanie" class="on">Zaloguj się</button>
+        <button data-z="rejestracja">Załóż konto</button>
+      </div>
+      <!-- logowanie -->
+      <form id="f-logowanie" autocomplete="on">
+        <label class="pro-pole"><span>E-mail</span><input type="email" name="email" autocomplete="username" required></label>
+        <label class="pro-pole"><span>Hasło</span><input type="password" name="haslo" autocomplete="current-password" required></label>
+        <button class="btn btn-gold pro-btn-pelny">Zaloguj się</button>
+        <p class="pro-msg" data-msg></p>
+        <button type="button" class="pro-link" id="pokaz-reset">Nie pamiętam hasła</button>
+      </form>
+      <!-- rejestracja -->
+      <form id="f-rejestracja" style="display:none" autocomplete="on">
+        <label class="pro-pole"><span>E-mail</span><input type="email" name="email" autocomplete="email" required></label>
+        <label class="pro-pole"><span>Hasło (min. 10 znaków)</span><input type="password" name="haslo" autocomplete="new-password" minlength="10" required></label>
+        <label class="pro-pole"><span>Imię i nazwisko</span><input name="imie" autocomplete="name"></label>
+        <label class="pro-pole"><span>Firma (opcjonalnie)</span><input name="firma" autocomplete="organization"></label>
+        <label class="pro-pole"><span>Telefon (opcjonalnie)</span><input name="telefon" autocomplete="tel"></label>
+        <label class="pro-pole"><span>Zajmuję się</span><select name="rola"><option value="">– wybierz –</option><option>pośrednik</option><option>deweloper</option><option>inwestor</option><option>architekt / projektant</option><option>inne</option></select></label>
+        <input type="text" name="strona_www" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+        <label class="pro-check"><input type="checkbox" name="zgoda_regulamin" required><span>Akceptuję <a href="regulamin.html" target="_blank" rel="noopener">regulamin</a> i <a href="klauzula.html" target="_blank" rel="noopener">zasady przetwarzania danych</a>.</span></label>
+        <label class="pro-check"><input type="checkbox" name="zgoda_kontakt"><span>Chcę otrzymywać informacje o nowościach gruntowo.pl (e-mail, telefon). Zgodę mogę wycofać w każdej chwili.</span></label>
+        <button class="btn btn-gold pro-btn-pelny">Załóż konto – 3 dni za darmo</button>
+        <p class="pro-msg" data-msg></p>
+      </form>
+      <!-- reset hasla: prosba -->
+      <form id="f-reset-start" style="display:none">
+        <p style="font-size:.88rem;color:var(--sage);margin-bottom:.8rem">Podaj e-mail konta – wyślemy link do ustawienia nowego hasła.</p>
+        <label class="pro-pole"><span>E-mail</span><input type="email" name="email" required></label>
+        <button class="btn btn-gold pro-btn-pelny">Wyślij link</button>
+        <p class="pro-msg" data-msg></p>
+      </form>
+      <!-- reset hasla: nowe haslo -->
+      <form id="f-reset" style="display:none">
+        <label class="pro-pole"><span>Nowe hasło (min. 10 znaków)</span><input type="password" name="haslo" autocomplete="new-password" minlength="10" required></label>
+        <button class="btn btn-gold pro-btn-pelny">Ustaw hasło i zaloguj</button>
+        <p class="pro-msg" data-msg></p>
+      </form>
+    </div>
+  </div>
+</main>
+
+<!-- ============ PANEL ============ -->
+<main class="pro-wrap" id="widok-panel" style="display:none">
+  <div class="pro-status" id="status"></div>
+
+  <section class="pro-karta">
+    <h2 class="pro-h2">Nowa analiza</h2>
+    <p style="font-size:.88rem;color:var(--sage);margin-bottom:.8rem">Kliknij działki na mapie (przybliż do granic działek) albo dodaj je identyfikatorem. Jedna działka – raport rozszerzony; 2–8 działek – analiza jako jeden teren.</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem">
+      <input id="szukaj-miejsce" placeholder="Miejscowość, np. Janikowo, Swarzędz" style="flex:1 1 220px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--cream);font:inherit;padding:.6rem .8rem">
+      <button class="btn" id="btn-szukaj-miejsce">Pokaż na mapie</button>
+      <input id="dodaj-id" placeholder="Identyfikator, np. 302116_5.0005.78/3" style="flex:1 1 220px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--cream);font-family:var(--ff-m);font-size:.85rem;padding:.6rem .8rem">
+      <button class="btn" id="btn-dodaj-id">Dodaj</button>
+    </div>
+    <div class="pro-mapa" id="mapa"></div>
+    <p class="pro-msg" id="mapa-info"></p>
+    <div class="pro-wybrane" id="wybrane"></div>
+    <div class="pro-akcje">
+      <button class="btn btn-gold" id="btn-teren" disabled>Analizuj jako jeden teren</button>
+      <button class="btn" id="btn-raport" disabled>Raport rozszerzony</button>
+      <button class="btn" id="btn-zapisz-wybrane" disabled>Zapisz działki</button>
+      <button class="btn" id="btn-wyczysc" disabled>Wyczyść</button>
+    </div>
+  </section>
+
+  <div class="pro-siatka">
+    <section class="pro-karta"><h2 class="pro-h2">Zapisane działki</h2><ul class="pro-lista" id="lista-zapisane"></ul></section>
+    <section class="pro-karta"><h2 class="pro-h2">Zapisane tereny</h2><ul class="pro-lista" id="lista-tereny"></ul></section>
+  </div>
+  <section class="pro-karta"><h2 class="pro-h2">Historia</h2><ul class="pro-lista" id="lista-historia"></ul></section>
+
+  <section class="pro-karta" id="sekcja-abonament">
+    <h2 class="pro-h2">Abonament</h2>
+    <div id="abonament"></div>
+  </section>
+
+  <section class="pro-karta">
+    <h2 class="pro-h2">Konto</h2>
+    <form id="f-konto" class="pro-siatka" style="gap:.25rem 1.25rem">
+      <label class="pro-pole"><span>Imię i nazwisko</span><input name="imie"></label>
+      <label class="pro-pole"><span>Firma</span><input name="firma"></label>
+      <label class="pro-pole"><span>Telefon</span><input name="telefon"></label>
+      <div style="align-self:end;margin-bottom:.85rem"><button class="btn">Zapisz dane</button> <span class="pro-msg" data-msg></span></div>
+    </form>
+    <form id="f-haslo" class="pro-siatka" style="gap:.25rem 1.25rem;margin-top:.5rem">
+      <label class="pro-pole"><span>Obecne hasło</span><input type="password" name="stare" autocomplete="current-password"></label>
+      <label class="pro-pole"><span>Nowe hasło (min. 10 znaków)</span><input type="password" name="nowe" autocomplete="new-password" minlength="10"></label>
+      <div style="margin-bottom:.85rem"><button class="btn">Zmień hasło</button> <span class="pro-msg" data-msg></span></div>
+    </form>
+  </section>
+</main>
+
+<script src="pro-sledz.js?v=1"></script>
+<script src="pro.js?v=1"></script>
+</body>
+</html>

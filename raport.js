@@ -363,7 +363,136 @@
   // liczy mediane i wypelnia liste transakcji + wartosc orientacyjna.
   // Wypelnia pole "Szacunkowa wartosc dzialki" w sekcji cen (pod mapa/suwakiem).
   // Zmienia sie razem z suwakiem niezabudowane/zabudowane.
-  function ustawSzacCeneBox(wartosc, opis, rodzaj) {
+  // ---- KOREKTA WARTOSCI wg przeznaczenia gruntu ----
+  // Wycena = mediana cen dzialek NIEZABUDOWANYCH w okolicy x powierzchnia. Gdy plan (MPZP/POG) albo ewidencja
+  // przeznacza teren na droge, zielen, las lub wody, taki grunt jest wart ulamek ceny dzialki budowlanej
+  // (zwykle wykup przez gmine / odszkodowanie) - mnozymy wartosc i piszemy dlaczego.
+  // Raport rozszerzony przekazuje wlasna, dokladniejsza ocene (z ewidencja i odczytem rysunku planu).
+  const MNOZNIKI_GRUNTU = {
+    droga: [0.3, 'teren drogi w planie miejscowym (KD)'], zielen: [0.3, 'teren zieleni w planie miejscowym (Z)'],
+    las: [0.2, 'teren lasu w planie miejscowym (ZL)'], wody: [0.1, 'teren wód w planie miejscowym (W)'],
+    pog_zielen: [0.3, 'strefa zieleni i rekreacji w planie ogólnym (SN), bez planu miejscowego'],
+    pog_droga: [0.3, 'strefa komunikacyjna w planie ogólnym (SK), bez planu miejscowego']
+  };
+  // Symbol terenu MPZP -> 'droga' | 'zielen' | 'las' | 'wody' | null (null = teren budowlany albo nieznany)
+  function klasaGruntuZSymbolu(symbol) {
+    const czesci = String(symbol || '').toUpperCase().replace(/^[\d\s.]+/, '').split(/[\/,;+\s]+/)
+      .map(function (x) { return x.replace(/[\d.]/g, '').replace(/^-+|-+$/g, ''); }).filter(Boolean);
+    if (!czesci.length) return null;
+    let klasa = null;
+    for (let i = 0; i < czesci.length; i++) {
+      const c = czesci[i];
+      if (/^(M|U|P|RM|MN|MW|ML|MU|UM)/.test(c)) return null;   // jest funkcja budowlana
+      const k = /^(ZL|L|LS)$/.test(c) ? 'las' : /^K/.test(c) ? 'droga' : /^Z/.test(c) ? 'zielen' : /^W/.test(c) ? 'wody' : null;
+      if (!k) return null;   // inne (np. R, E) - bez korekty
+      if (!klasa) klasa = k;
+    }
+    return klasa;
+  }
+  let bazaWyceny = null, korektaWyceny = null, korektaZRozszerzonego = false;
+  function korektaZKlasy(klasa, zrodlo) {
+    const m = MNOZNIKI_GRUNTU[klasa]; return m ? { klasa: klasa, mnoznik: m[0], powod: m[1], zrodlo: zrodlo || '' } : null;
+  }
+  // Raport bezplatny: korekta z symbolu MPZP, a bez planu - ze strefy POG
+  function przeliczKorekteWlasna() {
+    if (korektaZRozszerzonego) return;
+    const g = window.gruntowoRaport || {};
+    const mp = g.mpzp, pg = g.pog;
+    let k = null;
+    if (mp && mp.status === 'jest' && g.mpzpUdzialy && g.mpzpUdzialy.length) k = korektaZUdzialow(g.mpzpUdzialy);
+    else if (mp && mp.status === 'jest') { k = korektaZKlasy(klasaGruntuZSymbolu(g.mpzpSymbol), 'MPZP'); if (k) k.powod = k.powod.replace(/\([A-Z]+\)$/, '(' + String(g.mpzpSymbol).trim() + ')'); }
+    else if (pg && pg.status === 'jest' && (!mp || mp.status === 'brak')) k = korektaZKlasy(pg.kod === 'SN' ? 'pog_zielen' : pg.kod === 'SK' ? 'pog_droga' : '', 'POG');
+    korektaWyceny = k; pokazWartosc();
+  }
+  // Dzialka na kilku terenach planu (np. czesc to woda albo droga): mnoznik wazony powierzchnia kazdego terenu.
+  // udzialy: [{symbol, udzial (0-1)}] z probkowania planu w punktach na dzialce; symbol '' = bez planu (bez korekty)
+  function korektaZUdzialow(udzialy) {
+    let suma = 0; const opisy = [];
+    udzialy.forEach(function (u) {
+      const kl = klasaGruntuZSymbolu(u.symbol), m = kl && MNOZNIKI_GRUNTU[kl] ? MNOZNIKI_GRUNTU[kl][0] : 1;
+      suma += u.udzial * m;
+      if (kl) opisy.push({ kl: kl, symbol: u.symbol, proc: Math.round(u.udzial * 100) });
+    });
+    if (!opisy.length || suma > 0.97) return null;
+    const NAZWY = { droga: 'teren drogi', zielen: 'teren zieleni', las: 'teren lasu', wody: 'teren wód' };
+    const calosc = opisy.length === 1 && opisy[0].proc >= 97;
+    const powod = calosc ? NAZWY[opisy[0].kl] + ' w planie miejscowym (' + opisy[0].symbol + ')'
+      : opisy.map(function (o) { return 'ok. ' + o.proc + '% działki to ' + NAZWY[o.kl] + ' (' + o.symbol + ')'; }).join(', ') + ' w planie miejscowym';
+    return { klasa: calosc ? opisy[0].kl : 'mieszana', mnoznik: Math.max(0.05, Math.round(suma * 100) / 100), powod: powod, zrodlo: 'MPZP' };
+  }
+  // Probkowanie planu miejscowego w punktach wewnatrz dzialki (GetFeatureInfo KIMPZP) -> udzialy terenow
+  function udzialyTerenowMPZP(wkt) {
+    const pierscienie = (String(wkt || '').match(/\(([^()]+)\)/g) || []).map(function (r) {
+      return r.replace(/[()]/g, '').split(',').map(function (p) { return p.trim().split(/\s+/).map(Number); });
+    }).filter(function (r) { return r.length >= 3; });
+    if (!pierscienie.length) return Promise.resolve(null);
+    const wew = function (x, y) {
+      let w = false;
+      pierscienie.forEach(function (r) {
+        for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+          if ((r[i][1] > y) !== (r[j][1] > y) && x < (r[j][0] - r[i][0]) * (y - r[i][1]) / ((r[j][1] - r[i][1]) || 1e-12) + r[i][0]) w = !w;
+        }
+      });
+      return w;
+    };
+    let b = [180, 90, -180, -90];
+    pierscienie[0].forEach(function (p) { b = [Math.min(b[0], p[0]), Math.min(b[1], p[1]), Math.max(b[2], p[0]), Math.max(b[3], p[1])]; });
+    // siatka punktow w dzialce (do 16), gestsza dla malych dzialek
+    let pkt = [];
+    for (let n = 5; n <= 12 && pkt.length < 12; n++) {
+      pkt = [];
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        const x = b[0] + (b[2] - b[0]) * (i + 0.5) / n, y = b[1] + (b[3] - b[1]) * (j + 0.5) / n;
+        if (wew(x, y)) pkt.push([x, y]);
+      }
+    }
+    if (pkt.length > 16) { const krok = pkt.length / 16; pkt = Array.from({ length: 16 }, function (_, i) { return pkt[Math.floor(i * krok)]; }); }
+    if (pkt.length < 2) return Promise.resolve(null);
+    const d = 0.00004;
+    const zapytaj = function (p) {
+      const url = URL_KIMPZP + '?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&SRS=EPSG:4326&BBOX=' + [p[0] - d, p[1] - d, p[0] + d, p[1] + d].join(',')
+        + '&WIDTH=11&HEIGHT=11&STYLES=&FORMAT=image/png&LAYERS=plany_granice,wektor-str&QUERY_LAYERS=plany_granice,wektor-str&INFO_FORMAT=text/html&FEATURE_COUNT=5&X=5&Y=5';
+      return fetchZPonowieniem(url, 1).then(function (r) { return r.text(); }).then(function (h) {
+        const sym = parsujLegendeMPZP(h).symbol;
+        return sym || (/plany_granice|wektor/i.test(h) && /<td/i.test(h) ? '?' : '');
+      }).catch(function () { return null; });
+    };
+    // po 4 zapytania naraz
+    const wyniki = []; let i = 0;
+    const kolejne = function () {
+      if (i >= pkt.length) return Promise.resolve();
+      const partia = pkt.slice(i, i + 4); i += 4;
+      return Promise.all(partia.map(zapytaj)).then(function (w) { wyniki.push.apply(wyniki, w); return kolejne(); });
+    };
+    return kolejne().then(function () {
+      const ok = wyniki.filter(function (w) { return w !== null; });
+      if (ok.length < 2 || ok.length < pkt.length * 0.6) return null;   // za malo odpowiedzi - zostaje symbol ze srodka
+      const licz = {};
+      ok.forEach(function (w) { licz[w] = (licz[w] || 0) + 1; });   // '' = poza planem, '?' = plan bez odczytanego symbolu
+      return Object.keys(licz).map(function (k) { return { symbol: k, udzial: licz[k] / ok.length }; })
+        .sort(function (a, b2) { return b2.udzial - a.udzial; });
+    });
+  }
+  window.GruntowoUdzialyMPZP = function () { return (window.gruntowoRaport || {}).mpzpUdzialy || null; };
+  // Raport rozszerzony: window.gruntowoKorekta({ mnoznik, powod }) albo null
+  window.gruntowoKorekta = function (k) {
+    korektaZRozszerzonego = true;
+    korektaWyceny = k && k.mnoznik > 0 && k.mnoznik < 1 ? k : null;
+    pokazWartosc();
+  };
+  window.GruntowoKlasaGruntu = klasaGruntuZSymbolu;
+  // Wspolne wyswietlanie wartosci: podsumowanie (pods-cena) + pole w sekcji cen + wartosc na gorze raportu rozszerzonego
+  function pokazWartosc(wartosc, opis, rodzaj, zBoxem) {
+    if (wartosc !== undefined) bazaWyceny = { wartosc: wartosc, opis: opis, rodzaj: rodzaj, zBoxem: !!zBoxem };
+    const b = bazaWyceny; if (!b) return;
+    const k = korektaWyceny;
+    const w = k ? Math.round(b.wartosc * k.mnoznik / 100) * 100 : b.wartosc;
+    const o = b.opis + (k ? ' · obniżona do ' + Math.round(k.mnoznik * 100) + '%: ' + k.powod : '');
+    if ($('pods-cena')) $('pods-cena').textContent = w.toLocaleString('pl-PL') + ' zł';
+    if ($('pods-cena-sub')) $('pods-cena-sub').textContent = o;
+    if (b.zBoxem) ustawSzacCeneBox(w, o, b.rodzaj, k);
+  }
+  function ustawSzacCeneBox(wartosc, opis, rodzaj, korekta) {
     const box = $('cena-szac-box');
     if (!box) return;
     if ($('cena-szac-val')) $('cena-szac-val').textContent = wartosc.toLocaleString('pl-PL') + ' zł';
@@ -372,7 +501,7 @@
       $('cena-szac-sub').textContent = opis + ' · porównanie: ' + typ;
     }
     box.style.display = 'block';
-    oglos('gruntowo:wycena', { wartosc: wartosc, opis: opis, rodzaj: rodzaj });
+    oglos('gruntowo:wycena', { wartosc: wartosc, opis: opis, rodzaj: rodzaj, korekta: korekta || null, bazowa: bazaWyceny ? bazaWyceny.wartosc : wartosc });
   }
 
   function pobierzCenyZBazy(lat, lon, powierzchnia, rodzaj) {
@@ -414,14 +543,12 @@
           // Mediana prosto z backendu (juz policzona po stronie serwera)
           if (dane.mediana_cena_m2 && powierzchnia && $('pods-cena')) {
             const wartosc = Math.round(dane.mediana_cena_m2 * powierzchnia);
-            $('pods-cena').textContent = wartosc.toLocaleString('pl-PL') + ' zł';
             const promienKm = ((dane.promien_m || 1500) / 1000).toFixed(1).replace('.0', '');
             let opis = 'mediana ' + Math.round(dane.mediana_cena_m2).toLocaleString('pl-PL') +
               ' zł/m² z ' + dane.liczba_transakcji + ' transakcji w promieniu ' + promienKm + ' km';
             if (dane.rozszerzony) opis += ' (poszerzony)';
-            if ($('pods-cena-sub')) $('pods-cena-sub').textContent = opis;
-            // Powtorz wartosc w sekcji cen (aktualizuje sie z suwakiem)
-            ustawSzacCeneBox(wartosc, opis, rodzaj);
+            // podsumowanie + sekcja cen (aktualizuje sie z suwakiem), z korekta wg przeznaczenia gruntu
+            pokazWartosc(wartosc, opis, rodzaj, true);
           }
           rysujTransakcjeZBazy(bliskie.slice(0, 20));
         })
@@ -506,11 +633,7 @@
           // Wartosc orientacyjna w streszczeniu
           if (powierzchnia && $('pods-cena')) {
             const wartosc = Math.round(mediana * powierzchnia);
-            $('pods-cena').textContent = wartosc.toLocaleString('pl-PL') + ' zł';
-            if ($('pods-cena-sub')) {
-              $('pods-cena-sub').textContent = 'mediana ' + Math.round(mediana).toLocaleString('pl-PL') +
-                ' zł/m² z ' + stawki.length + ' transakcji w promieniu 1,5 km';
-            }
+            pokazWartosc(wartosc, 'mediana ' + Math.round(mediana).toLocaleString('pl-PL') + ' zł/m² z ' + stawki.length + ' transakcji w promieniu 1,5 km', rodzaj, false);
           }
         }
 
@@ -680,12 +803,7 @@
     stawki.sort(function (a, b) { return a - b; });
     const mediana = stawki[Math.floor(stawki.length / 2)];
     const wartosc = Math.round(mediana * powierzchnia);
-    if ($('pods-cena')) {
-      $('pods-cena').textContent = wartosc.toLocaleString('pl-PL') + ' zł';
-    }
-    if ($('pods-cena-sub')) {
-      $('pods-cena-sub').textContent = 'mediana ' + Math.round(mediana).toLocaleString('pl-PL') + ' zł/m² z ' + statTxt(stawki.length) + ' w okolicy';
-    }
+    pokazWartosc(wartosc, 'mediana ' + Math.round(mediana).toLocaleString('pl-PL') + ' zł/m² z ' + statTxt(stawki.length) + ' w okolicy', 'niezabudowana', false);
   }
   function statTxt(n) { return n + ' transakcji'; }
 
@@ -798,7 +916,7 @@
     kolejka.push(function (gotowe) {
       setMapaOverlay('map-pog', ortoBase(mbPog.join(','), pogWH), pogUchwUrl, gotowe);
       rysujObrys('map-pog', wkt, mbPog, pogWH);
-      pobierzLegendePOG(bbox, pogWH);
+      pobierzLegendePOG(bbox, pogWH, mbPog);
     });
 
     // MAPA 2: MPZP - poprawne warstwy tresci planu (raster + wektor + granice).
@@ -1426,15 +1544,24 @@
 
   // Pobiera strefe POG przez GetFeatureInfo w EPSG:2180 (w 4326 usluga czesto nic nie zwraca).
   // Wynik: legenda pod mapa + ZNAK WODNY gdy planu brak + zdarzenie gruntowo:pog (dla raportu rozszerzonego).
-  function pobierzLegendePOG(bbox, wh) {
+  function pobierzLegendePOG(bbox, wh, kadr) {
     const c = srodek(bbox);
     ruFI('wms-pog', RU_POG_FI, c.lon, c.lat).then(function (obj) {
       const app = obj.filter(function (o) { return /^APP\.POG\.PrawnieWiazacy/.test(o.warstwa); })[0];
       const strefa = obj.filter(function (o) { return /^APP\.POG\.S[A-Z]{1,2}\./.test(o.warstwa); })[0];
       const projekt = obj.filter(function (o) { return /^APP\.POG\.(WTrakcie|WOpracowaniu)/.test(o.warstwa); })[0];
       if (!app && !strefa) {
-        if (projekt) { pogLegendaRU({ status: 'brak', zrodlo: 'ru', projekt: { tytul: ruPole(projekt.p, /^Tytu/), status: ruPole(projekt.p, /^Status/), link: ruPole(projekt.p, /^Link/) } }); return; }
-        pobierzLegendePOGstara(bbox, wh); return;      // RU nic nie ma - pytamy stara usluge
+        if (projekt) {
+          const wp = { status: 'brak', zrodlo: 'ru', projekt: { tytul: ruPole(projekt.p, /^Tytu/), status: ruPole(projekt.p, /^Status/), link: ruPole(projekt.p, /^Link/) } };
+          // Projekt planu (np. Gdansk, Wroclaw): strefy projektu z API rejestru - tylko informacyjnie, NIE wplywaja na ocene i wartosc
+          const idProj = ruIdAktu(wp.projekt.link);
+          if (idProj) { strefyPOGzAPI(idProj, c, kadr, wh, wp); return; }
+          pogLegendaRU(wp); return;
+        }
+        // RU nic nie ma - moze gmina opublikowala PROJEKT planu w pliku GML (lista gmin w pog-projekty.php na LH)
+        projektPOGzGML(c, kadr, wh).then(function (pokazano) { if (!pokazano) pobierzLegendePOGstara(bbox, wh); })
+          .catch(function () { pobierzLegendePOGstara(bbox, wh); });
+        return;
       }
       const w = { status: 'jest', zrodlo: 'ru', kod: '', ouz: false, ozs: false };
       if (strefa) {
@@ -1456,14 +1583,104 @@
         if (/ObszarZabudowySrodmiejskiej/.test(o.warstwa)) w.ozs = true;
       });
       if (app) w.plan = { tytul: ruMalymi(ruPole(app.p, /^Tytu[łl]$/)), od: ruPole(app.p, /obowi.zuje od/i), link: ruPole(app.p, /^Link/) };
+      // Usluga mapowa RU ma czasem sama granice planu bez stref (np. Swarzedz) - strefy dociagamy z API rejestru przez nasz serwer
+      const idPog = !strefa && w.plan ? ruIdAktu(w.plan.link) : '';
+      if (idPog) { strefyPOGzAPI(idPog, c, kadr, wh, w); return; }
       pogLegendaRU(w);
     }).catch(function () { pobierzLegendePOGstara(bbox, wh); });
+  }
+
+  // Strefy POG z API Rejestru Urbanistycznego (pog-strefy.php na LH): strefa w punkcie + ksztalty stref na mape
+  const URL_POG_STREFY = 'https://sniadecki-development.pl/gruntowo-api/pog-strefy.php';
+  const KOLORY_STREF = { SW: '#d9772b', SJ: '#f0c24b', SZ: '#c7b35a', SU: '#e0565b', SH: '#b5446e', SP: '#8d6cc0', SR: '#b9d77c',
+    SI: '#8f969a', SN: '#5fb06c', SC: '#6e8f78', SG: '#8a6a45', SO: '#a5d08c', SK: '#d4d4d4' };
+  function strefyPOGzAPI(idPog, c, kadr, wh, w) {
+    const url = URL_POG_STREFY + '?id=' + idPog + '&lon=' + c.lon.toFixed(6) + '&lat=' + c.lat.toFixed(6) + (kadr ? '&bbox=' + kadr.map(function (v) { return v.toFixed(6); }).join(',') : '');
+    fetchZPonowieniem(url, 1).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.ok && d.strefa) {
+        if (w.projekt && w.status !== 'jest') w.status = 'projekt';
+        w.oznaczenie = d.strefa.oznaczenie; w.kod = d.strefa.symbol; w.nazwaStrefy = ruMalymi(d.strefa.nazwa);
+        if (d.ouz) { w.ouz = true; w.ouzOzn = d.ouzOzn || ''; }
+        if (d.ozs) w.ozs = true;
+        w.zrodloStref = 'api';
+      }
+      if (d && d.ksztalty && kadr) rysujStrefyPOG(d.ksztalty, kadr, wh, d.strefa ? d.strefa.oznaczenie : '', c, w.status === 'projekt' || (w.projekt && w.status !== 'jest'));
+      pogLegendaRU(w);
+    }).catch(function () { pogLegendaRU(w); });
+  }
+  // Projekt planu ogolnego z pliku GML gminy (np. Dopiewo) - tylko informacyjnie, bez wplywu na ocene i wartosc
+  function projektPOGzGML(c, kadr, wh) {
+    const teryt = String((window.gruntowoRaport || {}).id || '').slice(0, 6);
+    if (!/^\d{6}$/.test(teryt)) return Promise.resolve(false);
+    const url = URL_POG_STREFY + '?teryt=' + teryt + '&lon=' + c.lon.toFixed(6) + '&lat=' + c.lat.toFixed(6) + (kadr ? '&bbox=' + kadr.map(function (v) { return v.toFixed(6); }).join(',') : '');
+    return fetchZPonowieniem(url, 1).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.ok || !(d.strefa || d.ouz)) return false;
+      if (d.plan && d.plan.projekt === false) {
+        // plan UCHWALONY, ktorego nie ma jeszcze w Rejestrze Urbanistycznym (plik GML z Dziennika Urzedowego)
+        const wj = { status: 'jest', zrodlo: 'gml', kod: d.strefa ? d.strefa.symbol : '', ouz: !!d.ouz, ozs: !!d.ozs, ouzOzn: d.ouzOzn || '',
+          plan: { tytul: d.plan.tytul || 'Plan ogólny gminy', od: d.plan.od || '', link: d.plan.link || '' } };
+        if (d.strefa) { wj.oznaczenie = d.strefa.oznaczenie; wj.nazwaStrefy = ruMalymi(d.strefa.nazwa); }
+        if (d.ksztalty && kadr) rysujStrefyPOG(d.ksztalty, kadr, wh, d.strefa ? d.strefa.oznaczenie : '', c, false, true);
+        pogLegendaRU(wj);
+        return true;
+      }
+      const w = { status: d.strefa ? 'projekt' : 'brak', zrodlo: 'gml', kod: d.strefa ? d.strefa.symbol : '', ouz: !!d.ouz, ozs: !!d.ozs, ouzOzn: d.ouzOzn || '',
+        projekt: { tytul: d.plan.tytul || 'Projekt planu ogólnego gminy', status: d.plan.etap || 'projekt', link: d.plan.link || '' } };
+      if (d.strefa) { w.oznaczenie = d.strefa.oznaczenie; w.nazwaStrefy = ruMalymi(d.strefa.nazwa); }
+      if (d.ksztalty && kadr) rysujStrefyPOG(d.ksztalty, kadr, wh, d.strefa ? d.strefa.oznaczenie : '', c, true, true);
+      pogLegendaRU(w);
+      return true;
+    });
+  }
+  function rysujStrefyPOG(ksztalty, kadr, wh, strefaDzialki, c, projekt, zrodloGML) {
+    const img = $('map-pog'); const box = img && img.parentElement; if (!box) return;
+    const W = wh.W, H = wh.H;
+    const px = function (p) { return [((p[0] - kadr[0]) / (kadr[2] - kadr[0])) * W, ((kadr[3] - p[1]) / (kadr[3] - kadr[1])) * H]; };
+    let sciezki = '', napisy = '';
+    ksztalty.forEach(function (k) {
+      const kol = KOLORY_STREF[k.s] || '#cccccc';
+      const d = k.p.map(function (r) { return 'M' + r.map(function (p) { const q = px(p); return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' L') + ' Z'; }).join(' ');
+      sciezki += '<path d="' + d + '" fill="' + kol + '" fill-opacity="0.42" fill-rule="evenodd" stroke="#ffffff" stroke-opacity="0.85" stroke-width="1.2" vector-effect="non-scaling-stroke"/>';
+      // napis: srodek ciezkosci punktow obrysu, o ile wypada w kadrze
+      // napis: srednia punktow obrysu lezacych w kadrze; strefa dzialki - tuz pod dzialka
+      let sx = 0, sy = 0, n = 0;
+      k.p[0].forEach(function (p) { const q = px(p); if (q[0] > 0 && q[0] < W && q[1] > 0 && q[1] < H) { sx += q[0]; sy += q[1]; n++; } });
+      if (k.o === strefaDzialki && c) { const q = px([c.lon, c.lat]); sx = q[0]; sy = q[1] + H * 0.09; }
+      else if (n >= 3) { sx /= n; sy /= n; } else { sx = -1; }
+      if (sx > 30 && sx < W - 30 && sy > 16 && sy < H - 16) napisy += '<text x="' + sx.toFixed(1) + '" y="' + sy.toFixed(1) + '" font-family="monospace" font-size="17" font-weight="700" fill="#14181a" stroke="#ffffff" stroke-width="3.5" paint-order="stroke" text-anchor="middle">' + escH(k.o) + '</text>';
+    });
+    const stary = box.querySelector('.pog-strefy-svg'); if (stary) stary.remove();
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'pog-strefy-svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+    svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4;';
+    svg.innerHTML = sciezki + napisy;
+    box.appendChild(svg);
+    const cap = box.nextElementSibling && box.nextElementSibling.classList.contains('mapbox-cap') ? box.nextElementSibling : null;
+    if (cap) cap.textContent = (projekt ? 'Plan ogólny gminy - jeszcze nie obowiązuje' : 'Strefy planu ogólnego gminy') + ' · ' + (zrodloGML ? 'plik GML uchwały / gminy' : 'Rejestr Urbanistyczny');
   }
 
   function pogLegendaRU(wynik) {
     const box = document.getElementById('pog-legenda');
     window.gruntowoRaport.pog = wynik;
-    oglos('gruntowo:pog', wynik);
+    oglos('gruntowo:pog', wynik); przeliczKorekteWlasna();
+    if (wynik.status === 'projekt') {
+      znakWodny('map-pog', '');
+      if (!box) return;
+      const rp = function (k, v) { return v ? '<div class="legenda-row"><span>' + k + '</span><strong>' + escH(v) + '</strong></div>' : ''; };
+      const uchw = /^uchwalony/i.test(wynik.projekt.status || '');   // plan uchwalony, ale jeszcze nie wszedl w zycie
+      let hp = '<div class="legenda-title">' + (uchw ? 'Plan ogólny uchwalony - strefa planistyczna' : 'Projekt planu ogólnego - strefa planistyczna') + '</div><div class="legenda-body">';
+      hp += '<div class="legenda-note"><strong>Plan ogólny jeszcze nie obowiązuje</strong> (' + escH(ruMalymi(wynik.projekt.status || 'w opracowaniu')) + '). ' + (uchw ? 'Strefa pochodzi z uchwalonego planu, który wkrótce wejdzie w życie.' : 'Strefa pochodzi z projektu i może się zmienić do uchwalenia.') + '</div>';
+      hp += rp('Strefa w projekcie', (wynik.oznaczenie || wynik.kod) + (wynik.nazwaStrefy ? ' - ' + wynik.nazwaStrefy.toLowerCase() : (wynik.kod && STREFY_POG[wynik.kod] ? ' - strefa ' + STREFY_POG[wynik.kod] : '')));
+      hp += rp('Obszar uzupełnienia zabudowy (projekt)', wynik.ouz ? 'tak' + (wynik.ouzOzn ? ' (' + wynik.ouzOzn + ')' : '') : 'nie');
+      if (wynik.ozs) hp += rp('Obszar zabudowy śródmiejskiej (projekt)', 'tak');
+      hp += rp('Projekt', ruMalymi(wynik.projekt.tytul));
+      if (wynik.projekt.link) hp += '<a class="legenda-link" href="' + escH(wynik.projekt.link) + '" target="_blank" rel="noopener">' + (/legalact/.test(wynik.projekt.link) ? 'Zobacz uchwałę w Dzienniku Urzędowym →' : wynik.zrodlo === 'gml' ? 'Zobacz projekt na stronie gminy (BIP) →' : 'Zobacz projekt w Rejestrze Urbanistycznym →') + '</a>';
+      box.innerHTML = hp + '</div>';
+      box.style.display = 'block';
+      return;
+    }
     if (wynik.status !== 'jest') {
       znakWodny('map-pog', 'Nie znaleziono planu ogólnego', 'dla działki nie znaleziono planu ogólnego - zweryfikować w gminie', 'brak');
       if (box && wynik.projekt) {
@@ -1487,7 +1704,7 @@
     h += r('Profil dodatkowy', wynik.profilDod);
     if (wynik.plan) h += r('Plan', wynik.plan.tytul + (wynik.plan.od ? ' (obowiązuje od ' + wynik.plan.od + ')' : ''));
     const link = wynik.link || (wynik.plan && wynik.plan.link);
-    if (link) h += '<a class="legenda-link" href="' + escH(link) + '" target="_blank" rel="noopener">Zobacz w Rejestrze Urbanistycznym →</a>';
+    if (link) h += '<a class="legenda-link" href="' + escH(link) + '" target="_blank" rel="noopener">' + (/legalact/.test(link) ? 'Zobacz uchwałę w Dzienniku Urzędowym →' : 'Zobacz w Rejestrze Urbanistycznym →') + '</a>';
     box.innerHTML = h + '</div>';
     box.style.display = 'block';
   }
@@ -1506,7 +1723,7 @@
       + '&INFO_FORMAT=text/xml&FEATURE_COUNT=10&X=50&Y=50';
     const zakoncz = function (wynik) {
       window.gruntowoRaport.pog = wynik;
-      oglos('gruntowo:pog', wynik);
+      oglos('gruntowo:pog', wynik); przeliczKorekteWlasna(); przeliczKorekteWlasna();
       if (wynik.status !== 'jest') {
         znakWodny('map-pog', 'Nie znaleziono planu ogólnego', 'dla działki nie znaleziono planu ogólnego - zweryfikować w gminie', 'brak');
       }
@@ -1603,6 +1820,7 @@
       const wynik = { status: status, html: opisJest ? html : '', pokrycie: pokrycie, zrodlo: opisJest ? 'opis' : (mapaJest ? 'mapa' : (ru ? 'rejestr' : (mesip ? 'mesip' : ''))), ru: ru, projekt: ruProjekt, mesip: mesip };
       window.gruntowoRaport.mpzp = wynik;
       oglos('gruntowo:mpzp', wynik);
+      przeliczKorekteWlasna();
       // Blok z Rejestru Urbanistycznego (uzupelniany o numer uchwaly i PDF z naszego serwera)
       const blokRU = ru ? '<div class="legenda-ru" id="mpzp-ru"><div class="legenda-row"><span>Plan (Rejestr Urbanistyczny)</span><strong class="mpzp-ru-tytul">' + escH(ru.tytul.replace(/^W sprawie uchwalenia\s+/i, '')) + '</strong></div>' +
         (ru.od ? '<div class="legenda-row"><span>Obowiązuje od</span><strong>' + escH(ru.od) + '</strong></div>' : '') +
@@ -1636,6 +1854,23 @@
       znakWodny('map-mpzp', '');
       const dane = opisJest ? parsujLegendeMPZP(html) : { symbol: '', uchwala: '', data: '', link: '' };
       const nazwaPlanu = opisJest ? poleTabeli(html, /^nazwa planu$/i).replace(/^w sprawie uchwalenia\s+/i, '').replace(/^(miejscowego\s+)?planu\s+zagospodarowania\s+przestrzennego\s+/i, '') : '';
+      window.gruntowoRaport.mpzpSymbol = dane.symbol || (mesip && mesip.tereny && mesip.tereny[0] ? mesip.tereny[0].symbol : '');
+      przeliczKorekteWlasna();
+      // Czy dzialka lezy na kilku terenach planu? (np. czesc woda/droga) - probkujemy plan w punktach na dzialce
+      if (wkt && !mesip) udzialyTerenowMPZP(wkt).then(function (ud) {
+        if (!ud) return;
+        const zPlanem = ud.filter(function (u) { return u.symbol && u.symbol !== '?'; });
+        if (ud.length < 2 && !(zPlanem.length === 1 && zPlanem[0].symbol !== window.gruntowoRaport.mpzpSymbol)) return;
+        window.gruntowoRaport.mpzpUdzialy = ud;
+        przeliczKorekteWlasna();
+        oglos('gruntowo:mpzp-udzialy', ud);
+        const body = box.querySelector('.legenda-body');
+        if (body && ud.length > 1) {
+          const wiersz = document.createElement('div'); wiersz.className = 'legenda-row';
+          wiersz.innerHTML = '<span>Tereny na działce (szacunkowo)</span><strong>' + ud.map(function (u) { return escH(u.symbol === '' ? 'poza planem' : u.symbol === '?' ? 'inny teren planu' : u.symbol) + ' ok. ' + Math.round(u.udzial * 100) + '%'; }).join(', ') + '</strong>';
+          body.insertBefore(wiersz, body.children[1] || null);
+        }
+      }).catch(function () {});
       if (dane.symbol || dane.uchwala || dane.link) {
         let h = '<div class="legenda-title">Zapisy planu dla działki</div><div class="legenda-body">';
         if (dane.symbol) h += '<div class="legenda-row"><span>Symbol / przeznaczenie</span><strong>' + dane.symbol + '</strong></div>';
@@ -1749,9 +1984,13 @@
     }
     if (linkM) wynik.link = (linkM[1] || linkM[0]);
 
-    // SYMBOL strefy (MN, MN2, 5MN.3, U, RM, ZL, MN/U...) - wg konwencji MPZP
-    const symM = plain.match(/\b(\d{0,2}[A-Z]{1,3}\d{0,2}(?:[\.\/][A-Z0-9]{1,4})?)\b(?=[\s\n]*[--:]?\s*(?:tereny|zabudow|przeznacz|funkcj))/i)
-      || plain.match(/(?:symbol|oznaczenie|przeznaczenie|funkcja)[\s:\n]+(\d{0,2}[A-Z]{1,3}\d{0,2}(?:[\.\/][A-Z0-9]{1,4})?)/i);
+    // SYMBOL strefy (MN, MN2, 5MN.3, U, RM, ZL, MN/U...) - wg konwencji MPZP.
+    // Szukamy TYLKO poza polami opisowymi planu (nazwa planu, dziennik, linki) - inaczej np. z nazwy
+    // "...gminy Steszew w zakresie..." wychodzil falszywy symbol "w" (teren wod). Litery symbolu - wielkie.
+    const bezOpisow = html.replace(/<tr[^>]*>\s*<th[^>]*>\s*(?:nazwa planu|dziennik|tre[sś][cć] uchwa[łl]y|rysunek planu|us[łl]uga|legenda|identyfikator|uchwa[łl]a|zmiana|numer planu|poziom informatyzacji)[\s\S]*?<\/tr>/gi, ' ');
+    const plainS = bezOpisow.replace(/<[^>]+>/g, ' \n ').replace(/&nbsp;/g, ' ');
+    const symM = plainS.match(/\b(\d{0,2}[A-Z]{1,3}\d{0,2}(?:[\.\/][A-Z0-9]{1,4})?)\b(?=[ \t]*[-–:]?[ \t]*(?:[Tt]ereny|[Zz]abudow|[Pp]rzeznacz|[Ff]unkcj))/)
+      || plainS.match(/(?:[Ss]ymbol|[Oo]znaczenie|[Pp]rzeznaczenie|[Ff]unkcja)[\s:]+(\d{0,2}[A-Z]{1,3}\d{0,2}(?:[\.\/][A-Z0-9]{1,4})?)\b/);
     if (symM) wynik.symbol = symM[1];
     // Format tabelaryczny/XML uslug gminnych (np. FUN_SYMB, numer_uchwaly)
     const fs = html.match(/<FUN_SYMB>([^<]+)<\/FUN_SYMB>/i) || html.match(/>\s*(?:symbol|fun_symb)\s*<\/t[hd]>\s*<td[^>]*>([^<]+)</i);

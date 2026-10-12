@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta name="robots" content="noindex, nofollow" />
+<meta name="robots" content="noindex, nofollow" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>gruntowo.pl - pokaż nam swój grunt, a my powiemy Ci, co możesz z nim zrobić</title>
@@ -11,16 +11,22 @@
   <meta property="og:site_name" content="gruntowo.pl" />
   <meta property="og:url" content="https://gruntowo.pl/" />
   <meta property="og:title" content="gruntowo.pl - pokaż nam swój grunt, a my powiemy Ci, co możesz z nim zrobić" />
-  <meta property="og:description" content="Bezpłatny raport o działce: plan miejscowy, ceny transakcyjne z okolicy, media, zdjęcia lotnicze." />
+  <meta property="og:description" content="Analiza działki w kilka minut: plan miejscowy, warunki zabudowy, media, ceny transakcyjne z okolicy. Bezpłatny raport o działce." />
+  <meta property="og:image" content="https://gruntowo.pl/og-gruntowo.jpg?v=1" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="gruntowo.pl - pokaż nam swój grunt, a my powiemy Ci, co możesz z nim zrobić" />
   <meta property="og:locale" content="pl_PL" />
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:description" content="Analiza działki w kilka minut: plan miejscowy, warunki zabudowy, media, ceny transakcyjne z okolicy." />
+  <meta name="twitter:image" content="https://gruntowo.pl/og-gruntowo.jpg?v=1" />
   <meta name="twitter:title" content="gruntowo.pl - pokaż nam swój grunt, a my powiemy Ci, co możesz z nim zrobić" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=24" />
+  <link rel="stylesheet" href="style.css?v=26" />
 </head>
 <body>
 
@@ -33,6 +39,7 @@
       <li><a href="#sourcing" data-cms="nav_sourcing">Jak analizujemy Twój grunt?</a></li>
       <li><a href="#oferty" data-cms="nav_oferty">Oferty i przykładowy raport</a></li>
       <li><a href="#ekosystem" data-cms="nav_ekosystem">O nas</a></li>
+      <li><a href="pro.html" data-cms="nav_pro">PRO</a></li>
       <li><a href="#kontakt" class="nav-cta" data-cms="nav_cta">Porozmawiajmy</a></li>
     </ul>
     <button class="nav-burger" id="burger" aria-label="Menu">
@@ -45,6 +52,7 @@
       <li><a href="#sourcing" class="mm-link" data-cms="nav_sourcing">Jak analizujemy Twój grunt?</a></li>
       <li><a href="#oferty" class="mm-link" data-cms="nav_oferty">Oferty i przykładowy raport</a></li>
       <li><a href="#ekosystem" class="mm-link" data-cms="nav_ekosystem">O nas</a></li>
+      <li><a href="pro.html" class="mm-link" data-cms="nav_pro">gruntowo.pl PRO</a></li>
       <li><a href="#kontakt" class="mm-link" data-cms="nav_kontakt">Kontakt</a></li>
     </ul>
   </div>
@@ -367,7 +375,7 @@
     <div class="container">
       <span class="tag tag-light">Konsultacja z ekspertem</span>
       <h2 class="h2 h2-light" data-cms="roadmap_title">Cztery etapy<br /><em>współpracy z ekspertem</em></h2>
-      <p class="etapy-intro">Tak wygląda droga od zgłoszenia działki do konsultacji z naszym ekspertem w modelu <strong>Raport z konsultacją (499 zł)</strong>.</p>
+      <p class="etapy-intro" data-cms="roadmap_intro">Tak wygląda droga od wskazania działki do rozmowy z naszym ekspertem w modelu <strong>Raport z konsultacją (499 zł)</strong>.</p>
 
       <div class="etapy" id="etapy">
         <div class="etapy-linia"><div class="etapy-strzalka" id="etapy-strzalka">↓</div></div>
@@ -375,33 +383,33 @@
           <div class="etap" data-etap="1">
             <div class="etap-num">1</div>
             <div class="etap-tresc">
-              <span class="etap-czas">Od razu</span>
-              <h3>Zgłoszenie i raport rozszerzony</h3>
-              <p>Zgłaszasz nieruchomość i od razu otrzymujesz raport rozszerzony - pełną analizę działki z werdyktem naszego modelu.</p>
+              <span class="etap-czas" data-cms="etap1_czas">Od razu</span>
+              <h3 data-cms="etap1_tytul">Wskazujesz działkę i opłacasz konsultację</h3>
+              <p data-cms="etap1_tekst">Zaznaczasz działkę na mapie albo podajesz jej identyfikator, zostawiasz kontakt i płacisz online przez PayU.</p>
             </div>
           </div>
           <div class="etap" data-etap="2">
             <div class="etap-num">2</div>
             <div class="etap-tresc">
-              <span class="etap-czas">W ciągu 30 minut</span>
-              <h3>Telefon od asystenta</h3>
-              <p>Nasz asystent dzwoni, doprecyzowuje zakres i charakterystykę nieruchomości oraz odpowiada na podstawowe pytania.</p>
+              <span class="etap-czas" data-cms="etap2_czas">Zaraz po płatności</span>
+              <h3 data-cms="etap2_tytul">Wybierasz termin i dostajesz raport rozszerzony</h3>
+              <p data-cms="etap2_tekst">Rezerwujesz termin w kalendarzu i od razu otwierasz raport rozszerzony działki - w cenie konsultacji.</p>
             </div>
           </div>
           <div class="etap" data-etap="3">
             <div class="etap-num">3</div>
             <div class="etap-tresc">
-              <span class="etap-czas">W ciągu 24 godzin</span>
-              <h3>Szczegółowa analiza</h3>
-              <p>Nasz ekspert przeprowadza szczegółową analizę potencjału nieruchomości i umawia termin konsultacji.</p>
+              <span class="etap-czas" data-cms="etap3_czas">Przed spotkaniem</span>
+              <h3 data-cms="etap3_tytul">Ekspert analizuje Twoją działkę</h3>
+              <p data-cms="etap3_tekst">Ekspert sprawdza potencjał działki: plan, chłonność zabudowy, możliwe formy sprzedaży lub przekształcenia.</p>
             </div>
           </div>
           <div class="etap" data-etap="4">
             <div class="etap-num">4</div>
             <div class="etap-tresc">
-              <span class="etap-czas">Do 7 dni</span>
-              <h3>Konsultacja z ekspertem</h3>
-              <p>Odbywasz konsultację - spotkanie online lub telekonferencję - w terminie do 7 dni od zgłoszenia.</p>
+              <span class="etap-czas" data-cms="etap4_czas">W wybranym terminie</span>
+              <h3 data-cms="etap4_tytul">Konsultacja z ekspertem</h3>
+              <p data-cms="etap4_tekst">Rozmowa online: wyniki analizy, odpowiedzi na pytania i dalsze kroki. Link do spotkania dostajesz e-mailem.</p>
             </div>
           </div>
         </div>
@@ -426,8 +434,8 @@
           <div class="fg"><label>E-mail</label><input type="email" id="c-email" placeholder="jan@firma.pl" /></div>
           <div class="fg"><label>Telefon <span style="opacity:.6">(opcjonalnie)</span></label><input type="tel" id="c-tel" placeholder="600 000 000" /></div>
           <div class="fg" style="position:absolute;left:-5000px" aria-hidden="true"><input type="text" name="strona_www" tabindex="-1" autocomplete="off" /></div>
-          <div class="fg"><label>Temat</label>
-            <select id="c-topic">
+          <div class="fg"><label data-cms="kontakt_temat_etykieta">Temat</label>
+            <select id="c-topic" data-cms-lista="kontakt_tematy">
               <option value="">Wybierz…</option>
               <option>Sourcing gruntów</option>
               <option>Gotowa oferta dla dewelopera</option>
@@ -460,14 +468,14 @@
     <div class="container footer-inner">
       <div>
         <a href="#" class="nav-logo"><img src="gruntowo-logo.png" alt="gruntowo.pl" class="ft-logo-img" /></a>
-        <p class="ft-sub">Portal z gruntami</p>
+        <p class="ft-sub">Analiza działek - pokaż nam swój grunt, a my powiemy Ci, co możesz z nim zrobić</p>
         <p class="ft-sub">Śniadecki S.A., ul. Młyńska 12, 61-730 Poznań</p>
         <p class="ft-sub">KRS 0001181879 · NIP 7831931207 · REGON 542155496</p>
         <p class="ft-sub ft-sub-sm">Sąd Rejonowy Poznań - Nowe Miasto i Wilda w Poznaniu, VIII Wydział Gospodarczy KRS · kapitał zakładowy 113 750 zł, wpłacony w całości</p>
         <p class="ft-sub ft-sub-sm">gruntowo.pl jest znakiem należącym do Śniadecki S.A. · <a href="klauzula.html">Klauzula informacyjna</a></p>
         <a href="https://gruntowo.com" target="_blank" rel="noopener" class="ft-partner">
           <img src="gruntowo-logo.png" alt="Gruntowo.com" />
-          <span>Portal z gruntami</span>
+          <span>gruntowo.com</span>
         </a>
       </div>
       <nav>
@@ -489,6 +497,6 @@
   <script src="zgody.js?v=2"></script>
   <script src="haslo.js?v=20261006"></script>
   <script src="lenis.min.js?v=1"></script>
-  <script src="main.js?v=54"></script>
+  <script src="main.js?v=66"></script>
 </body>
 </html>

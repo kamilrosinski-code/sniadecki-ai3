@@ -1,0 +1,64 @@
+/* gruntowo.pl PRO - panel konta i analiza terenu (uzupelnia raport-style.css) */
+.pro-wrap{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+.pro-h1{font-family:var(--ff-d);font-size:2.4rem;font-weight:500;line-height:1.1;margin:.25rem 0 .75rem;}
+.pro-h2{font-family:var(--ff-d);font-size:1.6rem;font-weight:500;margin:0 0 .75rem;}
+.pro-lead{color:var(--sage);max-width:640px;margin-bottom:1.5rem;}
+.pro-karta{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1.4rem 1.5rem;margin-bottom:1.25rem;}
+.pro-siatka{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+@media(max-width:820px){.pro-siatka{grid-template-columns:1fr;}}
+.pro-auth{max-width:440px;margin:1rem auto;}
+.pro-zakladki{display:flex;gap:.25rem;margin-bottom:1.1rem;border-bottom:1px solid var(--line);}
+.pro-zakladki button{background:none;border:0;border-bottom:2px solid transparent;color:var(--sage);font:inherit;font-size:.9rem;padding:.6rem .9rem;cursor:pointer;}
+.pro-zakladki button.on{color:var(--cream);border-bottom-color:var(--gold);}
+.pro-pole{display:block;margin-bottom:.85rem;}
+.pro-pole span{display:block;font-size:.78rem;color:var(--sage);margin-bottom:.3rem;}
+.pro-pole input,.pro-pole select,.pro-pole textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--cream);font:inherit;font-size:.95rem;padding:.7rem .85rem;}
+.pro-pole input:focus,.pro-pole select:focus{outline:none;border-color:var(--gold);}
+.pro-check{display:flex;gap:.55rem;align-items:flex-start;font-size:.82rem;color:var(--cream2);margin:.4rem 0 .7rem;}
+.pro-check input{margin-top:.25rem;}
+.pro-btn-pelny{width:100%;padding:.8rem;font-size:.9rem;justify-content:center;}
+.pro-msg{font-size:.85rem;margin:.6rem 0;min-height:1.2em;}
+.pro-msg.zle{color:#e08a6a;} .pro-msg.ok{color:#8fc7a3;}
+.pro-link{background:none;border:0;color:var(--goldl);font:inherit;font-size:.82rem;cursor:pointer;text-decoration:underline;padding:0;}
+.pro-zalety{list-style:none;margin:1rem 0 0;}
+.pro-zalety li{padding:.35rem 0 .35rem 1.5rem;position:relative;font-size:.9rem;color:var(--cream2);}
+.pro-zalety li:before{content:'◆';position:absolute;left:0;color:var(--gold);font-size:.75rem;top:.5rem;}
+.pro-status{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.25rem;border-radius:10px;border:1px solid var(--line);background:var(--panel);margin-bottom:1.25rem;}
+.pro-status.proba{border-color:rgba(201,169,97,.45);}
+.pro-status.wygasl{border-color:rgba(224,138,106,.6);}
+.pro-znaczek{font-family:var(--ff-m);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);}
+.pro-mapa{height:420px;border-radius:8px;border:1px solid var(--line);overflow:hidden;background:#0d1012;}
+.pro-wybrane{display:flex;flex-wrap:wrap;gap:.45rem;margin:.9rem 0;}
+.pro-chip{display:inline-flex;align-items:center;gap:.45rem;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:.35rem .5rem .35rem .8rem;font-family:var(--ff-m);font-size:.78rem;}
+.pro-chip b{color:var(--gold);font-weight:500;}
+.pro-chip button{background:none;border:0;color:var(--sage);cursor:pointer;font-size:1rem;line-height:1;}
+.pro-akcje{display:flex;flex-wrap:wrap;gap:.6rem;}
+.pro-lista{list-style:none;}
+.pro-lista li{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--line);font-size:.88rem;}
+.pro-lista li:last-child{border-bottom:0;}
+.pro-lista .id{font-family:var(--ff-m);font-size:.8rem;}
+.pro-lista .opis{color:var(--sage);font-size:.78rem;}
+.pro-lista .przyc{display:flex;gap:.35rem;flex-shrink:0;}
+.pro-mini{font-size:.72rem;padding:.35rem .6rem;}
+.pro-pusto{color:var(--sage);font-size:.85rem;padding:.4rem 0;}
+.gwiazdka{background:none;border:0;cursor:pointer;color:var(--sage);font-size:1.05rem;}
+.gwiazdka.on{color:var(--goldl);}
+.pro-karta-platnosc .pole-karty{background:#fff;border-radius:6px;padding:.75rem .8rem;margin-bottom:.6rem;min-height:44px;}
+/* analiza terenu */
+.teren-kafle{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:1.25rem 0;}
+@media(max-width:820px){.teren-kafle{grid-template-columns:repeat(2,1fr);}}
+.teren-kafel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem;}
+.teren-kafel .k{font-size:.72rem;color:var(--sage);text-transform:uppercase;letter-spacing:.08em;}
+.teren-kafel .v{font-family:var(--ff-d);font-size:1.6rem;line-height:1.15;margin-top:.25rem;}
+.teren-kafel .s{font-size:.75rem;color:var(--sage);margin-top:.2rem;}
+.teren-tab{width:100%;border-collapse:collapse;font-size:.85rem;}
+.teren-tab th,.teren-tab td{text-align:left;padding:.6rem .5rem;border-bottom:1px solid var(--line);vertical-align:top;}
+.teren-tab th{font-size:.72rem;color:var(--sage);font-weight:500;text-transform:uppercase;letter-spacing:.06em;}
+.teren-tab td.num{text-align:right;white-space:nowrap;}
+.teren-tab tfoot td{font-weight:500;border-bottom:0;border-top:1px solid rgba(201,169,97,.4);}
+@media(max-width:720px){.teren-tab thead{display:none}.teren-tab,.teren-tab tbody,.teren-tab tr,.teren-tab td{display:block}.teren-tab tr{border:1px solid var(--line);border-radius:8px;margin-bottom:.6rem;padding:.3rem}.teren-tab td{border:0;padding:.25rem .5rem}.teren-tab td.num{text-align:left}.teren-tab td:before{content:attr(data-k);display:block;font-size:.7rem;color:var(--sage)}}
+.teren-uwaga{font-size:.85rem;padding:.8rem 1rem;border-radius:8px;border:1px solid var(--line);background:var(--panel2);margin:.75rem 0;}
+.teren-uwaga.plus{border-color:rgba(111,174,138,.5);} .teren-uwaga.minus{border-color:rgba(224,138,106,.55);}
+.kolor-kropka{display:inline-block;width:.7rem;height:.7rem;border-radius:2px;margin-right:.4rem;vertical-align:middle;}
+.wczyt{color:var(--sage);font-size:.8rem;}
+@media print{.topbar,.pro-akcje,.no-print{display:none!important}.pro-karta,.teren-kafel{background:#fff;color:#000;border-color:#ccc}}

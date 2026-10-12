@@ -25,7 +25,7 @@
 (function () {
   'use strict';
 
-  var RAPORT_JS = 'raport.js?v=20261006w';
+  var RAPORT_JS = 'raport.js?v=20261012a';
 
   var URL_KIMPZP = 'https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego';
   var URL_POG = 'https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin';
@@ -623,6 +623,8 @@
   function analizaPOG() {
     return wynikRaportu('pog', 45000).then(function (w) {
       if (!w || w.status === 'blad') throw new Error('usługa planów ogólnych nie odpowiedziała');
+      // projekt planu (jeszcze nie obowiazuje) - tylko do informacji, bez wplywu na ocene
+      if (w.status === 'projekt') return { status: 'projekt', kod: w.kod, nazwa: w.kod ? STREFY_POG[w.kod] : '', oznaczenie: w.oznaczenie, nazwaStrefy: w.nazwaStrefy, ouz: !!w.ouz, projekt: w.projekt };
       if (w.status !== 'jest') return { status: 'brak' };
       var r = { status: 'jest', kod: w.kod, nazwa: w.kod ? STREFY_POG[w.kod] : '', ouz: !!w.ouz };
       // Rejestr Urbanistyczny podaje wskazniki strefy - przenosimy je do raportu
@@ -1205,6 +1207,43 @@
   // 5. CZYNNIKI -> WERDYKT
   //    typ: 'plus' | 'minus' | 'uwaga'; waga: wplyw na wynik (plus > 0, minus < 0, uwaga 0)
   // =====================================================================
+  // Przeznaczenie gruntu, ktore obniza wartosc: droga / zielen / las / wody (MPZP), strefa SN/SK planu
+  // ogolnego (bez MPZP) albo dzialka drogowa (dr) w ewidencji. Zwraca { klasa, mnoznik, powod, zrodlo } albo null.
+  var MNOZNIK_KLASY = { droga: 0.3, zielen: 0.3, las: 0.2, wody: 0.1 };
+  var OPIS_KLASY = { droga: 'teren drogi', zielen: 'teren zieleni', las: 'teren lasu', wody: 'teren wód' };
+  function klasaSymbolu(sym) { return window.GruntowoKlasaGruntu ? GruntowoKlasaGruntu(sym) : null; }
+  function ocenaGruntu() {
+    var mp = stan.mpzp, pg = stan.pog, uz = stan.uzytki;
+    var planJest = !!(mp && mp.status === 'jest');
+    var drEGiB = !!(uz && !uz.blad && uz.opis && uz.opis.length && uz.opis.every(function (o) { return o.kat === 'drogi'; }));
+    if (planJest) {
+      // kilka terenow na dzialce (odczyt z rysunku z udzialami) -> mnoznik wazony powierzchnia
+      var sr = stan.symbolRysunek;
+      if (!mp.symbol && sr && sr.symbole && sr.symbole.length > 1) {
+        var suma = 0, wagi = 0, klasy = [];
+        sr.symbole.forEach(function (x) { var k = klasaSymbolu(x.symbol), u = x.udzial || (100 / sr.symbole.length); suma += u * (k ? MNOZNIK_KLASY[k] : 1); wagi += u; if (k) klasy.push(x.symbol); });
+        var mw = wagi ? suma / wagi : 1;
+        if (mw < 0.97) return { klasa: 'mieszana', mnoznik: Math.round(mw * 100) / 100, powod: 'część działki to ' + klasy.join(', ') + ' w planie miejscowym', zrodlo: 'MPZP' };
+      }
+      // udzialy terenow z probkowania planu w raporcie (gdy brak odczytu z rysunku)
+      var ud = window.GruntowoUdzialyMPZP ? window.GruntowoUdzialyMPZP() : null;
+      if (!(sr && sr.symbole && sr.symbole.length > 1) && ud && ud.length > 1) {
+        var s2 = 0, kl2 = [];
+        ud.forEach(function (x) { var k = klasaSymbolu(x.symbol); s2 += x.udzial * (k ? MNOZNIK_KLASY[k] : 1); if (k) kl2.push('ok. ' + Math.round(x.udzial * 100) + '% ' + OPIS_KLASY[k] + ' (' + x.symbol + ')'); });
+        if (kl2.length && s2 < 0.97) return { klasa: 'mieszana', mnoznik: Math.max(0.05, Math.round(s2 * 100) / 100), powod: kl2.join(', ') + ' w planie miejscowym', zrodlo: 'MPZP' };
+        if (!kl2.length) return null;
+      }
+      var sym = mp.symbol || (sr && sr.symbole && sr.symbole[0] && sr.symbole[0].symbol) || '';
+      var kl = klasaSymbolu(sym);
+      if (kl) return { klasa: kl, mnoznik: MNOZNIK_KLASY[kl], powod: OPIS_KLASY[kl] + ' w planie miejscowym (' + sym + ')', zrodlo: 'MPZP' };
+    } else if (pg && pg.status === 'jest' && (pg.kod === 'SN' || pg.kod === 'SK') && (!mp || mp.status === 'brak')) {
+      return pg.kod === 'SN' ? { klasa: 'pog_zielen', mnoznik: 0.3, powod: 'strefa zieleni i rekreacji w planie ogólnym (SN), bez planu miejscowego', zrodlo: 'POG' }
+                             : { klasa: 'pog_droga', mnoznik: 0.3, powod: 'strefa komunikacyjna w planie ogólnym (SK), bez planu miejscowego', zrodlo: 'POG' };
+    }
+    if (drEGiB) return { klasa: 'droga', mnoznik: planJest ? 0.4 : 0.3, powod: 'w ewidencji gruntów działka drogowa (dr)', zrodlo: 'EGiB' };
+    return null;
+  }
+
   function zbierzCzynniki() {
     var c = [];
     var dod = function (typ, waga, tytul, opis, zrodlo, limit) { c.push({ typ: typ, waga: waga, tytul: tytul, opis: opis || '', zrodlo: zrodlo || '', limit: limit || 0 }); };
@@ -1218,7 +1257,13 @@
       var pz = mp.przeznaczenie;
       if (pz && pz.ocena === 'budowlane') dod('plus', 22, 'Obowiązuje MPZP - przeznaczenie: ' + pz.etykieta, 'Plan miejscowy przesądza o możliwości zabudowy - nie potrzeba decyzji WZ.' + (mp.symbol ? ' Symbol terenu: ' + mp.symbol + '.' : ''), 'KIMPZP');
       else if (pz && pz.ocena === 'czesciowo') dod('plus', 10, 'Obowiązuje MPZP - przeznaczenie ' + pz.etykieta, 'Zabudowa możliwa w zakresie określonym planem (sprawdź dopuszczalne funkcje).', 'KIMPZP');
-      else if (pz && pz.ocena === 'niebudowlane') dod('minus', -25, 'MPZP przeznacza teren na: ' + pz.etykieta, 'Plan nie przewiduje zabudowy mieszkaniowej ani usługowej - zmiana wymaga zmiany planu przez gminę.', 'KIMPZP');
+      else if (pz && pz.ocena === 'niebudowlane') {
+        var og = ocenaGruntu();
+        if (og && og.zrodlo === 'MPZP' && og.klasa !== 'mieszana')
+          dod('minus', -40, 'MPZP przeznacza teren na: ' + pz.etykieta, 'Plan nie dopuszcza zabudowy - taki grunt (droga, zieleń, las, wody) jest wart ułamek ceny działki budowlanej; drogi i zieleń publiczną gmina zwykle wykupuje albo wypłaca odszkodowanie. Zmiana wymaga zmiany planu przez gminę.', 'KIMPZP', 20);
+        else if (og && og.klasa === 'mieszana' && og.mnoznik >= 0.5) dod('minus', -8, 'Część działki poza terenem budowlanym', 'Według planu ' + og.powod + '. Na tej części nie można budować - wycenę obniżono proporcjonalnie do jej powierzchni.', 'KIMPZP');
+        else dod('minus', -25, 'MPZP przeznacza teren na: ' + pz.etykieta, 'Plan nie przewiduje zabudowy mieszkaniowej ani usługowej - zmiana wymaga zmiany planu przez gminę.', 'KIMPZP');
+      }
       else if (mp.pokrycie !== null && mp.pokrycie !== undefined && mp.pokrycie < 60) dod('plus', 4, 'MPZP obejmuje część działki (ok. ' + Math.round(mp.pokrycie) + '%)', 'Pozostała część może wymagać decyzji WZ. Przeznaczenie odczytaj z rysunku planu lub uchwały.', 'KIMPZP');
       else dod('plus', 8, 'Działka objęta obowiązującym MPZP', 'Jasne zasady zabudowy. Przeznaczenie odczytaj z uchwały lub wypisu i wyrysu z planu' + (mp.uchwala ? ' (uchwała ' + mp.uchwala + ')' : '') + '.', 'KIMPZP');
     } else if (mp && mp.status === 'brak') {
@@ -1236,6 +1281,7 @@
     if (pg && pg.status === 'jest') {
       if (pg.kod && /^(SW|SJ|SU|SH)$/.test(pg.kod)) dod('plus', planJest ? 4 : 10, 'Plan ogólny: strefa ' + pg.nazwa + ' (' + pg.kod + ')', 'Kierunek zgodny z zabudową mieszkaniową/usługową.', 'POG');
       else if (pg.kod && /^(SZ|SP)$/.test(pg.kod)) dod('plus', 3, 'Plan ogólny: strefa ' + pg.nazwa + ' (' + pg.kod + ')', 'Zabudowa możliwa w zakresie tej strefy.', 'POG');
+      else if (pg.kod && /^(SN|SK)$/.test(pg.kod) && !planJest) dod('minus', -22, 'Plan ogólny: strefa ' + pg.nazwa + ' (' + pg.kod + ')', 'Strefa zieleni / komunikacyjna - nowy plan miejscowy nie przeznaczy działki pod zabudowę, a decyzji WZ nie będzie. Wartość rynkowa jest wielokrotnie niższa niż działki budowlanej.', 'POG', 30);
       else if (pg.kod) dod('minus', planJest ? -4 : -12, 'Plan ogólny: strefa ' + pg.nazwa + ' (' + pg.kod + ')', 'Strefa nie przewiduje zabudowy mieszkaniowej - utrudnia nowy plan miejscowy i decyzje WZ.', 'POG');
       if (!planJest && pg.ouz) dod('plus', 6, 'Działka w obszarze uzupełnienia zabudowy (POG)', 'Po wejściu w życie planu ogólnego WZ można wydawać tylko w takich obszarach.', 'POG');
       else if (!planJest && pg.status === 'jest' && !pg.ouz && pg.kod) dod('minus', -6, 'Działka poza obszarem uzupełnienia zabudowy', 'Po wejściu w życie planu ogólnego uzyskanie WZ poza tym obszarem nie będzie możliwe.', 'POG');
@@ -1315,6 +1361,12 @@
       if (les.length) dod('minus', planJest ? -6 : -15, 'Na działce są grunty leśne (' + les.map(function (o) { return o.kod; }).join(', ') + ')', 'Zabudowa wymaga zmiany przeznaczenia (MPZP) i wyłączenia z produkcji leśnej - kosztowne i niepewne.', 'EGiB');
       if (wys.length) dod('minus', -8, 'Grunty rolne wysokich klas (' + wys.map(function (o) { return o.kod; }).join(', ') + ')', 'Klasy I-III wymagają zgody na zmianę przeznaczenia i opłat za wyłączenie z produkcji rolnej (poza granicami miast).', 'EGiB');
       if (bud.length && !les.length) dod('plus', 5, 'W ewidencji grunt budowlany/zurbanizowany (' + bud.map(function (o) { return o.kod; }).join(', ') + ')', 'Brak konieczności wyłączania gruntu z produkcji rolnej.', 'EGiB');
+      if (uz.opis.length && uz.opis.every(function (o) { return o.kat === 'drogi'; })) {
+        var planBud = mp && mp.status === 'jest' && mp.przeznaczenie && mp.przeznaczenie.ocena === 'budowlane';
+        dod('minus', planBud ? -15 : -35, 'W ewidencji gruntów to działka drogowa (' + uz.opis.map(function (o) { return o.kod; }).join(', ') + ')',
+          planBud ? 'Plan dopuszcza zabudowę, ale działka jest użytkowana jako droga (np. dojazd wewnętrzny) - sprawdź, czy nie służy innym działkom (służebności, udziały).'
+                  : 'Działka zajęta pod drogę - nie nadaje się pod zabudowę; wartość to zwykle ułamek ceny działki budowlanej (często wykup przez gminę lub odszkodowanie).', 'EGiB', planBud ? 50 : 20);
+      }
     }
 
     // --- Droga i otoczenie ---
@@ -1396,7 +1448,9 @@
   // =====================================================================
   // 6. RYSOWANIE: werdykt (gora + dol), sekcje, lista kontrolna
   // =====================================================================
+  document.addEventListener('gruntowo:mpzp-udzialy', function () { try { przelicz(); } catch (e) { /* raport jeszcze sie laduje */ } });
   function przelicz() {
+    if (window.gruntowoKorekta && stan.dzialka) window.gruntowoKorekta(ocenaGruntu());
     var gotowe = ANALIZY.filter(function (a) { return !!stan[a]; }).length;
     var c = stan.dzialka ? zbierzCzynniki() : [];
     var plusy = c.filter(function (x) { return x.typ === 'plus'; }).sort(function (a, b) { return b.waga - a.waga; });
@@ -1535,6 +1589,8 @@
       if (pg.blad) ustawKarte('k-pog', 'brak odpowiedzi', 'pill-info', 'Nie udało się sprawdzić', 'usługa planów ogólnych nie odpowiedziała');
       else if (pg.status === 'jest') ustawKarte('k-pog', pg.oznaczenie || pg.kod || 'uchwalony', pg.kod && /^(SW|SJ|SU|SH)$/.test(pg.kod) ? 'pill-plus' : 'pill-warn',
         pg.kod ? 'Strefa ' + pg.nazwa : 'Plan ogólny obowiązuje', pg.ouz ? 'działka w obszarze uzupełnienia zabudowy' : 'poza obszarem uzupełnienia zabudowy');
+      else if (pg.status === 'projekt') ustawKarte('k-pog', 'projekt: ' + (pg.oznaczenie || pg.kod), 'pill-info',
+        'Projekt POG: ' + (pg.nazwaStrefy ? pg.nazwaStrefy.toLowerCase() : 'strefa ' + (pg.nazwa || pg.kod)), 'plan jeszcze nie obowiązuje - strefa może się zmienić' + (pg.ouz ? ' · w projekcie obszar uzupełnienia zabudowy' : ''));
       else ustawKarte('k-pog', 'brak POG', 'pill-warn', 'Gmina bez planu ogólnego', 'w usłudze krajowej - sprawdź projekt w gminie');
     }
     var h = '';
@@ -1597,6 +1653,12 @@
     czekajUst('Ustalamy teren działki na rysunku planu…', 'Usługa krajowa nie podała symbolu terenu - nakładamy granice działki na rysunek planu i sprawdzamy, w którym terenie leży. Zwykle 20-60 sekund.');
     odpytuj(zTokenem(ustaleniaBaza + '&dzialka=' + encodeURIComponent(idDzialki()), idDzialki()), function (w) {
       w.zrodlo = 'rysunek'; stan.symbolRysunek = w; ustCtx.zrodloSym = w;
+      if (stan.mpzp && !stan.mpzp.symbol && w.symbole && w.symbole[0]) {   // przeznaczenie z rysunku -> werdykt i wycena
+        var dom = w.symbole.slice().sort(function (a, b) { return (b.udzial || 0) - (a.udzial || 0); })[0];
+        stan.mpzp.przeznaczenie = klasyfikujPrzeznaczenie(dom.symbol, '');
+        stan.mpzp.symbolRysunek = dom.symbol;
+        przelicz();
+      }
       ustCtx.symbole = (w.symbole || []).map(function (s) { return s.symbol; }).filter(Boolean);
       pobierzUstalenia(ustCtx.symbole.length ? ustCtx.symbole : null);
     }, function (b) {
@@ -1817,6 +1879,32 @@
     h += '<p class="mapbox-cap" style="margin-top:.75rem;">Pozwolenia na budowę z rejestru GUNB (RWDZ) w promieniu ' + odl(w.promien || 1000) + ', wnioski i decyzje od ' + od + ' · bez sieci uzbrojenia i rozbiórek' +
       (w.aktualnosc ? ' · stan rejestru: ' + dataPL(w.aktualnosc.slice(0, 10)) : '') + (w.bez_polozenia ? ' · ' + w.bez_polozenia + ' spraw bez ustalonego położenia' : '') + ' · szczegóły sprawy w ' + linkRWDZ + '</p>';
     el.innerHTML = h;
+    ladujTloPozwolen();
+  }
+
+  // Podklad mapy pozwolen: najpierw szybkie kafelki WMTS (jak pozostale mapy raportu), przy bledzie WMS
+  // z kilkukrotnym ponowieniem (1,5 s, 4 s, 8 s). Wczesniej obraz ladowal sie raz - i czasem zostawal czarny.
+  var tloPozwolen = null;
+  function ladujTloPozwolen() {
+    var bb = tloPozwolen, el = document.querySelector('.pozw-mapka image.pz-tlo');
+    if (!bb || !el) return;
+    var wmsUrl = 'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/jpeg&TRANSPARENT=false&LAYERS=Raster&STYLES=&WIDTH=900&HEIGHT=900&BBOX=' + bb.map(function (v) { return v.toFixed(6); }).join(',');
+    var przerwy = [1500, 4000, 8000];
+    var wms = function (proba) {
+      return fetch(wmsUrl + (proba ? '&_r=' + Date.now() : '')).then(function (r) {
+        if (!r.ok || (r.headers.get('content-type') || '').indexOf('image') === -1) throw new Error('nie obraz');
+        return r.blob();
+      }).then(function (b) { return URL.createObjectURL(b); }).catch(function () {
+        if (proba >= przerwy.length) return null;
+        return new Promise(function (ok) { setTimeout(ok, przerwy[proba]); }).then(function () { return wms(proba + 1); });
+      });
+    };
+    var wmts = window.GruntowoMapy && GruntowoMapy.ortoWMTS ? GruntowoMapy.ortoWMTS(bb, 900, 900).catch(function () { return null; }) : Promise.resolve(null);
+    wmts.then(function (u) { return u || wms(0); }).then(function (u) {
+      var akt = document.querySelector('.pozw-mapka image.pz-tlo'); if (!akt) return;
+      if (u) { akt.setAttribute('href', u); akt.setAttributeNS('http://www.w3.org/1999/xlink', 'href', u); return; }
+      var z = document.querySelector('.pozw-mapka .pz-zrodlo'); if (z) z.textContent += ' (podkład chwilowo niedostępny - odśwież stronę)';
+    });
   }
 
   // Mapa polozenia pozwolen: ortofotomapa (GUGiK) 2 x 2 km, obrys dzialki, ponumerowane punkty (numery jak na liscie)
@@ -1825,7 +1913,7 @@
     var dLon = R * 1.08 / (111320 * Math.cos(s[1] * Math.PI / 180)), dLat = R * 1.08 / 110574;
     var bb = [s[0] - dLon, s[1] - dLat, s[0] + dLon, s[1] + dLat];
     var X = function (lon) { return (lon - bb[0]) / (bb[2] - bb[0]) * S; }, Y = function (lat) { return (bb[3] - lat) / (bb[3] - bb[1]) * S; };
-    var orto = 'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/jpeg&TRANSPARENT=false&LAYERS=Raster&STYLES=&WIDTH=900&HEIGHT=900&BBOX=' + bb.map(function (v) { return v.toFixed(6); }).join(',');
+    tloPozwolen = bb;   // podklad ortofoto ladujemy osobno (z ponawianiem) - ladujTloPozwolen()
     var c = S / 2, r1 = R / (R * 1.08) * S / 2;
     var obrys = geo.pier.map(function (r) { return 'M' + r.map(function (p) { return X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1); }).join('L') + 'Z'; }).join('');
     var pkt = lista.slice().reverse().map(function (x) {
@@ -1836,7 +1924,7 @@
     }).join('');
     var leg = [['dom', 'domy'], ['mieszk', 'wielorodzinne'], ['uslugi', 'usługi'], ['przem', 'przemysł'], ['infra', 'infrastruktura']];
     return '<figure class="pozw-mapka"><svg viewBox="0 0 ' + S + ' ' + S + '" role="img" aria-label="Położenie pozwoleń na budowę na ortofotomapie">' +
-      '<image href="' + orto + '" x="0" y="0" width="' + S + '" height="' + S + '" preserveAspectRatio="none"/>' +
+      '<image class="pz-tlo" x="0" y="0" width="' + S + '" height="' + S + '" preserveAspectRatio="none"/>' +
       '<rect class="pz-przyciemn" x="0" y="0" width="' + S + '" height="' + S + '"/>' +
       '<circle class="pz-krag" cx="' + c + '" cy="' + c + '" r="' + r1.toFixed(1) + '"/><circle class="pz-krag" cx="' + c + '" cy="' + c + '" r="' + (r1 / 2).toFixed(1) + '"/>' +
       '<text class="pz-opis" x="' + c + '" y="' + (c - r1 / 2 - 4).toFixed(1) + '">500 m</text><text class="pz-opis" x="' + c + '" y="' + (c - r1 - 4).toFixed(1) + '">1 km</text>' +
