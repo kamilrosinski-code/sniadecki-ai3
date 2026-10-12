@@ -8,6 +8,8 @@
   const CRM_ENDPOINT = 'https://sniadecki-development.pl/gruntowo-api/zgloszenie.php';
   // ⬇️ Strona rezerwacji konsultacji w Zencal (zespol Kamil + Marcin). Puste = przycisk prowadzi do formularza kontaktowego.
   const ZENCAL_URL = 'https://app.zencal.io/o/gruntowo/kamilrosinski/konsultacja-z-ekspertem';
+  const API_GRUNTOWO = 'https://sniadecki-development.pl/gruntowo-api';
+  const CENA_KONSULTACJI = 499;
   function doCRM(dane) {
     return fetch(CRM_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dane) })
       .then(function (r) { return r.json(); }).catch(function () { return { ok: false }; });
@@ -34,100 +36,284 @@
         '#konsult-modal .km-mapa{margin-top:.6rem;border:1px solid #2a2c26;border-radius:8px;overflow:hidden;flex-shrink:0}#konsult-modal .km-mapa-btn{flex-shrink:0}' +
         '#konsult-modal .km-szukaj{display:flex;gap:.4rem;padding:.4rem}#konsult-modal .km-szukaj input{flex:1;min-width:0;width:auto}' +
         '#konsult-modal .km-szukaj button{background:#c9a96e;color:#14181a;border:0;border-radius:6px;padding:0 .8rem;font:inherit;font-size:.8rem;cursor:pointer}' +
+        '#konsult-modal form.km-start{max-width:560px}#konsult-modal .km-krok{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#c9a96e;margin:1rem 0 .35rem}' +
+        '#konsult-modal .km-mapa-box{position:relative;height:300px}#konsult-modal .km-mapa-box .km-mapa-el{height:100%}' +
+        '#konsult-modal .km-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);z-index:600;pointer-events:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}' +
+        '#konsult-modal .km-dz{display:flex;justify-content:space-between;gap:.5rem;align-items:center;padding:.5rem .6rem;font-size:.8rem;color:#b9c2bc;border-top:1px solid #2a2c26}#konsult-modal .km-dz strong{color:#dfc090}' +
+        '#konsult-modal .km-id-btn{background:none;border:0;color:#c9a96e;font:inherit;font-size:.76rem;text-decoration:underline;cursor:pointer;padding:0;white-space:nowrap}' +
+        '#konsult-modal .km-id-pole[hidden]{display:none}#konsult-modal .km-id-pole{margin-top:.5rem}' +
+        '#konsult-modal .km-dane{display:grid;grid-template-columns:1fr 1fr;gap:0 .6rem}#konsult-modal .km-dane .km-cala{grid-column:1/-1}@media(max-width:520px){#konsult-modal .km-dane{grid-template-columns:1fr}#konsult-modal .km-mapa-box{height:250px}}' +
         '#konsult-modal .km-mapa-el{height:260px}#konsult-modal .km-info{margin:0;padding:.45rem .6rem;font-size:.78rem;color:#8a9a93}#konsult-modal .km-info strong{color:#dfc090}' +
+        '#konsult-modal form.km-szeroki{max-width:1000px;padding:1.1rem 1.2rem 1.2rem}#konsult-modal .km-ramka{width:100%;height:min(72vh,760px);border:0;border-radius:10px;background:#fff;display:block;margin-top:.6rem}' +
+        '#konsult-modal .km-pod{display:flex;gap:.6rem;flex-wrap:wrap}#konsult-modal .km-pod>*{flex:1 1 220px}#konsult-modal .km-pod.km-wyroznij .km-gotowe{box-shadow:0 0 0 3px rgba(201,169,110,.55);animation:kmPuls 1.2s ease-in-out 3}' +
+        '@keyframes kmPuls{50%{transform:scale(1.03)}}@media(max-width:640px){#konsult-modal{padding:6px}#konsult-modal form.km-szeroki{padding:.8rem;max-height:98vh}#konsult-modal .km-ramka{height:70vh}}' +
         '#konsult-modal .x{position:absolute;top:.6rem;right:.8rem;background:none;border:0;color:#8a9a93;font-size:1.6rem;cursor:pointer}#konsult-modal .msg{color:#ff9a7a;font-size:.85rem;min-height:1.2em;margin-top:.5rem}';
       document.head.appendChild(st);
       m = document.createElement('div'); m.id = 'konsult-modal';
       m.innerHTML = '<form novalidate><button type="button" class="x" aria-label="Zamknij">×</button>' +
-        '<div style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:#c9a96e">Konsultacja z ekspertem · 499 zł</div>' +
-        '<h3>Umów konsultację</h3><p>Zostaw dane i numer działki - przygotujemy się do rozmowy. W następnym kroku wybierzesz dogodny termin w kalendarzu.</p>' +
-        '<label>Imię i nazwisko</label><input name="imie" autocomplete="name" required>' +
-        '<label>E-mail</label><input name="email" type="email" autocomplete="email" required>' +
-        '<label>Telefon</label><input name="telefon" type="tel" autocomplete="tel">' +
-        '<label>Numer działki lub adres (opcjonalnie)</label><input name="dzialka" placeholder="np. 302116_5.0005.78/3">' +
-        '<button type="button" class="km-mapa-btn">Nie znasz numeru? Wskaż działkę na mapie</button>' +
-        '<div class="km-mapa" hidden><div class="km-szukaj"><input type="text" placeholder="Miejscowość lub adres" autocomplete="off"><button type="button">Szukaj</button></div>' +
-        '<div class="km-mapa-el"></div><p class="km-info">Wyszukaj miejscowość, przybliż mapę i kliknij w działkę.</p></div>' +
+        '<div style="font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#c9a96e">Konsultacja z ekspertem · 499 zł</div>' +
+        '<h3>Umów konsultację</h3><p>Wskaż działkę i zostaw dane. Po opłaceniu (PayU) od razu wybierzesz termin w kalendarzu, a raport rozszerzony działki dostaniesz w cenie konsultacji.</p>' +
+        '<div class="km-krok">1 · Wskaż działkę</div>' +
+        '<div class="km-mapa"><div class="km-szukaj"><input type="text" placeholder="Miejscowość, np. Janikowo, Komorniki" autocomplete="off"><button type="button">Szukaj</button></div>' +
+        '<div class="km-mapa-box"><div class="km-mapa-el"></div><svg class="km-pin" width="34" height="44" viewBox="0 0 44 56" aria-hidden="true"><path d="M22 0C9.85 0 0 9.85 0 22c0 15.4 22 34 22 34s22-18.6 22-34C44 9.85 34.15 0 22 0z" fill="#c9a96e"/><circle cx="22" cy="21" r="9" fill="#0b0c0a"/></svg></div>' +
+        '<div class="km-dz"><span class="km-info">Wyszukaj miejscowość i przesuń mapę tak, aby pinezka wskazała działkę.</span><button type="button" class="km-id-btn">Mam identyfikator</button></div></div>' +
+        '<div class="km-id-pole" hidden><label>Identyfikator działki</label><input name="dzialka" placeholder="np. 302116_5.0005.78/3"></div>' +
+        '<div class="km-krok">2 · Twoje dane</div><div class="km-dane">' +
+        '<div><label>Imię i nazwisko</label><input name="imie" autocomplete="name" required></div>' +
+        '<div><label>Telefon</label><input name="telefon" type="tel" autocomplete="tel"></div>' +
+        '<div class="km-cala"><label>E-mail</label><input name="email" type="email" autocomplete="email" required></div></div>' +
         '<input name="strona_www" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">' +
         '<label class="km-zgoda"><input type="checkbox" name="zgoda_kontakt"> <span>Chcę otrzymywać od Śniadecki S.A. informacje o usługach gruntowo.pl (oferty, nowości) e-mailem i telefonicznie. Zgoda jest dobrowolna - możesz ją w każdej chwili wycofać.</span></label>' +
         '<p class="km-rodo">Administratorem Twoich danych jest Śniadecki S.A. Wykorzystamy je, aby umówić i przeprowadzić konsultację. Szczegóły w <a href="klauzula.html" target="_blank" rel="noopener">klauzuli informacyjnej</a>.</p>' +
-        '<div class="msg" role="status"></div><button type="submit">Dalej - wybierz termin →</button></form>';
+        '<div class="msg" role="status"></div><button type="submit">Zapłać ' + CENA_KONSULTACJI + ' zł i wybierz termin →</button></form>';
       document.body.appendChild(m);
       m.addEventListener('click', function (e) { if (e.target === m || e.target.classList.contains('x')) m.style.display = 'none'; });
-      // Wskazanie dzialki na mapie w okienku konsultacji (klik -> numer z ULDK do pola "dzialka")
-      let kmMapa = null, kmZnacznik = null;
-      m.querySelector('.km-mapa-btn').addEventListener('click', function () {
-        const box = m.querySelector('.km-mapa');
-        box.hidden = !box.hidden;
-        if (!box.hidden) setTimeout(function () { box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60);
-        if (box.hidden || kmMapa) { if (kmMapa) setTimeout(function () { kmMapa.invalidateSize(); }, 50); return; }
-        const el = box.querySelector('.km-mapa-el'), info = box.querySelector('.km-info'), pole = m.querySelector('input[name=dzialka]');
-        if (typeof L === 'undefined') { el.innerHTML = '<p style="padding:1rem;font-size:.8rem;color:#8a9a93">Mapa chwilowo niedostępna - wpisz miejscowość i ulicę w polu powyżej.</p>'; return; }
-        kmMapa = L.map(el, { center: [52.40, 16.92], zoom: 11 });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(kmMapa);
-        L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20, tileSize: 512 }).addTo(kmMapa);
-        const szukajPole = box.querySelector('.km-szukaj input');
-        const szukaj = function () {
-          const q = szukajPole.value.trim(); if (!q) return;
-          fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pl&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'pl' } })
-            .then(function (r) { return r.json(); })
-            .then(function (w) { if (w && w.length) kmMapa.setView([+w[0].lat, +w[0].lon], 17); else info.textContent = 'Nie znaleźliśmy tego miejsca - wpisz samą miejscowość.'; })
-            .catch(function () { info.textContent = 'Wyszukiwarka chwilowo nie działa - przesuń mapę ręcznie.'; });
-        };
-        box.querySelector('.km-szukaj button').addEventListener('click', szukaj);
-        szukajPole.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); szukaj(); } });
-        kmMapa.on('click', function (e) {
-          if (kmMapa.getZoom() < 15) { kmMapa.setView(e.latlng, 17); info.textContent = 'Teraz kliknij w swoją działkę.'; return; }
-          if (kmZnacznik) kmZnacznik.remove();
-          kmZnacznik = L.marker(e.latlng).addTo(kmMapa);
-          info.textContent = 'Ustalamy numer działki…';
-          fetch(ULDK_PROXY + '?xy=' + encodeURIComponent(e.latlng.lng.toFixed(6) + ',' + e.latlng.lat.toFixed(6)))
-            .then(function (r) { return r.json(); })
-            .then(function (d) {
-              if (d && d.id) { pole.value = d.id; info.innerHTML = 'Wybrana działka: <strong>' + d.id + '</strong>'; }
-              else { pole.value = e.latlng.lat.toFixed(6) + ', ' + e.latlng.lng.toFixed(6); info.textContent = 'Nie ustaliliśmy numeru - zapisaliśmy współrzędne punktu.'; }
-            })
-            .catch(function () { pole.value = e.latlng.lat.toFixed(6) + ', ' + e.latlng.lng.toFixed(6); info.textContent = 'Zapisaliśmy współrzędne punktu - numer ustalimy sami.'; });
-        });
+      // Mapa od razu (jak w raporcie bezplatnym): pinezka na srodku. Numer dzialki szukamy W TLE -
+      // klient nie czeka; gdy numeru jeszcze nie ma, wysylamy wspolrzedne, a serwer ustali dzialke sam.
+      const kmStan = { id: '', szukane: '', szuka: null, wsp: null };
+      const kmMapaBox = m.querySelector('.km-mapa'), kmInfo = m.querySelector('.km-info'), kmPole = m.querySelector('input[name=dzialka]');
+      let kmMapa = null, kmTimer = null;
+      const kmUstalDzialke = function () {
+        if (!kmMapa) return;
+        const c = kmMapa.getCenter(), z = kmMapa.getZoom();
+        kmStan.wsp = z >= 15 ? { lat: c.lat, lon: c.lng } : null;
+        if (z < 15) { kmStan.id = ''; kmInfo.textContent = 'Przybliż mapę na swoją działkę (pinezka na środku).'; return; }
+        const klucz = c.lng.toFixed(6) + ',' + c.lat.toFixed(6);
+        kmInfo.innerHTML = 'Pinezka wskazuje działkę - <em>ustalamy numer…</em> (możesz już wypełniać dane)';
+        kmStan.szukane = klucz; kmStan.id = '';
+        kmStan.szuka = fetch(ULDK_PROXY + '?xy=' + encodeURIComponent(klucz)).then(function (r) { return r.json(); }).then(function (d) {
+          const idP = d && d.id ? String(d.id) : '';
+          if (kmStan.szukane !== klucz) return idP;   // klient w miedzyczasie przesunal mape - wynik dotyczy starego punktu
+          if (idP) { kmStan.id = idP; kmInfo.innerHTML = 'Działka: <strong>' + idP.replace(/[<>&"]/g, '') + '</strong>'; }
+          else kmInfo.textContent = 'Pinezka nie trafia w działkę ewidencyjną - przesuń mapę.';
+          return idP;
+        }).catch(function () { if (kmStan.szukane === klucz) kmInfo.textContent = 'Pinezka wskazuje działkę (numer ustalimy po zgłoszeniu).'; return ''; });
+      };
+      const kmStartMapy = function () {
+        if (kmMapa) { setTimeout(function () { kmMapa.invalidateSize(); }, 50); return; }
+        const el = m.querySelector('.km-mapa-el');
+        if (typeof L === 'undefined') { el.innerHTML = '<p style="padding:1rem;font-size:.8rem;color:#8a9a93">Mapa chwilowo niedostępna - kliknij „Mam identyfikator” i wpisz numer działki.</p>'; return; }
+        kmMapa = L.map(el, { center: [52.40, 16.92], zoom: 10 });
+        const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(kmMapa);
+        const orto = L.tileLayer('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}&TILEROW={y}&TILECOL={x}', { maxNativeZoom: 19, maxZoom: 20, attribution: 'GUGiK' });
+        const dz = L.tileLayer.wms('https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow', { layers: 'dzialki,numery_dzialek', format: 'image/png', transparent: true, minZoom: 16, maxZoom: 20, tileSize: 512 }).addTo(kmMapa);
+        L.control.layers({ 'Mapa': osm, 'Ortofotomapa': orto }, { 'Granice działek': dz }, { collapsed: true }).addTo(kmMapa);
+        kmMapa.on('movestart', function () { clearTimeout(kmTimer); kmStan.szukane = ''; kmStan.id = ''; });
+        kmMapa.on('moveend', function () { clearTimeout(kmTimer); kmTimer = setTimeout(kmUstalDzialke, 450); });
         setTimeout(function () { kmMapa.invalidateSize(); }, 80);
+      };
+      m._kmStartMapy = kmStartMapy; m._kmStan = kmStan;
+      const szukajPole = m.querySelector('.km-szukaj input');
+      const szukaj = function () {
+        const q = szukajPole.value.trim(); if (!q || !kmMapa) return;
+        kmInfo.textContent = 'Szukamy…';
+        szukajMiejscowosci(q).then(function (lista) {
+          if (!lista.length) { kmInfo.textContent = 'Nie znaleźliśmy tej miejscowości - wpisz ją z gminą, np. „Janikowo, Swarzędz”.'; return; }
+          kmMapa.setView([lista[0].lat, lista[0].lon], lista.length > 1 ? 12 : 16);
+          if (lista.length > 1) pokazWyborMiejscowosci(lista, function (x) { kmMapa.setView([x.lat, x.lon], 16); },
+            { box: m.querySelector('.km-mapa-box'), podpowiedz: function (t) { kmInfo.textContent = t; }, zmianaPo: m.querySelector('.km-dz') });
+          else kmInfo.textContent = 'Przesuń mapę tak, aby pinezka wskazała Twoją działkę.';
+        }).catch(function () { kmInfo.textContent = 'Wyszukiwarka chwilowo nie działa - przesuń mapę ręcznie.'; });
+      };
+      m.querySelector('.km-szukaj button').addEventListener('click', szukaj);
+      szukajPole.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); szukaj(); } });
+      m.querySelector('.km-id-btn').addEventListener('click', function () {
+        const p = m.querySelector('.km-id-pole'); p.hidden = !p.hidden; if (!p.hidden) kmPole.focus();
       });
       m.querySelector('form').addEventListener('submit', function (e) {
         e.preventDefault();
         const f = e.target, msg = f.querySelector('.msg'), btn = f.querySelector('button[type=submit]');
         const v = function (n) { return f.elements[n].value.trim(); };
         if (!v('imie') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('email'))) { msg.textContent = 'Podaj imię i poprawny e-mail.'; return; }
-        btn.disabled = true; btn.textContent = 'Chwilka…';
+        // dzialka WYMAGANA (raport rozszerzony w cenie konsultacji) - identyfikator jak w raporcie bezplatnym
+        // dzialka: wpisany identyfikator ALBO pinezka na mapie (numer moze sie jeszcze ustalac - nie czekamy)
+        const wpisany = /^[0-9]{6}_[0-9]\.[0-9A-Za-z_]{1,12}\.[0-9A-Za-z_\/.\-]{1,30}$/.test(v('dzialka')) ? v('dzialka') : '';
+        if (!wpisany && v('dzialka') && !kmStan.wsp) { msg.textContent = 'Identyfikator wygląda na niepełny (np. 302116_5.0005.78/3) - popraw go albo wskaż działkę na mapie.'; return; }
+        if (!wpisany && !kmStan.wsp) { msg.textContent = 'Wskaż działkę: wyszukaj miejscowość i przybliż mapę tak, aby pinezka stała na działce.'; return; }
+        btn.disabled = true; btn.textContent = 'Przechodzimy do płatności…';
+        const dz0 = wpisany || kmStan.id, zgoda0 = !!(m.querySelector('[name=zgoda_kontakt]') && m.querySelector('[name=zgoda_kontakt]').checked);
+        const wsp0 = !wpisany && kmStan.wsp ? kmStan.wsp.lat.toFixed(6) + ',' + kmStan.wsp.lon.toFixed(6) : '';
+        const szuka0 = kmStan.szuka;
+        // 1) platnosc PayU (zgloszenie w CRM zapisuje serwer); po zaplaceniu PayU wraca na gruntowo.pl/?konsultacja=oplacona
+        fetch(API_GRUNTOWO + '/konsultacja-start.php', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imie: v('imie'), email: v('email'), telefon: v('telefon'), dzialka: dz0, wsp: wsp0, zgoda_kontakt: zgoda0 ? 'TAK' : 'NIE', strona_www: v('strona_www') }) })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d && d.ok && d.redirect) {
+              window.gruntowoZdarzenie && window.gruntowoZdarzenie('begin_checkout', { currency: 'PLN', value: CENA_KONSULTACJI, items: [{ item_name: 'Konsultacja z ekspertem' }] });
+              window.location.href = d.redirect; return;
+            }
+            if (d && d.wylaczone) { kalendarzBezPlatnosci(); return; }   // platnosci online jeszcze nie wlaczone - jak dotad
+            msg.textContent = (d && d.blad) || 'Nie udało się rozpocząć płatności. Spróbuj ponownie.';
+            btn.disabled = false; btn.textContent = 'Zapłać ' + CENA_KONSULTACJI + ' zł i wybierz termin →';
+          })
+          .catch(function () {
+            msg.textContent = 'Brak połączenia z serwerem płatności. Spróbuj ponownie za chwilę.';
+            btn.disabled = false; btn.textContent = 'Zapłać ' + CENA_KONSULTACJI + ' zł i wybierz termin →';
+          });
+        // Dotychczasowa droga (bez platnosci online): CRM + kalendarz w nowej karcie
+        function kalendarzBezPlatnosci() {
         // Kalendarz Zencal w NOWEJ karcie (otwarta od razu przy kliknieciu - inaczej przegladarka ja zablokuje);
         // gruntowo.pl zostaje w tej karcie z podziekowaniem, wiec po rezerwacji klient wraca na strone
-        const okno = window.open('', '_blank');
-        if (okno) { try { okno.document.title = 'Wybór terminu - gruntowo.pl'; okno.document.body.innerHTML = '<p style="font:16px sans-serif;padding:2rem">Otwieramy kalendarz…</p>'; } catch (e2) {} }
-        const dz = v('dzialka'), jestId = /^\d{6}_\d\./.test(dz);
         const zgodaK = !!(m.querySelector('[name=zgoda_kontakt]') && m.querySelector('[name=zgoda_kontakt]').checked);
         window.gruntowoZdarzenie && window.gruntowoZdarzenie('generate_lead', { formularz: 'konsultacja' });
-        doCRM({ zrodlo: 'konsultacja', imie: v('imie'), email: v('email'), telefon: v('telefon'), zgoda_kontakt: zgodaK ? 'TAK' : 'NIE',
-          dzialka: jestId ? dz : '', miejscowosc: jestId ? '' : dz, temat: 'Konsultacja z ekspertem - wybór terminu w Zencal',
-          strona_www: v('strona_www'), strona: location.href })
+        // kalendarz od razu; zgloszenie do CRM, gdy numer dzialki sie ustali (najwyzej 8 s czekania w tle)
+        const daneCRM = { zrodlo: 'konsultacja', imie: v('imie'), email: v('email'), telefon: v('telefon'), zgoda_kontakt: zgodaK ? 'TAK' : 'NIE',
+          temat: 'Konsultacja z ekspertem (bez płatności online) - WYŚLIJ klientowi raport rozszerzony działki', strona_www: v('strona_www'), strona: location.href };
+        if (wsp0) { daneCRM.wspolrzedne = wsp0; daneCRM.mapa_link = 'https://www.google.com/maps?q=' + encodeURIComponent(wsp0); }
+        Promise.race([dz0 ? Promise.resolve(dz0) : (szuka0 || Promise.resolve('')), new Promise(function (ok) { setTimeout(function () { ok(''); }, 8000); })])
+          .then(function (idDz) { daneCRM.dzialka = dz0 || idDz || ''; return doCRM(daneCRM); });
+        Promise.resolve()
           .then(function () {   // w Zencal i tak wybiera termin, nawet gdy CRM nie odpowie
-            if (!okno || okno.closed) { window.location.href = ZENCAL_URL; return; }   // blokada okien - jak dawniej
-            okno.location.href = ZENCAL_URL;
-            f.innerHTML = '<button type="button" class="x" aria-label="Zamknij">×</button>' +
-              '<div style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:#c9a96e">Konsultacja z ekspertem · 499 zł</div>' +
-              '<h3>Dziękujemy, ' + v('imie').split(' ')[0].replace(/[<>&"]/g, '') + '!</h3>' +
-              '<p>Kalendarz otworzył się w nowej karcie - wybierz tam dogodny termin. Po rezerwacji możesz zamknąć tamtą kartę i wrócić tutaj.</p>' +
-              '<p>Potwierdzenie spotkania przyjdzie na e-mail. Przed rozmową przygotujemy analizę Twojej działki.</p>' +
-              '<a href="' + ZENCAL_URL + '" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:1rem;background:#c9a96e;color:#14181a;border-radius:8px;padding:.8rem;font-weight:600;text-decoration:none">Otwórz kalendarz ponownie</a>' +
-              '<button type="button" class="km-wroc" style="display:block;width:100%;margin-top:.6rem;background:none;border:1px solid #2a2c26;border-radius:8px;color:#f2f0eb;padding:.7rem;font:inherit;cursor:pointer">Wróć na stronę</button>';
-            f.querySelector('.km-wroc').addEventListener('click', function () { m.style.display = 'none'; });
+            const imie = v('imie').split(' ')[0].replace(/[<>&"]/g, '');
+            kalendarzNaStronie(function () {
+              // bez platnosci online nie ma zamowienia, wiec dostep do raportu rozszerzonego nadajemy recznie (link e-mailem);
+              // od razu pokazujemy bezplatny raport wskazanej dzialki
+              const idR = dz0 || kmStan.id;
+              komunikatKonsultacji('Dziękujemy' + (imie ? ', ' + imie : '') + '!',
+                '<p>Potwierdzenie spotkania przyjdzie na e-mail. Raport rozszerzony ' + (idR ? 'działki <strong style="color:#dfc090">' + String(idR).replace(/[<>&"]/g, '') + '</strong> ' : 'wskazanej działki ') +
+                'prześlemy Ci e-mailem przed spotkaniem.</p>' + (idR ? '<p>Już teraz możesz zobaczyć bezpłatny raport tej działki.</p>' : ''),
+                (idR ? '<a href="raport.html?id=' + encodeURIComponent(idR) + '&ok=1" style="' + PRZYCISK_ZLOTY + '">Zobacz raport działki →</a>' : '') +
+                '<button type="button" class="km-wroc" style="' + PRZYCISK_JASNY + '">Wróć na stronę</button>')
+                .querySelector('.km-wroc').addEventListener('click', function () { document.getElementById('konsult-modal').style.display = 'none'; });
+            });
           });
+        }
       });
     }
     m.style.display = 'flex';
-    if (dzialka) m.querySelector('input[name=dzialka]').value = dzialka;
-    setTimeout(function () { m.querySelector('input[name=imie]').focus(); }, 50);
+    const fm = m.querySelector('form');
+    if (fm && fm.querySelector('.km-mapa')) {
+      fm.classList.add('km-start');
+      if (dzialka && fm.querySelector('input[name=dzialka]')) { fm.querySelector('input[name=dzialka]').value = dzialka; fm.querySelector('.km-id-pole').hidden = false; }
+      if (m._kmStartMapy) m._kmStartMapy();
+      setTimeout(function () { const p = fm.querySelector(dzialka ? 'input[name=imie]' : '.km-szukaj input'); if (p) p.focus(); }, 60);
+    }
+  }
+  // Komunikat w okienku konsultacji (powrot z PayU / z kalendarza)
+  function komunikatKonsultacji(tytul, tresc, przyciski) {
+    okienkoKonsultacji('');
+    const m = document.getElementById('konsult-modal'), f = m.querySelector('form');
+    f.classList.remove('km-szeroki'); f.classList.remove('km-start');
+    f.innerHTML = '<button type="button" class="x" aria-label="Zamknij">×</button>' +
+      '<div style="font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#c9a96e">Konsultacja z ekspertem · ' + CENA_KONSULTACJI + ' zł</div>' +
+      '<h3>' + tytul + '</h3>' + tresc + (przyciski || '');
+    return f;
+  }
+  const PRZYCISK_ZLOTY = 'display:block;width:100%;box-sizing:border-box;text-align:center;margin-top:1rem;background:#c9a96e;color:#14181a;border:0;border-radius:8px;padding:.8rem;font-weight:600;text-decoration:none;font:inherit;cursor:pointer';
+  const PRZYCISK_JASNY = 'display:block;width:100%;margin-top:.6rem;background:none;border:1px solid #2a2c26;border-radius:8px;color:#f2f0eb;padding:.7rem;font:inherit;cursor:pointer';
+  // 2) Powrot z PayU: sprawdzamy platnosc, potem kalendarz Zencal w TEJ karcie (po rezerwacji Zencal wraca na gruntowo.pl)
+  function adresRaportuKonsultacji(ext, id) { return 'raport-rozszerzony.html?id=' + encodeURIComponent(id) + '&ok=1&zamowienie=' + ext; }
+  function poPlatnosciKonsultacji(ext, id) {
+    if (!/^[a-f0-9]{32}$/.test(ext)) return;
+    if (!id) { try { const z = JSON.parse(localStorage.getItem('gruntowo_konsultacja') || 'null'); if (z && z.ext === ext) id = z.id; } catch (e) {} }
+    komunikatKonsultacji('Sprawdzamy płatność…', '<p>To potrwa kilka sekund.</p>');
+    let proby = 0;
+    const sprawdz = function () {
+      fetch(API_GRUNTOWO + '/platnosc-status.php?zamowienie=' + ext + '&id=' + encodeURIComponent(id || ''), { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.dzialka && !id) id = d.dzialka;   // dzialka ustalona przez serwer ze wskazanego punktu
+          if (d && d.oplacone) {
+            try { if (!localStorage.getItem('gruntowo_kons_' + ext)) { localStorage.setItem('gruntowo_kons_' + ext, '1');
+              window.gruntowoZdarzenie && window.gruntowoZdarzenie('purchase', { transaction_id: ext, currency: 'PLN', value: CENA_KONSULTACJI, items: [{ item_name: 'Konsultacja z ekspertem' }] }); } } catch (e) {}
+            try { localStorage.setItem('gruntowo_konsultacja', JSON.stringify({ ext: ext, id: id })); } catch (e) {}
+            const fp = komunikatKonsultacji('Płatność przyjęta - dziękujemy!',
+              '<p>Teraz wybierz dogodny termin konsultacji w kalendarzu. ' + (id ? 'Po rezerwacji od razu otworzysz raport rozszerzony działki <strong style="color:#dfc090">' + String(id).replace(/[<>&"]/g, '') + '</strong>.' : 'Raport rozszerzony wskazanej działki prześlemy przed spotkaniem.') + '</p>',
+              '<a href="' + ZENCAL_URL + '" class="km-kalendarz" style="' + PRZYCISK_ZLOTY + '">Wybierz termin →</a>' +
+              (id ? '<a href="' + adresRaportuKonsultacji(ext, id) + '" target="_blank" rel="noopener" style="' + PRZYCISK_JASNY + ';text-align:center;text-decoration:none;box-sizing:border-box">Raport rozszerzony już teraz (nowa karta)</a>' : ''));
+            podepnijKalendarz(fp.querySelector('.km-kalendarz'));
+            return;
+          }
+          if (d && /CANCELED|REJECTED/.test(d.status || '')) {
+            komunikatKonsultacji('Płatność nie została zrealizowana', '<p>Płatność została anulowana. Możesz spróbować ponownie - nic nie zostało pobrane.</p>',
+              '<button type="button" class="km-ponow" style="' + PRZYCISK_ZLOTY + '">Spróbuj ponownie</button>')
+              .querySelector('.km-ponow').addEventListener('click', function () { document.getElementById('konsult-modal').remove(); okienkoKonsultacji(''); });
+            return;
+          }
+          if (++proby < 10) { setTimeout(sprawdz, 3000); return; }
+          komunikatKonsultacji('Czekamy na potwierdzenie płatności', '<p>PayU jeszcze nie potwierdziło płatności. Zwykle trwa to chwilę - odśwież stronę za minutę. ' +
+            'Jeśli płatność została pobrana, a problem się powtarza, napisz na <a href="mailto:kontakt@gruntowo.pl" style="color:#c9a96e">kontakt@gruntowo.pl</a>.</p>',
+            '<button type="button" class="km-odswiez" style="' + PRZYCISK_ZLOTY + '">Sprawdź ponownie</button>')
+            .querySelector('.km-odswiez').addEventListener('click', function () { poPlatnosciKonsultacji(ext); });
+        })
+        .catch(function () { if (++proby < 10) setTimeout(sprawdz, 4000); });
+    };
+    sprawdz();
+  }
+  // Kalendarz Zencal w OKNIE nad strona: gruntowo.pl zostaje pod spodem, wiec klient zawsze do niej wraca.
+  // Gdy Zencal ma ustawiona strone podziekowania (?konsultacja=umowiona), okno samo sie zamyka
+  // i strona pod spodem pokazuje potwierdzenie. Gdy przegladarka zablokuje okno - kalendarz w tej karcie.
+  let oknoKalendarza = null;
+  // Kalendarz Zencal OSADZONY w okienku na gruntowo.pl (iframe) - klient w ogole nie opuszcza strony.
+  // sandbox BEZ allow-top-navigation: Zencal po rezerwacji probuje przeniesc cala karte na swoja strone potwierdzenia - blokujemy to,
+  // wiec nie potrzeba strony podziekowania w Zencal. Po rezerwacji klika "Zarezerwowalem termin".
+  function kalendarzNaStronie(poRezerwacji) {
+    const f = komunikatKonsultacji('Wybierz termin konsultacji',
+      '<p style="margin:0">Wybierz dzień i godzinę w kalendarzu poniżej. Po potwierdzeniu rezerwacji w kalendarzu kliknij <strong style="color:#dfc090">„Zarezerwowałem termin”</strong>.</p>' +
+      '<iframe class="km-ramka" src="' + ZENCAL_URL + '" title="Kalendarz konsultacji" allow="payment; clipboard-write" loading="eager" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals"></iframe>',
+      '<div class="km-pod"><button type="button" class="km-gotowe" style="' + PRZYCISK_ZLOTY + '">Zarezerwowałem termin →</button>' +
+      '<a href="' + ZENCAL_URL + '" target="_blank" rel="noopener" class="km-nowa" style="' + PRZYCISK_JASNY + ';margin-top:1rem;text-align:center;text-decoration:none;box-sizing:border-box">Kalendarz się nie wyświetla? Otwórz w nowej karcie</a></div>');
+    f.classList.add('km-szeroki');
+    const ramka = f.querySelector('.km-ramka'); let ladowania = 0;
+    // kolejne zaladowanie ramki = klient przeszedl dalej w kalendarzu (zwykle potwierdzenie) -> wyrozniamy przycisk
+    ramka.addEventListener('load', function () { if (++ladowania >= 2) { const p = f.querySelector('.km-pod'); if (p) p.classList.add('km-wyroznij'); } });
+    f.querySelector('.km-gotowe').addEventListener('click', function () { f.classList.remove('km-szeroki'); (poRezerwacji || poRezerwacjiKonsultacji)(); });
+    f.querySelector('.km-nowa').addEventListener('click', function () { const p = f.querySelector('.km-pod'); if (p) p.classList.add('km-wyroznij'); });
+  }
+  function podepnijKalendarz(a) {
+    if (!a) return;
+    a.addEventListener('click', function (e) { e.preventDefault(); kalendarzNaStronie(); });
+  }
+  // Gdyby Zencal przesylal z ramki informacje o rezerwacji - wylapujemy ja (bez szkody, gdy nie przesyla)
+  window.addEventListener('message', function (e) {
+    if (!/^https:\/\/([a-z0-9-]+\.)*zencal\.io$/.test(e.origin || '')) return;
+    let t = ''; try { t = typeof e.data === 'string' ? e.data : JSON.stringify(e.data); } catch (e2) {}
+    if (/confirm|booked|scheduled|meeting_created/i.test(t) && document.querySelector('#konsult-modal .km-ramka')) {
+      const p = document.querySelector('#konsult-modal .km-pod'); if (p) p.classList.add('km-wyroznij');
+    }
+  });
+  // Wiadomosc z okna kalendarza (strona podziekowania Zencal otwarta w oknie): rezerwacja zrobiona
+  window.addEventListener('message', function (e) {
+    if (e.origin !== location.origin || !e.data || e.data.gruntowo !== 'konsultacja_umowiona') return;
+    try { if (oknoKalendarza && !oknoKalendarza.closed) oknoKalendarza.close(); } catch (e2) {}
+    poRezerwacjiKonsultacji();
+  });
+  // To samo przez localStorage - dziala tez, gdy Zencal odetnie polaczenie okna ze strona (window.opener)
+  window.addEventListener('storage', function (e) {
+    if (e.key !== 'gruntowo_umowiona' || !oknoKalendarza) return;
+    try { if (!oknoKalendarza.closed) oknoKalendarza.close(); } catch (e2) {}
+    oknoKalendarza = null;
+    poRezerwacjiKonsultacji();
+  });
+  // 3) Powrot z kalendarza Zencal po rezerwacji (adres ustawiony w Zencal jako strona podziekowania)
+  function poRezerwacjiKonsultacji() {
+    window.gruntowoZdarzenie && window.gruntowoZdarzenie('konsultacja_umowiona', {});
+    let z = null; try { z = JSON.parse(localStorage.getItem('gruntowo_konsultacja') || 'null'); } catch (e) {}
+    const raport = z && z.ext && z.id ? adresRaportuKonsultacji(z.ext, z.id) : '';
+    const f = komunikatKonsultacji('Termin zarezerwowany - do zobaczenia!',
+      '<p>Potwierdzenie spotkania i link do rozmowy wysłaliśmy na Twój e-mail.' + (raport ? ' Raport rozszerzony Twojej działki jest gotowy - otwórz go poniżej (dostęp przez 30 dni).' : ' Przed konsultacją przygotujemy analizę Twojej działki.') + '</p>',
+      (raport ? '<a href="' + raport + '" style="' + PRZYCISK_ZLOTY + '">Otwórz raport rozszerzony →</a>' : '') +
+      '<button type="button" class="km-wroc" style="' + PRZYCISK_JASNY + '">Wróć na stronę</button>');
+    f.querySelector('.km-wroc').addEventListener('click', function () { document.getElementById('konsult-modal').style.display = 'none'; });
   }
   // Wejscie z raportu (przycisk "Umow konsultacje") -> od razu okienko konsultacji z numerem dzialki
   (function () {
     const p = new URLSearchParams(location.search);
+    if (p.get('konsultacja') === 'oplacona' || p.get('konsultacja') === 'umowiona') {
+      if (p.get('konsultacja') === 'oplacona') poPlatnosciKonsultacji(p.get('zamowienie') || '', p.get('dzialka') || '');
+      else {
+        // strona podziekowania otwarta w OKNIE kalendarza -> powiadom strone pod spodem i zamknij okno
+        try { localStorage.setItem('gruntowo_umowiona', String(Date.now())); } catch (e) {}
+        let wOknie = false;
+        try { wOknie = !!(window.opener && !window.opener.closed && window.opener.location.origin === location.origin); } catch (e) { wOknie = false; }
+        if (wOknie) { try { window.opener.postMessage({ gruntowo: 'konsultacja_umowiona' }, location.origin); window.opener.focus(); } catch (e) {} }
+        if (window.name === 'gruntowo_zencal') setTimeout(function () { window.close(); }, 400);   // nasze okno kalendarza
+        poRezerwacjiKonsultacji();
+      }
+      try { history.replaceState(null, '', location.pathname); } catch (e) { /* bez znaczenia */ }
+      return;
+    }
     if (ZENCAL_URL && p.get('konsultacja') === '1') {
       okienkoKonsultacji(p.get('dzialka') || '');
       try { history.replaceState(null, '', location.pathname); } catch (e) { /* bez znaczenia */ }
@@ -220,7 +406,7 @@
             if (o >= 1) {
               // w pelni widoczna: bez transformacji i warstwy GPU - inaczej tekst bywa rozmyty
               // (zwlaszcza przy skalowaniu ekranu 125%/150% w Windows)
-              sb.style.opacity = ''; sb.style.transform = ''; sb.style.willChange = 'auto';
+              sb.style.opacity = '1'; sb.style.transform = 'none'; sb.style.willChange = 'auto';   // jawnie 1 - dziala tez ze starszym style.css
             } else {
               sb.style.willChange = 'opacity, transform';
               sb.style.opacity = o.toFixed(3);
@@ -305,7 +491,7 @@
           warstwa.classList.add('widac'); warstwa.style.opacity = '1';
           if (window.scrollY > 5) pokazFilm();
           budz();
-          }, Math.max(0, 1700 - performance.now()));
+          }, Math.max(0, (document.getElementById('hero-wizual') ? 3700 : 1700) - performance.now()));   // czekamy tez na animacje podgladu raportu
         }, { once: true });
       }).catch(function () { /* zostaje zdjecie */ });
     }
@@ -459,20 +645,90 @@
       leafletMap.invalidateSize();
     }
 
-    // Geokoduj miejscowość przez Nominatim (OpenStreetMap) - darmowe, bez klucza
-    const q = encodeURIComponent(miasto + ', Polska');
-    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + q, {
-      headers: { 'Accept-Language': 'pl' }
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (wyniki) {
-        if (wyniki && wyniki.length) {
-          const lat = parseFloat(wyniki[0].lat), lng = parseFloat(wyniki[0].lon);
-          leafletMap.setView([lat, lng], 16);
-        }
+    // Geokoduj miejscowość przez Nominatim (OpenStreetMap) - darmowe, bez klucza.
+    // Gdy w Polsce jest kilka miejscowości o tej nazwie - klient wybiera właściwą (gmina, powiat, województwo).
+    const stary = document.getElementById('miejsca-wybor'); if (stary) stary.remove();
+    const zm = document.getElementById('miejsca-zmien'); if (zm) zm.remove();
+    szukajMiejscowosci(miasto)
+      .then(function (lista) {
+        if (!lista.length) { podpowiedzMapy('Nie znaleźliśmy tej miejscowości - przesuń i przybliż mapę ręcznie albo wpisz nazwę z gminą, np. „Janikowo, Swarzędz”.'); return; }
+        leafletMap.setView([lista[0].lat, lista[0].lon], lista.length > 1 ? 12 : 16);
+        if (lista.length > 1) pokazWyborMiejscowosci(lista, function (m) { leafletMap.setView([m.lat, m.lon], 16); });
       })
       .catch(function () { /* zostaje domyślny widok */ })
       .finally(function () { leafletMap.invalidateSize(); });
+  }
+
+  // Wyszukanie miejscowości: do 10 wyników z Nominatim, tylko miejscowości/części miast, bez powtórzeń
+  function szukajMiejscowosci(nazwa) {
+    const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=12&countrycodes=pl&q=' + encodeURIComponent(nazwa);
+    return fetch(url, { headers: { 'Accept-Language': 'pl' } }).then(function (r) { return r.json(); }).then(function (w) {
+      const typy = /^(city|town|village|hamlet|suburb|quarter|neighbourhood|isolated_dwelling|locality|borough|administrative)$/;
+      const widziane = {}, lista = [];
+      (w || []).forEach(function (x) {
+        if (!typy.test(x.type || x.addresstype || '') && !typy.test(x.addresstype || '')) return;
+        const a = x.address || {};
+        const nazwaM = a.village || a.town || a.hamlet || a.suburb || a.quarter || a.neighbourhood || a.isolated_dwelling || a.city || (x.name || x.display_name.split(',')[0]);
+        const gmina = (a.municipality || '').replace(/^gmina\s+/i, '');
+        const powiat = (a.county || '').replace(/^powiat\s+/i, '');
+        const woj = (a.state || '').replace(/^województwo\s+/i, '');
+        const klucz = (nazwaM + '|' + gmina + '|' + powiat).toLowerCase();
+        if (widziane[klucz]) return; widziane[klucz] = 1;
+        const opis = [a.city && a.city !== nazwaM ? 'część m. ' + a.city : '', gmina ? 'gm. ' + gmina : '', powiat ? 'pow. ' + powiat : '', woj ? 'woj. ' + woj : ''].filter(Boolean).join(', ');
+        lista.push({ nazwa: x.name || nazwaM, opis: opis || x.display_name, lat: +x.lat, lon: +x.lon });
+      });
+      // gdy nic nie pasuje do typów miejscowości (np. wpisano adres z ulicą) - bierzemy pierwszy wynik jak dotąd
+      if (!lista.length && w && w.length) lista.push({ nazwa: w[0].name || nazwa, opis: w[0].display_name, lat: +w[0].lat, lon: +w[0].lon });
+      return lista;
+    });
+  }
+  function podpowiedzMapy(t) { const h = document.getElementById('map-coords-hint'); if (h) h.textContent = t; }
+  // Okienko na mapie: "Która miejscowość?" z listą (gmina, powiat, województwo)
+  function pokazWyborMiejscowosci(lista, poWyborze, opcje) {
+    opcje = opcje || {};
+    const box = opcje.box || document.querySelector('#step-2 .map-box'); if (!box) return;
+    const podp = opcje.podpowiedz || podpowiedzMapy;
+    if (!document.getElementById('mw-styl')) {
+      const st = document.createElement('style'); st.id = 'mw-styl';
+      st.textContent = '#miejsca-wybor{position:absolute;inset:10px;z-index:1200;background:rgba(14,15,12,.96);border:1px solid rgba(201,169,110,.45);border-radius:10px;display:flex;flex-direction:column;padding:.8rem;color:#f2f0eb;text-align:left}' +
+        '#miejsca-wybor .mw-glowa{margin-bottom:.55rem}#miejsca-wybor .mw-glowa strong{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:1.35rem;color:#dfc090}#miejsca-wybor .mw-glowa span{font-size:.78rem;color:#8a9a93}' +
+        '#miejsca-wybor .mw-lista{flex:1;overflow:auto;display:flex;flex-direction:column;gap:.35rem;min-height:0}' +
+        '#miejsca-wybor .mw-lista button{background:#1a1c17;border:1px solid #2a2c26;border-radius:8px;color:#f2f0eb;padding:.4rem .7rem;text-align:left;cursor:pointer;font:inherit}#miejsca-wybor .mw-lista button:hover{border-color:#c9a96e}' +
+        '#miejsca-wybor .mw-lista b{display:block;font-size:.9rem}#miejsca-wybor .mw-lista small{display:block;font-size:.74rem;color:#8a9a93;margin-top:.1rem}' +
+        '#miejsca-wybor .mw-zamknij{margin-top:.55rem;background:none;border:0;color:#c9a96e;font:inherit;font-size:.78rem;text-decoration:underline;cursor:pointer;align-self:flex-start;padding:0}' +
+        '#miejsca-zmien-k{margin:.4rem .6rem!important}#miejsca-zmien,#miejsca-zmien-k{background:none;border:0;color:#c9a96e;font:inherit;font-size:.78rem;text-decoration:underline;cursor:pointer;padding:0;margin:-.4rem 0 .8rem;display:block}';
+      document.head.appendChild(st);
+    }
+    let p = document.getElementById('miejsca-wybor'); if (p) p.remove();
+    p = document.createElement('div'); p.id = 'miejsca-wybor';
+    p.innerHTML = '<div class="mw-glowa"><strong>Która miejscowość?</strong><span>Znaleźliśmy ' + lista.length + ' miejsc o tej nazwie - wybierz właściwe</span></div>' +
+      '<div class="mw-lista">' + lista.map(function (m, i) {
+        const e = function (t) { return String(t).replace(/[<>&"]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]; }); };
+        return '<button type="button" data-i="' + i + '"><b>' + e(m.nazwa) + '</b><small>' + e(m.opis) + '</small></button>';
+      }).join('') + '</div><button type="button" class="mw-zamknij">Żadna z nich - przesunę mapę sam</button>';
+    box.appendChild(p);
+    p.querySelectorAll('.mw-lista button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        const m = lista[+b.getAttribute('data-i')];
+        p.remove(); poWyborze(m);
+        podp('Wybrano: ' + m.nazwa + ' (' + m.opis + '). Przesuń mapę tak, aby pinezka wskazała Twoją działkę.');
+        dodajZmiane(lista, poWyborze, opcje);
+      });
+    });
+    p.querySelector('.mw-zamknij').addEventListener('click', function () { p.remove(); dodajZmiane(lista, poWyborze, opcje); });
+    ['mousedown', 'touchstart', 'wheel', 'dblclick'].forEach(function (ev) { p.addEventListener(ev, function (e) { e.stopPropagation(); }, { passive: true }); });
+  }
+  // Link pod mapą "Inna miejscowość o tej nazwie?" - otwiera listę ponownie
+  function dodajZmiane(lista, poWyborze, opcje) {
+    opcje = opcje || {};
+    const id = opcje.zmianaPo ? 'miejsca-zmien-k' : 'miejsca-zmien';
+    let a = document.getElementById(id);
+    if (!a) {
+      a = document.createElement('button'); a.type = 'button'; a.id = id; a.className = 'mw-zmien';
+      const h = opcje.zmianaPo || document.getElementById('map-coords-hint'); if (h && h.parentNode) h.parentNode.insertBefore(a, h.nextSibling);
+    }
+    a.textContent = 'Inna miejscowość o tej nazwie? Zmień →';
+    a.onclick = function () { pokazWyborMiejscowosci(lista, poWyborze, opcje); };
   }
 
   if (btnBack) {
@@ -533,8 +789,12 @@
       // ...i do CRM
       const zgodaS = !!(document.getElementById('s-zgoda') && document.getElementById('s-zgoda').checked);
       window.gruntowoZdarzenie && window.gruntowoZdarzenie('generate_lead', { formularz: 'raport_bezplatny_mapa' });
-      doCRM({ zrodlo: 'raport_darmowy', email: email, telefon: telefon, miejscowosc: miasto, wspolrzedne: wsp, zgoda_kontakt: zgodaS ? 'TAK' : 'NIE',
-        mapa_link: 'https://www.google.com/maps?q=' + encodeURIComponent(wsp), strona: location.href });
+      // CRM dostaje zgloszenie z NUMEREM DZIALKI (gdy uda sie go ustalic) - wtedy klient dostaje e-mail z linkiem do raportu
+      const doCRMraport = function (idDz) {
+        const wyslij = doCRM({ zrodlo: 'raport_darmowy', email: email, telefon: telefon, miejscowosc: miasto, wspolrzedne: wsp, zgoda_kontakt: zgodaS ? 'TAK' : 'NIE',
+          dzialka: idDz || '', mapa_link: 'https://www.google.com/maps?q=' + encodeURIComponent(wsp), strona: location.href });
+        return Promise.race([wyslij, new Promise(function (ok) { setTimeout(ok, 3000); })]);   // nie trzymamy klienta dluzej niz 3 s
+      };
 
       // Ustal identyfikator działki z współrzędnych (przez pośrednik ULDK), potem raport
       if (ULDK_PROXY && ULDK_PROXY !== 'WKLEJ_TUTAJ_LINK_APPS_SCRIPT_ULDK') {
@@ -542,16 +802,19 @@
           .then(function (r) { return r.json(); })
           .then(function (data) {
             if (data.id) {
-              // Mamy identyfikator - przejdź do raportu (dane już zebrane: ok=1)
-              window.location.href = 'raport.html?id=' + encodeURIComponent(data.id) + '&ok=1';
+              // Mamy identyfikator - zapis do CRM (+ e-mail z linkiem), potem raport (dane już zebrane: ok=1)
+              doCRMraport(data.id).then(function () { window.location.href = 'raport.html?id=' + encodeURIComponent(data.id) + '&ok=1'; });
             } else {
+              doCRMraport('');
               pokazBlad(data.error || 'Nie udało się ustalić działki w tym punkcie.');
             }
           })
           .catch(function () {
+            doCRMraport('');
             pokazBlad('Wystąpił błąd połączenia. Spróbuj ponownie za chwilę.');
           });
       } else {
+        doCRMraport('');
         // Brak pośrednika - pokaż komunikat zastępczy
         const ct = document.getElementById('confirm-title');
         const cx = document.getElementById('confirm-text');
@@ -673,6 +936,20 @@
           // podmieniamy tylko, gdy tresc naprawde sie rozni - inaczej napis "mrugal" po wczytaniu
           if (norm(el.innerHTML) !== norm(v)) el.innerHTML = v;
         }
+      });
+      // Listy wyboru z arkusza (np. tematy w formularzu kontaktowym): pozycje rozdzielone znakiem | albo ;
+      document.querySelectorAll('select[data-cms-lista]').forEach(function (sel) {
+        const v = map[sel.getAttribute('data-cms-lista')];
+        if (!v || !String(v).trim()) return;
+        const pozycje = String(v).split(/\s*[|;\n]\s*/).map(function (x) { return x.trim(); }).filter(Boolean);
+        if (!pozycje.length) return;
+        const obecne = Array.prototype.slice.call(sel.options).filter(function (o) { return o.value !== ''; }).map(function (o) { return o.text; });
+        if (obecne.join('|') === pozycje.join('|')) return;   // bez zmian - nie przebudowujemy
+        const wybrane = sel.value, pierwsza = sel.options[0] && sel.options[0].value === '' ? sel.options[0].text : 'Wybierz…';
+        sel.innerHTML = '';
+        sel.appendChild(new Option(pierwsza, ''));
+        pozycje.forEach(function (t) { sel.appendChild(new Option(t, t)); });
+        if (wybrane && pozycje.indexOf(wybrane) > -1) sel.value = wybrane;
       });
     })
     .catch(function (e) {
