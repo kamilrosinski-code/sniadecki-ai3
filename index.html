@@ -27,7 +27,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <link rel="stylesheet" href="style.css?v=27" />
-  <link rel="stylesheet" href="hero-raport.css?v=1" />
+  <link rel="stylesheet" href="hero-raport.css?v=2" />
 </head>
 <body>
 
@@ -67,8 +67,6 @@
       <p class="hero-eyebrow" data-cms="hero_eyebrow2">Analiza działki · Dane · Możliwości</p>
       <h1 class="hero-headline" data-cms="hero_haslo">Pokaż nam swój grunt,<br /><em>a my powiemy, co możesz z nim zrobić!</em></h1>
       <p class="hero-sub" data-cms="hero_sub">Masz grunt? Wypełnij formularz i dowiedz się o jego potencjale całkowicie bezpłatnie! W przypadku najciekawszych nieruchomości możesz otrzymać darmową konsultację naszego eksperta.</p>
-
-      <p class="hero-podpowiedz" aria-hidden="true">Przewiń, aby wejść w pole</p>
 
       <!-- WYSZUKIWARKA - jedna prosta ścieżka -->
       <div class="search-box" id="search-box">
@@ -218,33 +216,66 @@
   </section>
 
   <!-- INTRO ze zdjęciem i miarką geodezyjną; na komputerze za sekcją dalej leci film z hero, potem tło przechodzi w czerń -->
-  <section class="section sekcja-film">
+  <section class="section sekcja-film sekcja-analiza">
     <div class="container">
       <div class="intro-grid">
-        <div class="photo-frame">
-          <img src="https://images.unsplash.com/photo-1526958097901-5e6d742d3371?w=900&q=80" alt="Widok z drona na pola i działki" loading="lazy" />
-          <svg class="photo-geo" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <line x1="0" y1="110" x2="400" y2="95" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.7"/>
-            <line x1="160" y1="0" x2="145" y2="300" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.7"/>
-            <line x1="270" y1="0" x2="285" y2="300" stroke="#c9a96e" stroke-width="1" stroke-dasharray="5 7" opacity="0.5"/>
-            <circle cx="160" cy="110" r="5" fill="none" stroke="#c9a96e" stroke-width="1.5" opacity="0.9"/>
-            <circle cx="160" cy="110" r="2" fill="#c9a96e"/>
-            <circle cx="270" cy="98" r="4" fill="none" stroke="#c9a96e" stroke-width="1.2" opacity="0.8"/>
-            <circle cx="270" cy="98" r="1.5" fill="#c9a96e"/>
-            <text x="170" y="106" font-size="9" fill="#c9a96e" font-family="Inter,sans-serif" letter-spacing="0.08em" opacity="0.9">DZ. 142/3</text>
-            <text x="280" y="94" font-size="9" fill="#c9a96e" font-family="Inter,sans-serif" letter-spacing="0.08em" opacity="0.8">DZ. 142/4</text>
-            <rect x="146" y="96" width="124" height="90" fill="rgba(201,169,110,0.07)" stroke="#c9a96e" stroke-width="1" stroke-dasharray="4 6" opacity="0.6"/>
-            <!-- Miarka -->
-            <line x1="146" y1="205" x2="270" y2="205" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
-            <line x1="146" y1="200" x2="146" y2="210" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
-            <line x1="270" y1="200" x2="270" y2="210" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
-            <text x="188" y="220" font-size="8" fill="#c9a96e" font-family="Inter,sans-serif" opacity="0.85">48,5 m</text>
-          </svg>
-        </div>
+        <!-- DRUGI PODGLAD RAPORTU: sekcja "Przeznaczenie i status planistyczny" (prawdziwe dane dzialki 78/3 Janikowo) -->
+        <a class="hero-wizual hw-druga" href="raport-rozszerzony.html?id=302116_5.0005.78%2F3&amp;ok=1&amp;przyklad=1" target="_blank" rel="noopener" aria-label="Zobacz przykładowy raport rozszerzony: zapisy planu miejscowego dla działki 78/3">
+          <div class="hw-scena">
+            <div class="hw-ruch">
+              <div class="hw-karta hw-przod hw2" aria-hidden="true">
+                <div class="hw-blysk"></div>
+                <div class="hw-gora">
+                  <img class="hw-logo" src="gruntowo-logo.png" alt="" />
+                  <nav class="hw-zakladki"><span>Podsumowanie</span><span class="on">Plan</span><span>Media</span><span>Ceny</span><span>Ryzyka</span></nav>
+                  <svg class="hw-user" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3.2"/><path d="M6 19c1.5-2.6 3.6-3.8 6-3.8s4.5 1.2 6 3.8"/></svg>
+                </div>
+                <div class="hw2-srodek">
+                  <div class="hw-mapa hw2-mapa">
+                    <div class="hw-orto" data-mpzp="1"></div>
+                    <svg class="hw-obrys" viewBox="0 0 960 656" preserveAspectRatio="xMidYMid slice">
+                      <polygon class="hw-dzialka" points="545.0,339.0 558.2,309.0 545.2,245.5 486.5,257.6 387.4,317.4 427.7,409.8" />
+                    </svg>
+                    <span class="hw2-etykieta">3MN/U</span>
+                    <span class="hw2-zrodlo">Rysunek planu · KIMPZP</span>
+                  </div>
+                  <div class="hw2-plan">
+                    <div class="hw2-sekcja">09 · Przeznaczenie i status planistyczny</div>
+                    <div class="hw2-statusy">
+                      <div><span>Plan miejscowy</span><b class="ok">Obowiązuje</b></div>
+                      <div><span>Plan ogólny</span><b>340SJ</b></div>
+                      <div><span>Warunki zabudowy</span><b>Nie dotyczy</b></div>
+                    </div>
+                    <div class="hw2-teren">
+                      <span class="hw2-symbol">3MN/U</span>
+                      <div><strong>Zabudowa mieszkaniowa jednorodzinna lub usługowa</strong><small>teren odczytany z rysunku planu (AI) · pewność wysoka</small></div>
+                    </div>
+                    <div class="hw2-param">
+                      <div><span>Wysokość</span><b>do 10 m</b></div>
+                      <div><span>Zabudowa</span><b>maks. 35%</b></div>
+                      <div><span>Biol. czynna</span><b>min. 40%</b></div>
+                      <div><span>Min. nowa działka</span><b>1000 m²</b></div>
+                      <div><span>Dach</span><b>płaski lub 25–45°</b></div>
+                      <div><span>Parkowanie</span><b>2 miejsca / lokal</b></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="hw-kafle hw2-kafle">
+                  <div class="hw-kafel"><b>Możliwa zabudowa</b><span>do <em class="hw2-licz" data-licz="350">350</em> m² powierzchni zabudowy na działce</span><i class="hw2-pasek"><s style="--w:35%"></s></i></div>
+                  <div class="hw-kafel"><b>Teren</b><span>płaski · spadek 1,8% · 1,1 m różnicy wysokości</span><i class="hw2-profil"><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M0 14 C20 13 35 11 50 10 S80 7 100 6"/></svg></i></div>
+                  <div class="hw-kafel"><b>Okolica się zabudowuje</b><span>13 nowych domów i 4 budynki usługowe w promieniu 1 km</span><i class="hw2-slupki"><s style="--h:100%"></s><s style="--h:31%"></s><s style="--h:4%"></s><s style="--h:4%"></s></i></div>
+                </div>
+                <div class="hw-stopka"><span>Uchwała XXXIX/455/2021 · MPZP „Dolina Rzeki Głównej”, gm. Swarzędz. Zapisy dla terenu działki wyciągamy z uchwały automatycznie.</span><span class="hw-btn">Otwórz uchwałę →</span></div>
+              </div>
+            </div>
+          </div>
+          <span class="hw-podpis">Przykładowy raport rozszerzony · sekcja planowania</span>
+        </a>
         <div class="intro-tekst">
-          <span class="tag" data-cms="intro_tag">Dlaczego możemy o tym mówić?</span>
-          <h2 class="h2" data-cms="intro_title">Doświadczenie<br /><em>zbudowane na nieruchomościach</em></h2>
-          <p class="lead" data-cms="intro_lead">To realne przeprowadzone transakcje i obszerna wiedza naszych ekspertów stoi za stworzeniem tego portalu. Stworzyliśmy przyjazne modele oceny nieruchomości, które pozwolą każdemu, czuć się jak ekspert w branży nieruchomości.</p>
+          <span class="tag" data-cms="intro_tag2">Dlaczego gruntowo.pl?</span>
+          <h2 class="h2" data-cms="intro_title2">Nie dostajesz kolejnych map,<br /><em>które trudno odczytać.</em></h2>
+          <p class="lead intro-lead-mocny" data-cms="intro_lead2">Dostajesz przejrzystą analizę, za którą stoi nasze doświadczenie.</p>
+          <p class="lead" data-cms="intro_lead3">Zamiast kilkunastu geoportali i stron uchwał - jedna odpowiedź: co wolno zbudować, ile działka jest warta i na co uważać. Model oceny zbudowaliśmy na realnych transakcjach i wiedzy ekspertów, którzy od lat kupują i sprzedają grunty.</p>
           <div class="pillars">
             <div class="pillar"><span class="p-dot"></span><div><strong data-cms="pillar1_title">Wiedza i umiejętności</strong><span data-cms="pillar1_sub">Pozwala szybciej odkryć wady i potencjał nieruchomości</span></div></div>
             <div class="pillar"><span class="p-dot"></span><div><strong data-cms="pillar2_title">Kontakty budowane latami</strong><span data-cms="pillar2_sub">Prawnicy, Architekci, Rzeczoznawcy, Pośrednicy Nieruchomości i Inwestorzy</span></div></div>
@@ -559,10 +590,10 @@
     </div>
   </footer>
 
-  <script src="zgody.js?v=2"></script>
+  <script src="zgody.js?v=3"></script>
   <script src="haslo.js?v=20261006"></script>
   <script src="lenis.min.js?v=1"></script>
-  <script src="main.js?v=67"></script>
-  <script src="hero-raport.js?v=1"></script>
+  <script src="main.js?v=68"></script>
+  <script src="hero-raport.js?v=2"></script>
 </body>
 </html>

@@ -13,6 +13,8 @@
   .hero .hero-content { max-width: 1320px; display: grid; grid-template-columns: minmax(0, 590px) minmax(0, 1fr); column-gap: 3vw; align-items: center; padding-top: 9.5rem; }
   .hero .hero-headline { font-size: clamp(3rem, 4.4vw, 4.6rem); }
   .hero .search-box { max-width: 590px; }
+  /* raport stoi w miejscu, gdy wyszukiwarka urosnie (mapa) */
+  .hero .hero-wizual { align-self: start; margin-top: 4.5rem; }
 }
 
 /* --- scena 3D --- */
@@ -167,3 +169,110 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
   .hw-dzialka { stroke-dashoffset: 0; }
   .hw-ruch { transition: none; }
 }
+
+/* =====================================================================
+   WYSZUKIWARKA POD SKOSEM (w druga strone niz raport) - prostuje sie po najechaniu;
+   po wyborze miejscowosci (mapa) raport oddala sie, a ramka z mapa przybliza
+   ===================================================================== */
+.hero .search-box {
+  animation: sbWejscie 1s .75s cubic-bezier(.2,.8,.2,1) both !important;
+  transform-origin: 75% 50%;
+  transform: perspective(1300px) rotateY(12deg) rotateX(3deg) rotateZ(.9deg);
+  transition: transform .75s cubic-bezier(.2,.7,.2,1), box-shadow .75s ease, border-color .75s ease;
+  box-shadow: -30px 40px 90px rgba(0,0,0,.42);
+  will-change: transform;
+}
+@keyframes sbWejscie { from { opacity: 0; translate: -70px 30px; } to { opacity: 1; translate: 0 0; } }
+.hero .search-box:hover, .hero .search-box:focus-within, .hero.hero-mapa .search-box {
+  transform: none; box-shadow: 0 30px 80px rgba(0,0,0,.5); border-color: rgba(201,169,110,.45);
+}
+.hero.hero-mapa .search-box { will-change: auto; }
+@media (max-width: 1099px), (hover: none) { .hero .search-box { transform: none; box-shadow: none; } }
+@media (prefers-reduced-motion: reduce) { .hero .search-box { animation: none !important; transform: none; } }
+
+/* mapa wyboru dzialki: nieco mniejsza, wjezdza "przyblizajac sie" */
+.hero .map-box { height: 196px; }
+.hero.hero-mapa .map-box { animation: mapaBlizej .9s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes mapaBlizej { from { opacity: .3; transform: scale(.9); } to { opacity: 1; transform: none; } }
+/* przykladowy raport oddala sie */
+.hero .hero-wizual { transition: transform 1.1s cubic-bezier(.2,.7,.2,1), opacity 1.1s ease, filter 1.1s ease; transform-origin: 70% 40%; }
+.hero.hero-mapa .hero-wizual { transform: scale(.8) translate(7%, -2%); opacity: .5; filter: blur(1.4px) saturate(.8); pointer-events: none; }
+
+/* statyczne zdjecie hero w tle (film wylaczony) */
+.hero .hero-bg { transform: none !important; }
+
+/* =====================================================================
+   SEKCJA "Nie dostajesz kolejnych map..." + drugi podglad raportu (plan miejscowy)
+   ===================================================================== */
+.sekcja-analiza { position: relative; overflow: hidden; background: radial-gradient(ellipse 60% 70% at 25% 45%, rgba(201,169,110,.07), transparent 70%), var(--bg); }
+.sekcja-analiza .intro-lead-mocny { font-family: var(--fd); font-size: clamp(1.35rem, 2vw, 1.75rem); font-weight: 500; font-style: italic; line-height: 1.3; color: var(--gold); margin-bottom: 1rem; }
+@media (min-width: 900px) {
+  .sekcja-analiza .intro-grid { grid-template-columns: minmax(0, 1fr); }
+  .sekcja-analiza .intro-tekst { max-width: 720px; }
+}
+@media (min-width: 1100px) {
+  .sekcja-analiza > .container { max-width: 1320px; }
+  .sekcja-analiza .intro-grid { grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); align-items: center; gap: 3vw; }
+  .sekcja-analiza .intro-tekst { max-width: none; }
+}
+.hw-druga { margin: 0; width: 100%; justify-self: stretch; }
+.hw-druga .hw-scena { perspective-origin: 70% 40%; }
+/* lustrzany skos - karta zwrocona w strone tekstu */
+.hw-druga .hw-przod { transform: rotateY(15deg) rotateX(5deg) rotateZ(1.4deg); animation-name: hwWejscie2; animation-delay: .2s; }
+@keyframes hwWejscie2 {
+  0% { opacity: 0; transform: translate3d(-160px, 60px, -320px) rotateY(42deg) rotateX(12deg) rotateZ(4deg); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: rotateY(15deg) rotateX(5deg) rotateZ(1.4deg); }
+}
+@media (max-width: 1099px) {
+  .hw-druga .hw-przod { transform: rotateY(9deg) rotateX(4deg) rotateZ(1deg); animation-name: hwWejscie2M; }
+  @keyframes hwWejscie2M { 0% { opacity: 0; transform: translate3d(0, 60px, -200px) rotateY(24deg) rotateX(10deg); } 100% { opacity: 1; transform: rotateY(9deg) rotateX(4deg) rotateZ(1deg); } }
+}
+/* animacje drugiej karty startuja dopiero, gdy karta wjedzie na ekran (hero-raport.js dodaje .hw-gra) */
+.hw-druga:not(.hw-gra) .hw-przod, .hw-druga:not(.hw-gra) .hw-przod *, .hw-druga:not(.hw-gra) .hw-podpis, .hw-druga:not(.hw-gra) .hw-scena { animation-play-state: paused !important; }
+
+.hw2-srodek { display: grid; grid-template-columns: 240px 1fr; gap: 16px; padding: 16px 18px 12px; }
+.hw2-mapa { height: 238px; }
+.hw2-mapa .hw-orto img.hw-mpzp { inset: 0; width: 100%; height: 100%; opacity: .62; mix-blend-mode: multiply; }
+.hw2-mapa .hw-orto { filter: saturate(.9) brightness(.9); }
+.hw2-etykieta { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 11px; font-weight: 600; letter-spacing: .04em; color: #10201b; background: #8fe3c0; padding: 3px 7px; border-radius: 5px; box-shadow: 0 4px 12px rgba(0,0,0,.4); animation: hwPin .7s 2.4s cubic-bezier(.3,1.6,.5,1) both; }
+.hw2-zrodlo { position: absolute; left: 8px; bottom: 7px; font-size: 8.5px; color: rgba(255,255,255,.85); background: rgba(12,18,17,.7); padding: 2px 6px; border-radius: 4px; }
+.hw2-sekcja { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #c9a96e; margin-bottom: 10px; }
+.hw2-statusy { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.hw2-statusy div { border: 1px solid rgba(255,255,255,.09); border-radius: 8px; padding: 7px 9px; animation: hwKafel .6s both; }
+.hw2-statusy div:nth-child(1) { animation-delay: 1.7s; } .hw2-statusy div:nth-child(2) { animation-delay: 1.82s; } .hw2-statusy div:nth-child(3) { animation-delay: 1.94s; }
+.hw2-statusy span { display: block; font-size: 8.5px; color: rgba(242,240,235,.5); text-transform: uppercase; letter-spacing: .08em; }
+.hw2-statusy b { display: block; font-size: 12px; font-weight: 500; color: #f2f0eb; margin-top: 2px; }
+.hw2-statusy b.ok { color: #8fe3c0; }
+.hw2-teren { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 10px; background: rgba(143,227,192,.07); border: 1px solid rgba(143,227,192,.22); margin-bottom: 10px; animation: hwFade .6s 2.1s both; }
+.hw2-symbol { font-size: 17px; font-weight: 600; color: #8fe3c0; letter-spacing: .02em; white-space: nowrap; }
+.hw2-teren strong { display: block; font-size: 10.5px; font-weight: 500; color: #f2f0eb; line-height: 1.3; }
+.hw2-teren small { display: block; font-size: 8.5px; color: rgba(242,240,235,.5); margin-top: 2px; }
+.hw2-param { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.hw2-param div { background: rgba(255,255,255,.035); border-radius: 7px; padding: 6px 8px; animation: hwKafel .55s both; }
+.hw2-param div:nth-child(1) { animation-delay: 2.3s; } .hw2-param div:nth-child(2) { animation-delay: 2.4s; } .hw2-param div:nth-child(3) { animation-delay: 2.5s; }
+.hw2-param div:nth-child(4) { animation-delay: 2.6s; } .hw2-param div:nth-child(5) { animation-delay: 2.7s; } .hw2-param div:nth-child(6) { animation-delay: 2.8s; }
+.hw2-param span { display: block; font-size: 8.5px; color: rgba(242,240,235,.5); }
+.hw2-param b { display: block; font-size: 11px; font-weight: 500; color: #f2f0eb; margin-top: 1px; white-space: nowrap; }
+.hw2-kafle { grid-template-columns: repeat(3, 1fr); }
+.hw2-kafle .hw-kafel { gap: 5px; }
+.hw2-kafle .hw-kafel span { min-height: 0; }
+.hw2-kafle em { font-style: normal; color: #f2f0eb; font-weight: 600; }
+.hw2-kafle i { border: 0; padding: 0; border-radius: 0; font-size: 0; display: block; height: 18px; align-self: stretch; }
+.hw2-pasek { position: relative; background: rgba(255,255,255,.07) !important; border-radius: 4px !important; height: 7px !important; margin-top: 6px; overflow: hidden; }
+.hw2-pasek s { position: absolute; left: 0; top: 0; bottom: 0; width: var(--w); background: linear-gradient(90deg, #8fe3c0, #c9a96e); border-radius: 4px; animation: hw2Pasek 1.2s 2.6s cubic-bezier(.3,.8,.3,1) both; }
+@keyframes hw2Pasek { from { width: 0; } }
+.hw2-profil svg { width: 100%; height: 18px; display: block; }
+.hw2-profil path { fill: none; stroke: #8fe3c0; stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-dasharray: 120; stroke-dashoffset: 120; animation: hw2Linia 1.2s 2.7s ease-out forwards; }
+@keyframes hw2Linia { to { stroke-dashoffset: 0; } }
+.hw2-slupki { display: flex !important; align-items: flex-end; gap: 5px; }
+.hw2-slupki s { flex: 1; height: var(--h); min-height: 2px; background: #8fe3c0; border-radius: 2px 2px 0 0; opacity: .85; animation: hw2Slupek .9s both; transform-origin: bottom; }
+.hw2-slupki s:nth-child(2) { background: #c9a96e; } .hw2-slupki s:nth-child(3), .hw2-slupki s:nth-child(4) { background: rgba(242,240,235,.35); }
+.hw2-slupki s:nth-child(1) { animation-delay: 2.8s; } .hw2-slupki s:nth-child(2) { animation-delay: 2.9s; } .hw2-slupki s:nth-child(3) { animation-delay: 3s; } .hw2-slupki s:nth-child(4) { animation-delay: 3.1s; }
+@keyframes hw2Slupek { from { transform: scaleY(0); } }
+.hw2 .hw-stopka { margin-top: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .hw2 *, .hw-druga .hw-przod { animation: none !important; }
+  .hw2-profil path { stroke-dashoffset: 0; }
+}
+.hw-przod.hw2 { height: 514px; }

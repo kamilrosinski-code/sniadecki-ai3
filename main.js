@@ -330,6 +330,8 @@
 
   // ===== HERO: film przewijany kolkiem; wyszukiwarka pojawia sie razem z przewijaniem =====
   (function () {
+    // FILM = false: statyczne zdjecie hero.jpeg w tle (film z lotem nad polem wylaczony 13.10.2026; true = wlacza z powrotem)
+    const FILM = false;
     const hero = document.querySelector('.hero');
     const sb = document.getElementById('search-box');
     if (!hero || !sb) return;
@@ -343,7 +345,8 @@
       hero.classList.remove('hero-czeka'); sb.classList.add('wysuwa');
     };
     // Bez myszy (telefon), przy ograniczonym ruchu albo gdy ktos wchodzi z linku do wyszukiwarki - od razu
-    if (!mysz || malo || /#szukaj|#search-box/.test(location.hash)) { wysun(); }
+    // Wyszukiwarka widoczna od razu (ramka pod skosem, prostuje sie po najechaniu - hero-raport.css)
+    if (!FILM || !mysz || malo || /#szukaj|#search-box/.test(location.hash)) { wysun(); }
     else {
       hero.classList.add('hero-czeka');
       window.addEventListener('scroll', function () { if (window.scrollY > 40 && !filmSteruje) wysun(); }, { passive: true });
@@ -357,7 +360,7 @@
     // Tylko komputer; telefon, oszczedzanie danych albo blad pobierania = zostaje zdjecie i zwykle przewijanie.
     const film = bg.querySelector('.hero-film');
     const oszczedza = navigator.connection && navigator.connection.saveData;
-    if (film && window.innerWidth >= 900 && !oszczedza && window.fetch && window.URL) {
+    if (FILM && film && window.innerWidth >= 900 && !oszczedza && window.fetch && window.URL) {
       fetch(film.canPlayType('video/mp4; codecs="avc1.42E01E"') ? 'hero-pole.mp4?v=5' : 'hero-pole.webm?v=5')
         .then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
         film.src = URL.createObjectURL(b);

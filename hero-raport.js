@@ -1,90 +1,119 @@
 /*
- * gruntowo.pl - PODGLAD RAPORTU W HERO (index.html)
- *  - skaluje karte do szerokosci kolumny,
- *  - wczytuje prawdziwa ortofotomape dzialki przykladowej (78/3 Janikowo) z Geoportalu + granice dzialek z KIEG,
- *  - licznik werdyktu 0 -> 83 zgrany z animacja pierscienia,
- *  - lekkie pochylanie karty za kursorem (tylko mysz).
+ * gruntowo.pl - PODGLADY RAPORTU (index.html): karta w hero + karta w sekcji "Nie dostajesz kolejnych map..."
+ *  - skaluje karty do szerokosci kolumny (projekt 680 x 560 px),
+ *  - wczytuje prawdziwa ortofotomape dzialki przykladowej (78/3 Janikowo) z Geoportalu + granice dzialek (KIEG)
+ *    albo rysunek planu miejscowego (KIMPZP) - dla karty z data-mpzp,
+ *  - liczniki (werdykt 0 -> 83, zabudowa 0 -> 350 m2) zgrane z animacjami,
+ *  - druga karta animuje sie dopiero po wjechaniu na ekran,
+ *  - lekkie pochylanie kart za kursorem (tylko mysz),
+ *  - po wyborze miejscowosci (mapa w wyszukiwarce) hero dostaje klase .hero-mapa: raport sie oddala, mapa przybliza.
  */
 (function () {
   'use strict';
-  var box = document.getElementById('hero-wizual');
-  if (!box) return;
-  var hero = box.closest('.hero');
+  var karty = Array.prototype.slice.call(document.querySelectorAll('.hero-wizual'));
+  if (!karty.length) return;
   var malo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var mysz = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  var hero = document.querySelector('.hero');
 
-  // ---- skala karty (projekt 680 x 560 px) ----
-  function skaluj() {
+  // ---- skala kart ----
+  function skaluj(box) {
     var w = box.clientWidth || box.parentNode.clientWidth;
-    var s = Math.max(0.42, Math.min(1, w / 690));
-    box.style.setProperty('--hw-skala', s.toFixed(4));
+    box.style.setProperty('--hw-skala', Math.max(0.42, Math.min(1, w / 690)).toFixed(4));
   }
-  skaluj();
-  if (window.ResizeObserver) new ResizeObserver(skaluj).observe(box); else window.addEventListener('resize', skaluj);
+  karty.forEach(function (box) {
+    skaluj(box);
+    if (window.ResizeObserver) new ResizeObserver(function () { skaluj(box); }).observe(box);
+    else window.addEventListener('resize', function () { skaluj(box); });
+  });
 
-  // ---- ortofotomapa (PUWG 1992), kadr 240 x 164 m wokol dzialki, 2 x 2 kafle 480 x 328 px ----
+  // ---- mapy (PUWG 1992), kadr 240 x 164 m wokol dzialki ----
   var BB = [365714, 509986, 365954, 510150];
   var ORTO = 'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG:2180&FORMAT=image/jpeg&WIDTH=480&HEIGHT=328&BBOX=';
   var KIEG = 'https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=dzialki&STYLES=&SRS=EPSG:2180&FORMAT=image/png&TRANSPARENT=TRUE&WIDTH=960&HEIGHT=656&BBOX=' + BB.join(',');
-  var orto = document.getElementById('hw-orto');
-  // usluga czasem oddaje pusty (bialy) kafel - maly plik; wtedy ponawiamy
+  var MPZP = 'https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&SRS=EPSG:2180&FORMAT=image/png&TRANSPARENT=TRUE&LAYERS=raster,wektor-str,wektor-pow,wektor-lin,wektor-pkt,wektor-lzb,granice&STYLES=,,,,,,&WIDTH=960&HEIGHT=656&BBOX=' + BB.join(',');
+  // usluga czasem oddaje pusty (bialy) kafel - maly plik; wtedy ponawiamy. Kafle wspolne dla obu kart.
   function kafel(bb, proba) {
     var url = ORTO + bb.join(',') + (proba ? '&_p=' + proba : '');
     if (!window.fetch || !window.URL) return Promise.resolve(url);
     return fetch(url, { mode: 'cors' }).then(function (r) { if (!r.ok) throw new Error('http'); return r.blob(); }).then(function (b) {
       if (b.size < 9000 && proba < 6) return kafel(bb, proba + 1);
       return URL.createObjectURL(b);
-    }).catch(function (e) { return proba < 2 ? kafel(bb, proba + 1) : url; });   // bez CORS - zwykly obrazek
+    }).catch(function () { return proba < 2 ? kafel(bb, proba + 1) : url; });   // bez CORS - zwykly obrazek
   }
-  function laduj() {
-    if (!orto || orto.dataset.ladowane) return; orto.dataset.ladowane = '1';
+  var kafle = null;
+  function pobierzKafle() {
+    if (kafle) return kafle;
     var dx = (BB[2] - BB[0]) / 2, dy = (BB[3] - BB[1]) / 2, zad = [];
     for (var ix = 0; ix < 2; ix++) for (var iy = 0; iy < 2; iy++) {
-      (function (ix, iy) {
-        var bb = [BB[0] + ix * dx, BB[3] - (iy + 1) * dy, BB[0] + (ix + 1) * dx, BB[3] - iy * dy];
-        zad.push(kafel(bb, 0).then(function (src) {
-          return new Promise(function (ok) {
-            var im = new Image(); im.className = 'hw-tile'; im.alt = ''; im.decoding = 'async';
-            im.style.left = (ix * 50) + '%'; im.style.top = (iy * 50) + '%';
-            im.onload = function () { ok(im); }; im.onerror = function () { ok(null); }; im.src = src;
-          });
-        }));
-      })(ix, iy);
+      var bb = [BB[0] + ix * dx, BB[3] - (iy + 1) * dy, BB[0] + (ix + 1) * dx, BB[3] - iy * dy];
+      zad.push(kafel(bb, 0).then((function (ix, iy) { return function (src) { return { src: src, x: ix * 50, y: iy * 50 }; }; })(ix, iy)));
     }
-    Promise.all(zad).then(function (imgs) {
+    return (kafle = Promise.all(zad));
+  }
+  function obraz(src, klasa, x, y) {
+    return new Promise(function (ok) {
+      var im = new Image(); im.className = klasa; im.alt = ''; im.decoding = 'async';
+      if (x != null) { im.style.left = x + '%'; im.style.top = y + '%'; }
+      im.onload = function () { ok(im); }; im.onerror = function () { ok(null); }; im.src = src;
+    });
+  }
+  function laduj(box) {
+    var orto = box.querySelector('.hw-orto');
+    if (!orto || orto.dataset.ladowane) return; orto.dataset.ladowane = '1';
+    pobierzKafle().then(function (lista) {
+      return Promise.all(lista.map(function (k) { return obraz(k.src, 'hw-tile', k.x, k.y); }));
+    }).then(function (imgs) {
       if (imgs.filter(Boolean).length < 4) return;              // niepelna mapa - zostaje stonowane tlo
       imgs.forEach(function (im) { orto.appendChild(im); });
-      var g = new Image(); g.className = 'hw-granice'; g.alt = ''; g.onload = function () { orto.appendChild(g); }; g.src = KIEG;
       orto.classList.add('gotowe');
+      obraz(orto.dataset.mpzp ? MPZP : KIEG, orto.dataset.mpzp ? 'hw-mpzp' : 'hw-granice').then(function (im) { if (im) orto.appendChild(im); });
       var kopia = box.querySelector('.hw-orto-kopia');            // rozmyta karta w tle
       if (kopia) imgs.forEach(function (im) { kopia.appendChild(im.cloneNode()); });
     });
   }
-  // mapa tylko gdy karta jest widoczna na ekranie
-  if (window.IntersectionObserver) {
-    var io = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { laduj(); io.disconnect(); } }, { rootMargin: '200px' });
-    io.observe(box);
-  } else laduj();
 
-  // ---- licznik werdyktu (rusza razem z pierscieniem: 1,5 s po zaladowaniu, 1,6 s) ----
-  var pkt = document.getElementById('hw-punkty');
-  if (pkt && !malo) {
-    var cel = +pkt.textContent || 83, t0 = performance.now() + 1500, dl = 1600;
-    pkt.textContent = '0';
+  // ---- liczniki ----
+  function licz(el, opoznienie, dl) {
+    var cel = +(el.dataset.licz || el.textContent) || 0;
+    if (malo) { el.textContent = cel; return; }
+    var t0 = performance.now() + opoznienie;
+    el.textContent = '0';
     var krok = function (now) {
-      if (hero && hero.classList.contains('wejscie-zrobione')) { pkt.textContent = cel; return; }
+      if (hero && hero.classList.contains('wejscie-zrobione') && hero.contains(el)) { el.textContent = cel; return; }
       var p = Math.max(0, Math.min(1, (now - t0) / dl)), e = 1 - Math.pow(1 - p, 3);
-      pkt.textContent = Math.round(cel * e);
+      el.textContent = Math.round(cel * e);
       if (p < 1) requestAnimationFrame(krok);
     };
     requestAnimationFrame(krok);
   }
 
+  // ---- start kart: hero od razu, pozostale po wjechaniu na ekran ----
+  function start(box) {
+    if (box.classList.contains('hw-gra')) return;
+    box.classList.add('hw-gra');
+    var pkt = box.querySelector('#hw-punkty'); if (pkt) licz(pkt, 1500, 1600);
+    box.querySelectorAll('[data-licz]').forEach(function (el) { licz(el, 2600, 1200); });
+  }
+  karty.forEach(function (box) {
+    var wHero = hero && hero.contains(box);
+    if (!window.IntersectionObserver) { laduj(box); start(box); return; }
+    // mapa wczesniej (z zapasem), animacja gdy karta naprawde widac
+    var ioM = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { laduj(box); ioM.disconnect(); } }, { rootMargin: '400px' });
+    ioM.observe(box);
+    if (wHero) start(box);
+    else {
+      var ioA = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { start(box); ioA.disconnect(); } }, { threshold: 0.35 });
+      ioA.observe(box);
+    }
+  });
+
   // ---- pochylanie za kursorem ----
-  var mysz = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  if (mysz && !malo && hero) {
-    var ruch = box.querySelector('.hw-ruch'), ramka = null, mx = 0, my = 0;
-    hero.addEventListener('mousemove', function (e) {
-      mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5;
+  if (mysz && !malo) karty.forEach(function (box) {
+    var obszar = box.closest('section') || box.parentNode, ruch = box.querySelector('.hw-ruch'), ramka = null, mx = 0, my = 0;
+    obszar.addEventListener('mousemove', function (e) {
+      var r = obszar.getBoundingClientRect();
+      mx = (e.clientX - r.left) / r.width - 0.5; my = (e.clientY - r.top) / r.height - 0.5;
       if (ramka) return;
       ramka = requestAnimationFrame(function () {
         ramka = null;
@@ -92,6 +121,26 @@
         ruch.style.setProperty('--hw-mx', (-my * 5).toFixed(2) + 'deg');
       });
     });
-    hero.addEventListener('mouseleave', function () { ruch.style.setProperty('--hw-my', '0deg'); ruch.style.setProperty('--hw-mx', '0deg'); });
+    obszar.addEventListener('mouseleave', function () { ruch.style.setProperty('--hw-my', '0deg'); ruch.style.setProperty('--hw-mx', '0deg'); });
+  });
+
+  // ---- mapa w wyszukiwarce: raport sie oddala ----
+  var s2 = document.getElementById('step-2'), s3 = document.getElementById('step-3');
+  if (hero && s2 && window.MutationObserver) {
+    var bylo = false;
+    var sprawdz = function () {
+      var jest = !s2.classList.contains('hidden') || (s3 && !s3.classList.contains('hidden'));
+      hero.classList.toggle('hero-mapa', jest);
+      // mapa ma byc w calosci widoczna - przewijamy do niej lagodnie, jesli wystaje poza ekran
+      if (jest && !bylo) setTimeout(function () {
+        var mb = document.querySelector('#step-2:not(.hidden) .map-box') || document.getElementById('search-box');
+        if (!mb) return; var r = mb.getBoundingClientRect();
+        if (r.bottom > window.innerHeight - 20 || r.top < 70) window.scrollBy({ top: r.top - Math.max(90, (window.innerHeight - r.height) / 2.6), behavior: malo ? 'auto' : 'smooth' });
+      }, 120);
+      bylo = jest;
+    };
+    var mo = new MutationObserver(sprawdz);
+    mo.observe(s2, { attributes: true, attributeFilter: ['class'] }); if (s3) mo.observe(s3, { attributes: true, attributeFilter: ['class'] });
+    sprawdz();
   }
 })();
