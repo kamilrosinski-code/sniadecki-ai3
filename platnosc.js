@@ -13,7 +13,7 @@
 
   var API = 'https://sniadecki-development.pl/gruntowo-api';
   var KLUCZ = 'gruntowo_oplacone_v1';
-  var CENA = '69 zł';
+  var CENA = '<span data-cena="raport">159 zł</span>';   // tekst podstawia cennik.js (ceny z CRM)
   // Oficjalne logo PayU - plik pobrany ze strony PayU (Pliki do pobrania) i wgrany obok raportu.
   // Najpierw payu-logo.svg, potem payu-logo.png; gdy zadnego nie ma - napis "PayU".
   var LOGO_PAYU = 'payu-logo.svg';
@@ -92,7 +92,7 @@
     if (!zgoda) { msg.textContent = 'Zaznacz akceptację regulaminu.'; return; }
     try { localStorage.setItem('gruntowo_email', email); } catch (e2) {}
     btn.disabled = true; msg.textContent = 'Łączymy z PayU…';
-    window.gruntowoZdarzenie && window.gruntowoZdarzenie('begin_checkout', { currency: 'PLN', value: 69, items: [{ item_name: 'Raport rozszerzony' }] });
+    window.gruntowoZdarzenie && window.gruntowoZdarzenie('begin_checkout', { currency: 'PLN', value: (window.GruntowoCeny ? window.GruntowoCeny.raport : 159), items: [{ item_name: 'Raport rozszerzony' }] });
     fetch(API + '/platnosc-start.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: biezaceId, email: email, zgoda_kontakt: modal.querySelector('#kup-marketing').checked ? 'TAK' : 'NIE' }) })
       .then(function (r) { return r.json(); })
       .then(function (w) {
@@ -130,7 +130,7 @@
       if (start && !document.querySelector('.kup-podpowiedz')) {
         var p = document.createElement('div');
         p.className = 'kup-podpowiedz';
-        p.innerHTML = '<strong>Zamówienie raportu rozszerzonego (69 zł).</strong> Wpisz identyfikator działki albo wskaż ją na mapie i kliknij „Generuj raport” - zaraz potem otworzy się płatność (BLIK, karta, przelew).';
+        p.innerHTML = '<strong>Zamówienie raportu rozszerzonego (<span data-cena="raport">159 zł</span>).</strong> Wpisz identyfikator działki albo wskaż ją na mapie i kliknij „Generuj raport” - zaraz potem otworzy się płatność (BLIK, karta, przelew).';
         start.parentNode.insertBefore(p, start.nextSibling);
       }
     });

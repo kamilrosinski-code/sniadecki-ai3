@@ -25,7 +25,7 @@
 (function () {
   'use strict';
 
-  var RAPORT_JS = 'raport.js?v=20261013a';
+  var RAPORT_JS = 'raport.js?v=20261013b';
 
   var URL_KIMPZP = 'https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego';
   var URL_POG = 'https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin';
@@ -124,7 +124,7 @@
     pasek.className = 'pasek-przykladu';
     pasek.innerHTML = '<div class="pp-tekst"><strong>To jest przykładowy raport rozszerzony</strong> - dla działki w Janikowie (gm. Swarzędz). ' +
       'Tak samo wygląda raport dla Twojej działki. <a href="raport.html?id=302116_5.0005.78%2F3&ok=1&przyklad=1">Zobacz też raport bezpłatny tej działki</a>, żeby porównać zakres.</div>' +
-      '<div class="pp-akcje"><a href="raport.html?kup=1" class="btn btn-gold">Kup raport dla swojej działki - 69 zł</a>' +
+      '<div class="pp-akcje"><a href="raport.html?kup=1" class="btn btn-gold">Kup raport dla swojej działki - <span data-cena="raport">159 zł</span></a>' +
       '<a href="index.html#haslo" class="btn">Mam hasło</a></div>';
     var hero = document.querySelector('#report .rep-hero');
     if (hero) hero.parentNode.insertBefore(pasek, hero);
@@ -158,7 +158,7 @@
       if (w.oplacone) {
         // zakup (raz na zamowienie) - do statystyk Google Analytics, jesli uzytkownik sie zgodzil
         try { const k = 'gruntowo_ga_zakup_' + ext; if (!localStorage.getItem(k)) { localStorage.setItem(k, '1');
-          window.gruntowoZdarzenie && window.gruntowoZdarzenie('purchase', { transaction_id: ext, currency: 'PLN', value: 69, items: [{ item_name: 'Raport rozszerzony' }] }); } } catch (e) {}
+          window.gruntowoZdarzenie && window.gruntowoZdarzenie('purchase', { transaction_id: ext, currency: 'PLN', value: (window.GruntowoCeny ? window.GruntowoCeny.raport : 159), items: [{ item_name: 'Raport rozszerzony' }] }); } } catch (e) {}
         otworzOplacony(id, ext); return;
       }
       if (proba < 10 && w.status !== 'CANCELED' && w.status !== 'BRAK') {
@@ -220,7 +220,7 @@
       var kup = document.createElement('div');
       kup.className = 'bramka-kup';
       kup.innerHTML = '<div class="bramka-albo"><span>albo</span></div>' +
-        '<button type="button" class="btn btn-gold bramka-kup-btn" data-kup-raport data-id="' + window.GruntowoPlatnosc.esc(id) + '">Kup raport dla tej działki - 69 zł</button>' +
+        '<button type="button" class="btn btn-gold bramka-kup-btn" data-kup-raport data-id="' + window.GruntowoPlatnosc.esc(id) + '">Kup raport dla tej działki - <span data-cena="raport">159 zł</span></button>' +
         '<div class="znaczek-payu">' + '<span>Płatność obsługuje</span>' + window.GruntowoPlatnosc.logoPayU() + '</div>' +
         '<p class="bramka-kup-info">Działka ' + window.GruntowoPlatnosc.esc(id) + ' · BLIK, karta, przelew</p>';
       var alt = form.querySelector('.bramka-alt');

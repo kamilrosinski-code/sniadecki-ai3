@@ -26,7 +26,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <link rel="stylesheet" href="style.css?v=27" />
+  <link rel="stylesheet" href="style.css?v=28" />
   <link rel="stylesheet" href="hero-raport.css?v=8" />
   <link rel="stylesheet" href="publikacje.css?v=3" />
 </head>
@@ -67,9 +67,8 @@
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <div class="hero-tekst">
-      <p class="hero-eyebrow" data-cms="hero_eyebrow2">Analiza działki · Dane · Możliwości</p>
       <h1 class="hero-headline" data-cms="hero_haslo">Pokaż nam swój grunt,<br /><em>a my powiemy, co możesz z nim zrobić!</em></h1>
-      <p class="hero-sub" data-cms="hero_sub">Masz grunt? Wypełnij formularz i dowiedz się o jego potencjale całkowicie bezpłatnie! W przypadku najciekawszych nieruchomości możesz otrzymać darmową konsultację naszego eksperta.</p>
+      <p class="hero-sub" data-cms="hero_sub"><span class="m-ukryj">Masz grunt? Wypełnij formularz i dowiedz się o jego potencjale całkowicie bezpłatnie! W przypadku najciekawszych nieruchomości możesz otrzymać darmową konsultację naszego eksperta.</span><span class="m-tylko">Bezpłatnie sprawdzisz, co możesz zbudować i ile jest warta Twoja działka.</span></p>
 
       <!-- WYSZUKIWARKA - jedna prosta ścieżka -->
       <div class="search-box" id="search-box">
@@ -203,7 +202,6 @@
             </div>
           </div>
         </div>
-        <span class="hw-podpis">Przykładowy raport rozszerzony · prawdziwe dane działki</span>
       </a>
     </div>
 
@@ -280,7 +278,6 @@
               </div>
             </div>
           </div>
-          <span class="hw-podpis">Przykładowy raport rozszerzony · sekcja planowania</span>
         </a>
         <div class="intro-tekst">
           <span class="tag" data-cms="intro_tag2">Dlaczego gruntowo.pl?</span>
@@ -302,10 +299,10 @@
       </div>
       <div class="sourcing-layout">
         <div class="cards">
-          <div class="card src-card card-hi" data-model="1"><span class="card-n">01</span><h3 data-cms="src1_title">Model 1 · Bezpłatna analiza w kilka minut</h3><p data-cms="src1_text">Najczystsza forma prezentacji działki dostępna na rynku.</p></div>
-          <div class="card src-card" data-model="2"><span class="card-n">02</span><h3 data-cms="src2_title">Model 2 · Raport rozszerzony</h3><p data-cms="src2_text">Rozjaśnia większość znaków zapytania, które mogą się pojawić przy ocenie działki.</p></div>
-          <div class="card src-card" data-model="3"><span class="card-n">03</span><h3 data-cms="src3_title">Model 3 · Konsultacja z ekspertem</h3><p data-cms="src3_text">12 lat doświadczenia w pigułce - podczas 30-minutowej konsultacji.</p></div>
-          <div class="card src-card" data-model="4"><span class="card-n">04</span><h3 data-cms="src4_title">Model 4 · Wsparcie przy gruntach o złożonych problemach</h3><p data-cms="src4_text">Zmiana MPZP, planu ogólnego, uzyskanie WZ lub pozwolenia na budowę - obsługujemy indywidualnie, to nasz chleb powszedni.</p></div>
+          <div class="card src-card card-hi" data-model="1"><span class="card-n">01</span><h3 data-cms="src1_title" data-m="Bezpłatna analiza">Model 1 · Bezpłatna analiza w kilka minut</h3><p data-cms="src1_text">Najczystsza forma prezentacji działki dostępna na rynku.</p></div>
+          <div class="card src-card" data-model="2"><span class="card-n">02</span><h3 data-cms="src2_title" data-m="Raport rozszerzony">Model 2 · Raport rozszerzony</h3><p data-cms="src2_text">Rozjaśnia większość znaków zapytania, które mogą się pojawić przy ocenie działki.</p></div>
+          <div class="card src-card" data-model="3"><span class="card-n">03</span><h3 data-cms="src3_title" data-m="Konsultacja z ekspertem">Model 3 · Konsultacja z ekspertem</h3><p data-cms="src3_text">12 lat doświadczenia w pigułce - podczas 30-minutowej konsultacji.</p></div>
+          <div class="card src-card" data-model="4"><span class="card-n">04</span><h3 data-cms="src4_title" data-m="Grunty z problemami">Model 4 · Wsparcie przy gruntach o złożonych problemach</h3><p data-cms="src4_text">Zmiana MPZP, planu ogólnego, uzyskanie WZ lub pozwolenia na budowę - obsługujemy indywidualnie, to nasz chleb powszedni.</p></div>
         </div>
         <!-- WIZUALIZACJE MODELI: jedna karta "ekranu" na model, przelaczane najechaniem na karte modelu (main.js + hero-raport.js) -->
         <div class="src-wizual" id="src-visual">
@@ -359,7 +356,7 @@
                     </div>
                   </div>
                   <div class="hw-kafle"><div class="hw-kafel"><b>Planowanie</b><span>MPZP 3MN/U · POG SJ</span></div><div class="hw-kafel"><b>Media</b><span>4 sieci do 50 m</span></div><div class="hw-kafel"><b>Rynek</b><span>14 transakcji</span></div><div class="hw-kafel hw-kafel-uwaga"><b>Ryzyka</b><span>2 do weryfikacji</span></div></div>
-                  <div class="hw-stopka"><span>Werdykt 0–100, plusy i ryzyka, plan, media, ceny, teren i zabudowa okolicy.</span><span class="hw-btn">69 zł →</span></div>
+                  <div class="hw-stopka"><span>Werdykt 0–100, plusy i ryzyka, plan, media, ceny, teren i zabudowa okolicy.</span><span class="hw-btn"><span data-cena="raport">159 zł</span> →</span></div>
                 </div>
 
                 <!-- MODEL 3: konsultacja z ekspertem -->
@@ -384,7 +381,7 @@
                     </div>
                   </div>
                   <div class="hwm3-terminy"><span>Wybierz termin</span><i>pon 10:00</i><i class="on">wt 14:00</i><i>czw 9:30</i><i>pt 12:00</i></div>
-                  <div class="hw-stopka"><span>Rozmowa online z ekspertem – raport rozszerzony w cenie.</span><span class="hw-btn">499 zł →</span></div>
+                  <div class="hw-stopka"><span>Rozmowa online z ekspertem – raport rozszerzony w cenie.</span><span class="hw-btn"><span data-cena="konsultacja">1490 zł</span> →</span></div>
                 </div>
 
                 <!-- MODEL 4: grunty o zlozonych problemach -->
@@ -435,10 +432,10 @@
           <a href="raport.html?id=302116_5.0005.78%2F3&ok=1&przyklad=1" target="_blank" rel="noopener" class="ofr-haslo-link">Zobacz przykładowy raport bezpłatny →</a>
         </div>
 
-        <!-- OFERTA 2 - 69 zł -->
+        <!-- OFERTA 2 - 159 zł -->
         <div class="ofr">
           <div class="ofr-label" data-cms="fmt2_label">Model 2. Raport rozszerzony</div>
-          <div class="ofr-cena"><span class="ofr-num" data-cms="fmt2_title">69</span><span class="ofr-unit">zł</span></div>
+          <div class="ofr-cena"><span class="ofr-num" data-cms="fmt2_title" data-cena="raport-liczba">159</span><span class="ofr-unit">zł</span></div>
           <p class="ofr-desc" data-cms="fmt2_text">Obszerna analiza - korzyści, zagrożenia oraz werdykt naszego zaawansowanego modelu analitycznego.</p>
           <ul class="ofr-lista">
             <li>Wszystko z raportu bezpłatnego</li>
@@ -447,16 +444,16 @@
             <li>Ograniczenia formalnoprawne i uzbrojenie</li>
             <li>Pozwolenia na budowę w okolicy</li>
           </ul>
-          <a href="raport.html?kup=1" class="ofr-btn">Zamów raport rozszerzony - 69 zł</a>
+          <a href="raport.html?kup=1" class="ofr-btn">Zamów raport rozszerzony - <span data-cena="raport">159 zł</span></a>
           <a href="raport-rozszerzony.html?id=302116_5.0005.78%2F3&ok=1&przyklad=1" target="_blank" rel="noopener" class="ofr-haslo-link">Zobacz przykładowy raport rozszerzony →</a>
           <a href="#haslo" class="ofr-haslo-link">Masz hasło? Odblokuj raport za darmo →</a>
         </div>
 
-        <!-- OFERTA 3 - 499 zł, wyróżniona -->
+        <!-- OFERTA 3 - 1490 zł, wyróżniona -->
         <div class="ofr ofr-premium">
           <div class="ofr-badge">★ z ekspertem</div>
           <div class="ofr-label" data-cms="fmt3_label">Model 3 · Konsultacja z ekspertem</div>
-          <div class="ofr-cena"><span class="ofr-num" data-cms="fmt3_title">499</span><span class="ofr-unit">zł</span></div>
+          <div class="ofr-cena"><span class="ofr-num" data-cms="fmt3_title" data-cena="konsultacja-liczba">1490</span><span class="ofr-unit">zł</span></div>
           <p class="ofr-desc" data-cms="fmt3_text">Konsultacja z naszym ekspertem - nie chatbotem. Ocena przeznaczenia działki oraz dobór najlepszej formy przekształcenia lub adaptacji nieruchomości.</p>
           <ul class="ofr-lista">
             <li><strong>Wszystko z raportu rozszerzonego</strong></li>
@@ -540,7 +537,7 @@
             <div class="eco-node"><div class="eco-dot"></div><div><h4 data-cms="eko1_title">Ponad 200 transakcji na rynku nieruchomości</h4><p data-cms="eko1_text">Zespół gruntowo.pl ma na koncie ponad 200 wspólnych transakcji - sprzedaż nieruchomości lokalowych, gruntów pod zabudowę jednorodzinną oraz poszukiwaną zabudowę wielorodzinną.</p></div></div>
             <div class="eco-node"><div class="eco-dot"></div><div><h4 data-cms="eko2_title">Znajomość rynku nieruchomości</h4><p data-cms="eko2_text">Zdecydowana większość naszych transakcji to powiat poznański, ale doskonale odnajdujemy się także w rynku aparthoteli oraz inwestycjach deweloperskich na siedmiu największych rynkach w Polsce.</p></div></div>
             <div class="eco-node"><div class="eco-dot"></div><div><h4 data-cms="eko3_title">Inwestorzy i fundusze</h4><p data-cms="eko3_text">Lata doświadczeń to szeroka baza kontaktów, która pozwala sprzedać nieruchomość, zanim trafi na portale.</p></div></div>
-            <div class="eco-node"><div class="eco-dot"></div><div><h4 data-cms="eko4_title">Współpraca z najbardziej rozpoznawalnymi</h4><p data-cms="eko4_text">Mamy na koncie współpracę z najbardziej liczącymi się biurami nieruchomości oraz największymi deweloperami w Polsce.</p></div></div>
+            <div class="eco-node"><div class="eco-dot"></div><div><h4 data-cms="eko4_title">Współpraca z największymi biurami i deweloperami</h4><p data-cms="eko4_text">Mamy na koncie współpracę z najbardziej liczącymi się biurami nieruchomości oraz największymi deweloperami w Polsce.</p></div></div>
           </div>
         </div>
         <!-- O NAS: karta "doswiadczenie zespolu" w stylu podgladow raportu -->
@@ -656,7 +653,8 @@
   <script src="zgody.js?v=5"></script>
   <script src="haslo.js?v=20261006"></script>
   <script src="lenis.min.js?v=1"></script>
-  <script src="main.js?v=70"></script>
-  <script src="hero-raport.js?v=8"></script>
+  <script src="cennik.js?v=1"></script>
+  <script src="main.js?v=72"></script>
+  <script src="hero-raport.js?v=9"></script>
 </body>
 </html>

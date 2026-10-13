@@ -140,7 +140,7 @@
   // ---- mapa w wyszukiwarce: raport sie oddala ----
   var s2 = document.getElementById('step-2'), s3 = document.getElementById('step-3');
   if (hero && s2 && window.MutationObserver) {
-    var bylo = false;
+    var bylo = false, bylo3 = false;
     var sprawdz = function () {
       var jest = !s2.classList.contains('hidden') || (s3 && !s3.classList.contains('hidden'));
       hero.classList.toggle('hero-mapa', jest);
@@ -153,15 +153,22 @@
         sb.style.setProperty('--sb-x', Math.round(window.innerWidth / 2 - lewo - szer / 2) + 'px');
       } else if (sb) sb.style.removeProperty('--sb-x');
       // pionowo: lagodnie przewijamy tak, by ramka (a gdy jest wyzsza niz ekran - sama mapa) byla na srodku ekranu
-      if (jest && !bylo) setTimeout(function () {
-        var mb = document.querySelector('#step-2:not(.hidden) .map-box');
-        if (!sb || !mb) return;
-        var vh = window.innerHeight, el = sb.offsetHeight < vh - 80 ? sb : mb, p = naStronie(el);
-        var cel = Math.max(0, Math.round(p.y + el.offsetHeight / 2 - vh / 2));
-        if (Math.abs(cel - window.scrollY) < 8) return;
-        if (window.__lenis && !malo) window.__lenis.scrollTo(cel, { duration: 1.6, easing: function (t) { return 1 - Math.pow(1 - t, 3); } });
-        else window.scrollTo({ top: cel, behavior: malo ? 'auto' : 'smooth' });
-      }, 1150);   // po zwinieciu opisu pod haslem
+      var wysrodkuj = function (ms) {
+        setTimeout(function () {
+          var mb = document.querySelector('#step-2:not(.hidden) .map-box');
+          if (!sb) return;
+          var vh = window.innerHeight, el = (mb && sb.offsetHeight >= vh - 80) ? mb : sb, p = naStronie(el);
+          var cel = Math.max(0, Math.round(p.y + el.offsetHeight / 2 - vh / 2));
+          if (Math.abs(cel - window.scrollY) < 8) return;
+          if (window.__lenis && !malo) window.__lenis.scrollTo(cel, { duration: 1.2, easing: function (t) { return 1 - Math.pow(1 - t, 3); } });
+          else window.scrollTo({ top: cel, behavior: malo ? 'auto' : 'smooth' });
+        }, ms);
+      };
+      if (jest && !bylo) wysrodkuj(1150);   // po zwinieciu opisu pod haslem (mapa)
+      // po kliknieciu dzialki: krok "Ustalamy dzialke..." (ramka sie skraca) - tez idealnie na srodku ekranu
+      var jest3 = !!(s3 && !s3.classList.contains('hidden'));
+      if (jest3 && !bylo3) wysrodkuj(180);
+      bylo3 = jest3;
       bylo = jest;
     };
     var mo = new MutationObserver(sprawdz);

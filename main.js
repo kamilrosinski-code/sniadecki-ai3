@@ -9,7 +9,9 @@
   // ⬇️ Strona rezerwacji konsultacji w Zencal (zespol Kamil + Marcin). Puste = przycisk prowadzi do formularza kontaktowego.
   const ZENCAL_URL = 'https://app.zencal.io/o/gruntowo/kamilrosinski/konsultacja-z-ekspertem';
   const API_GRUNTOWO = 'https://sniadecki-development.pl/gruntowo-api';
-  const CENA_KONSULTACJI = 499;
+  const CENA_KONSULTACJI = 1490;   // zapas; aktualna cena z CRM: window.GruntowoCeny (cennik.js)
+  const cenaKons = function () { return window.GruntowoCeny ? window.GruntowoCeny.konsultacja : CENA_KONSULTACJI; };
+  const cenaKonsHtml = function () { return '<span data-cena="konsultacja">' + cenaKons() + ' zł</span>'; };
   function doCRM(dane) {
     return fetch(CRM_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dane) })
       .then(function (r) { return r.json(); }).catch(function () { return { ok: false }; });
@@ -65,7 +67,7 @@
         '<input name="strona_www" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">' +
         '<label class="km-zgoda"><input type="checkbox" name="zgoda_kontakt"> <span>Chcę otrzymywać od Śniadecki S.A. informacje o usługach gruntowo.pl (oferty, nowości) e-mailem i telefonicznie. Zgoda jest dobrowolna - możesz ją w każdej chwili wycofać.</span></label>' +
         '<p class="km-rodo">Administratorem Twoich danych jest Śniadecki S.A. Wykorzystamy je, aby umówić i przeprowadzić konsultację. Szczegóły w <a href="klauzula.html" target="_blank" rel="noopener">klauzuli informacyjnej</a>.</p>' +
-        '<div class="msg" role="status"></div><button type="submit">Zapłać ' + CENA_KONSULTACJI + ' zł i wybierz termin →</button></form>';
+        '<div class="msg" role="status"></div><button type="submit">Zapłać ' + cenaKonsHtml() + ' i wybierz termin →</button></form>';
       document.body.appendChild(m);
       m.addEventListener('click', function (e) { if (e.target === m || e.target.classList.contains('x')) m.style.display = 'none'; });
       // Mapa od razu (jak w raporcie bezplatnym): pinezka na srodku. Numer dzialki szukamy W TLE -
@@ -140,16 +142,16 @@
           .then(function (r) { return r.json(); })
           .then(function (d) {
             if (d && d.ok && d.redirect) {
-              window.gruntowoZdarzenie && window.gruntowoZdarzenie('begin_checkout', { currency: 'PLN', value: CENA_KONSULTACJI, items: [{ item_name: 'Konsultacja z ekspertem' }] });
+              window.gruntowoZdarzenie && window.gruntowoZdarzenie('begin_checkout', { currency: 'PLN', value: cenaKons(), items: [{ item_name: 'Konsultacja z ekspertem' }] });
               window.location.href = d.redirect; return;
             }
             if (d && d.wylaczone) { kalendarzBezPlatnosci(); return; }   // platnosci online jeszcze nie wlaczone - jak dotad
             msg.textContent = (d && d.blad) || 'Nie udało się rozpocząć płatności. Spróbuj ponownie.';
-            btn.disabled = false; btn.textContent = 'Zapłać ' + CENA_KONSULTACJI + ' zł i wybierz termin →';
+            btn.disabled = false; btn.innerHTML = 'Zapłać ' + cenaKonsHtml() + ' i wybierz termin →';
           })
           .catch(function () {
             msg.textContent = 'Brak połączenia z serwerem płatności. Spróbuj ponownie za chwilę.';
-            btn.disabled = false; btn.textContent = 'Zapłać ' + CENA_KONSULTACJI + ' zł i wybierz termin →';
+            btn.disabled = false; btn.innerHTML = 'Zapłać ' + cenaKonsHtml() + ' i wybierz termin →';
           });
         // Dotychczasowa droga (bez platnosci online): CRM + kalendarz w nowej karcie
         function kalendarzBezPlatnosci() {
@@ -196,7 +198,7 @@
     const m = document.getElementById('konsult-modal'), f = m.querySelector('form');
     f.classList.remove('km-szeroki'); f.classList.remove('km-start');
     f.innerHTML = '<button type="button" class="x" aria-label="Zamknij">×</button>' +
-      '<div style="font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#c9a96e">Konsultacja z ekspertem · ' + CENA_KONSULTACJI + ' zł</div>' +
+      '<div style="font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:#c9a96e">Konsultacja z ekspertem · ' + cenaKonsHtml() + '</div>' +
       '<h3>' + tytul + '</h3>' + tresc + (przyciski || '');
     return f;
   }
@@ -216,7 +218,7 @@
           if (d && d.dzialka && !id) id = d.dzialka;   // dzialka ustalona przez serwer ze wskazanego punktu
           if (d && d.oplacone) {
             try { if (!localStorage.getItem('gruntowo_kons_' + ext)) { localStorage.setItem('gruntowo_kons_' + ext, '1');
-              window.gruntowoZdarzenie && window.gruntowoZdarzenie('purchase', { transaction_id: ext, currency: 'PLN', value: CENA_KONSULTACJI, items: [{ item_name: 'Konsultacja z ekspertem' }] }); } } catch (e) {}
+              window.gruntowoZdarzenie && window.gruntowoZdarzenie('purchase', { transaction_id: ext, currency: 'PLN', value: cenaKons(), items: [{ item_name: 'Konsultacja z ekspertem' }] }); } } catch (e) {}
             try { localStorage.setItem('gruntowo_konsultacja', JSON.stringify({ ext: ext, id: id })); } catch (e) {}
             const fp = komunikatKonsultacji('Płatność przyjęta - dziękujemy!',
               '<p>Teraz wybierz dogodny termin konsultacji w kalendarzu. ' + (id ? 'Po rezerwacji od razu otworzysz raport rozszerzony działki <strong style="color:#dfc090">' + String(id).replace(/[<>&"]/g, '') + '</strong>.' : 'Raport rozszerzony wskazanej działki prześlemy przed spotkaniem.') + '</p>',

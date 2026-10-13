@@ -655,3 +655,54 @@ html.lenis { scroll-behavior: auto; }
   #sourcing > .container { position: relative; z-index: 1; }
   #sourcing .lead, #sourcing .tag { text-shadow: 0 1px 12px rgba(0,0,0,.6); }
 }
+
+
+/* =====================================================================
+   TELEFON: mniej tekstu - zostaja naglowki i najwazniejsze hasla
+   (.m-ukryj - ukryte na telefonie, .m-tylko - widoczne tylko na telefonie)
+   ===================================================================== */
+.m-tylko { display: none; }
+@media (max-width: 760px) {
+  .m-ukryj { display: none !important; }
+  .m-tylko { display: inline; }
+  .hero-sub { font-size: 1rem; line-height: 1.55; }
+  /* opisy pod haslami sekcji */
+  .sekcja-analiza .intro-lead-mocny + .lead,
+  #sourcing .naglowek-dyn .lead,
+  .src-card p,
+  .ofr-desc,
+  .haslo-sub,
+  .dataroom p,
+  #publikacje .naglowek-dyn .lead,
+  .pub-karta p,
+  .pub-karta-liczby,
+  #ekosystem .lead,
+  .eco-node p,
+  #kontakt .lead,
+  .dataroom { display: none; }
+  .pub-karta-liczby { display: none !important; }
+  .pub-karta-stopka b { white-space: nowrap; }
+  [data-cena] { white-space: nowrap; }
+  /* liczby w hero i w "O nas": ciasna siatka zamiast kolumny */
+  .hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem 1rem; padding: 1rem 1.25rem; }
+  .hero-stats .hstat-d { display: none; }
+  .hero-stats .hstat-l { font-size: .62rem; }
+  .eco-staty { grid-template-columns: repeat(3, 1fr) !important; gap: .4rem; }
+  .eco-staty div { padding: .6rem .5rem; }
+  .eco-staty span { font-size: .6rem; }
+  .eco-node h4 { margin-bottom: 0; }
+  .eco-node { padding-bottom: .6rem; }
+  .ofr-lista { margin-top: .4rem; }
+  .pub-karta h3 { font-size: 1.25rem; }
+  /* kafelki modeli: male, 2x2 - widac je razem z animacja ponizej */
+  #sourcing .cards { grid-template-columns: 1fr 1fr; }
+  .src-card { padding: .8rem .75rem .75rem; min-height: 0; }
+  .src-card .card-n { font-size: .6rem; margin-bottom: .2rem; display: block; }
+  .src-card h3 { font-size: 0; line-height: 0; margin: 0; }
+  .src-card h3::before { content: attr(data-m); font-size: .92rem; line-height: 1.25; font-weight: 500; }
+  .src-card:hover { transform: none; }
+  .src-card.card-hi { background: rgba(201,169,110,.12); }
+  .sourcing-layout { gap: 1.25rem; }
+  .hw-modele .hw-przod.hwm { min-height: 0; }
+  #sourcing .hw-modele { height: calc(400px * var(--hw-skala)); margin: 1rem auto 0; }
+}

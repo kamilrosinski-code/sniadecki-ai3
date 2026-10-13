@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta name="robots" content="noindex, nofollow" />
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Raport o terenie - gruntowo.pl</title>
@@ -246,7 +245,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             Kup raport rozszerzony
           </a>
-          <div class="premium-banner-price"><strong>69 zł</strong><span>dostęp od razu</span></div>
+          <div class="premium-banner-price"><strong data-cena="raport">159 zł</strong><span>dostęp od razu</span></div>
           <div class="znaczek-payu" data-payu-znaczek></div>
         </div>
       </div>
@@ -316,7 +315,7 @@
         <!-- WARIANT 1 -->
         <div class="wariant">
           <div class="wariant-eyebrow">Raport rozszerzony</div>
-          <div class="wariant-price"><span class="wariant-num">69 zł</span><span class="wariant-unit">jednorazowo</span></div>
+          <div class="wariant-price"><span class="wariant-num" data-cena="raport">159 zł</span><span class="wariant-unit">jednorazowo</span></div>
           <p class="wariant-desc">Rozszerzona analiza działki przygotowana przez nasz model analityczny na podstawie rejestrów publicznych.</p>
           <ul class="wariant-lista">
             <li>Werdykt 0-100 z plusami, minusami i rekomendacją</li>
@@ -326,7 +325,7 @@
             <li>Pozwolenia na budowę w promieniu 1 km</li>
             <li>Lista kontrolna przed zakupem i raport w PDF</li>
           </ul>
-          <a href="#" class="wariant-btn" data-kup-raport>Kup raport rozszerzony - 69 zł</a>
+          <a href="#" class="wariant-btn" data-kup-raport>Kup raport rozszerzony - <span data-cena="raport">159 zł</span></a>
           <div class="znaczek-payu" data-payu-znaczek></div>
         </div>
 
@@ -334,7 +333,7 @@
         <div class="wariant wariant-premium">
           <div class="wariant-badge">★ z ekspertem</div>
           <div class="wariant-eyebrow">Raport z konsultacją eksperta</div>
-          <div class="wariant-price"><span class="wariant-num">499 zł</span><span class="wariant-unit">jednorazowo</span></div>
+          <div class="wariant-price"><span class="wariant-num" data-cena="konsultacja">1490 zł</span><span class="wariant-unit">jednorazowo</span></div>
           <p class="wariant-desc">Wszystko z raportu rozszerzonego <strong>plus indywidualna konsultacja</strong> potencjału gruntu z naszym ekspertem.</p>
           <ul class="wariant-lista">
             <li><strong>Wszystko z raportu rozszerzonego</strong></li>
@@ -356,8 +355,9 @@
 
 <script src="zgody.js?v=2"></script>
 <script src="haslo.js?v=20261006"></script>
-<script src="raport.js?v=20261013a"></script>
-<script src="platnosc.js?v=20261002r"></script>
+<script src="cennik.js?v=1"></script>
+<script src="raport.js?v=20261013b"></script>
+<script src="platnosc.js?v=20261013c"></script>
 <script>
   // Formularz hasla w raporcie darmowym: po poprawnym hasle otwieramy raport rozszerzony TEJ SAMEJ dzialki.
   GruntowoHaslo.podlacz(document.getElementById('haslo-raport'), {
