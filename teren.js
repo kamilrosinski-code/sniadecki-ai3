@@ -28,7 +28,21 @@
   ids = ids.filter(function (s, i) { return ids.indexOf(s) === i; }).slice(0, 8);
   var D = [];   // dane dzialek
 
-  function ponow(url, ile) { return fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r; }).catch(function (e) { if (!ile) throw e; return new Promise(function (ok) { setTimeout(ok, 1500); }).then(function () { return ponow(url, ile - 1); }); }); }
+  // pobranie z limitem czasu (uslugi gmin potrafia "wisiec" minutami - wtedy cala tabela stala na "…") i ponowieniem
+  function ponow(url, ile, ms) {
+    var ac = window.AbortController ? new AbortController() : null, t = ac ? setTimeout(function () { ac.abort(); }, ms || 20000) : null;
+    return fetch(url, ac ? { signal: ac.signal } : undefined).then(function (r) { if (t) clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return r; })
+      .catch(function (e) { if (t) clearTimeout(t); if (!ile) throw e; return new Promise(function (ok) { setTimeout(ok, 1500); }).then(function () { return ponow(url, ile - 1, ms); }); });
+  }
+  // dane opisowe planu z KIMPZP (uchwala, data, poziom informatyzacji, linki) - gdy symbolu terenu brak (plan rastrowy)
+  function infoPlanu(html) {
+    var t = String(html || '').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+    var m = function (re) { var x = t.match(re); return x ? x[1].trim() : ''; };
+    var link = (String(html).match(/Tre[sś][cć] uchwa[łl]y[\s\S]{0,200}?href="([^"]+)"/i) || [])[1] || m(/Treść uchwały (https?:\/\/\S+)/);
+    var info = { uchwala: m(/Uchwała ([^\s]+\/[^\s]+)/), data: m(/Data uchwały (\d{4}-\d{2}-\d{2})/), poziom: m(/Poziom informatyzacji (\S+)/),
+      dziennik: m(/Dziennik (.+?) Numer planu/), nazwa: m(/Nazwa planu (.+?) (?:Zmiana|Treść|Rysunek)/), link: link || '' };
+    return info.uchwala || info.data ? info : null;
+  }
   function pierscienie(wkt) {
     return (String(wkt || '').match(/\(([^()]+)\)/g) || []).map(function (r) {
       return r.replace(/[()]/g, '').split(',').map(function (p) { return p.trim().split(/\s+/).map(Number); });
@@ -79,7 +93,7 @@
     var zapytaj = function (p) {
       var url = URL_KIMPZP + '?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&SRS=EPSG:4326&BBOX=' + [p[0] - d, p[1] - d, p[0] + d, p[1] + d].join(',')
         + '&WIDTH=11&HEIGHT=11&STYLES=&FORMAT=image/png&LAYERS=plany_granice,wektor-str&QUERY_LAYERS=plany_granice,wektor-str&INFO_FORMAT=text/html&FEATURE_COUNT=5&X=5&Y=5';
-      return ponow(url, 1).then(function (r) { return r.text(); }).then(function (h) { if (dz && !dz.mpzpPdf) dz.mpzpPdf = linkZHtml(h); var s = symbolZHtml(h); return s || (/plany_granice|wektor/i.test(h) && /<td/i.test(h) ? '?' : ''); }).catch(function () { return null; });
+      return ponow(url, 1, 12000).then(function (r) { return r.text(); }).then(function (h) { if (dz && !dz.mpzpPdf) dz.mpzpPdf = linkZHtml(h); if (dz && !dz.mpzpInfo) dz.mpzpInfo = infoPlanu(h); var s = symbolZHtml(h); return s || (/plany_granice|wektor/i.test(h) && /<td/i.test(h) ? '?' : ''); }).catch(function () { return null; });
     };
     var wyn = [], i2 = 0;
     var kolejne = function () { if (i2 >= pkt.length) return Promise.resolve(); var part = pkt.slice(i2, i2 + 4); i2 += 4; return Promise.all(part.map(zapytaj)).then(function (w) { wyn.push.apply(wyn, w); return kolejne(); }); };
@@ -97,14 +111,14 @@
     var url = URL_RU + 'wms-pog/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&SRS=EPSG:4326&BBOX=' + [lon - d, lat - d, lon + d, lat + d].join(',')
       + '&WIDTH=101&HEIGHT=101&X=50&Y=50&LAYERS=' + L1.join(',') + '&QUERY_LAYERS=' + L1.join(',') + '&STYLES=&INFO_FORMAT=application/json&FEATURE_COUNT=20';
     var zSerwera = function (q) {
-      return ponow(URL_POG + '?' + q + '&lon=' + lon.toFixed(6) + '&lat=' + lat.toFixed(6), 1).then(function (r) { return r.json(); })
+      return ponow(URL_POG + '?' + q + '&lon=' + lon.toFixed(6) + '&lat=' + lat.toFixed(6), 0, 45000).then(function (r) { return r.json(); })
         .then(function (j) {
           if (!j || !j.ok || !j.strefa) return null;
           var w = j.strefa.wskazniki;
           return { kod: j.strefa.symbol, ozn: j.strefa.oznaczenie, projekt: !!(j.plan && j.plan.projekt), wsk: w ? { i: w.i, pz: w.pz, h: w.h, pbc: w.pbc } : null };
         }).catch(function () { return null; });
     };
-    return ponow(url, 1).then(function (r) { return r.json(); }).then(function (j) {
+    return ponow(url, 1, 15000).then(function (r) { return r.json(); }).then(function (j) {
       var f = j.features || [];
       var str = f.filter(function (x) { return /^APP\.POG\.S[A-Z]{1,2}\./.test(String(x.id)); })[0];
       var plan = f.filter(function (x) { return /^APP\.POG\.(PrawnieWiazacy|WTrakcie|WOpracowaniu)/.test(String(x.id)); })[0];
@@ -150,13 +164,15 @@
       return (link.match(/details\/mpzp\/(\d+)/) || [])[1] || '';
     }).catch(function () { return ''; });
   }
-  function wskaznikiMPZP(d, gotowe) {
+  function wskaznikiMPZP(d, gotowe, pdfReczny) {
     var budowlane = (d.udzialy || []).filter(function (u) { return u.symbol && !klasa(u.symbol); });
-    if (!budowlane.length) return Promise.resolve();          // brak planu albo same drogi/zielen
-    var sym = budowlane[0].symbol;
-    return planRU(d.srodek[0], d.srodek[1]).then(function (idRU) {
-      var baza = idRU ? URL_USTALENIA + '?id=' + idRU : d.mpzpPdf ? URL_USTALENIA + '?pdf=' + encodeURIComponent(d.mpzpPdf) : '';
-      if (!baza) { d.wskStan = 'plan miejscowy bez dostępnej uchwały'; gotowe(); return; }
+    if (!budowlane.length && !pdfReczny) return Promise.resolve();          // brak planu albo same drogi/zielen
+    var sym = budowlane.length ? budowlane[0].symbol : '?';
+    d.wskStan = 'szukamy uchwały planu…'; d.wskBrakZrodla = false; gotowe();
+    return (pdfReczny ? Promise.resolve('') : planRU(d.srodek[0], d.srodek[1])).then(function (idRU) {
+      var pdf = pdfReczny || d.mpzpPdf;
+      var baza = idRU ? URL_USTALENIA + '?id=' + idRU : pdf ? URL_USTALENIA + '?pdf=' + encodeURIComponent(pdf) : '';
+      if (!baza) { d.wskStan = ''; d.wskBrakZrodla = true; gotowe(); return; }   // UI pokaze pole na link do uchwaly
       return PRO.zapewnijDostep().then(function () {
         var t = '&t=' + encodeURIComponent(tokenPRO());
         var symbol = sym !== '?' ? Promise.resolve([sym]) : (d.wskStan = 'ustalamy teren na rysunku planu…', gotowe(),
@@ -174,6 +190,9 @@
       });
     }).catch(function (e) { d.wskStan = 'zapisy planu: ' + (e && e.message || 'błąd'); gotowe(); });
   }
+  // przycisk "Odczytaj plan z AI" w tabeli chlonnosci (teren-chlonnosc.js)
+  window.TerenAI = function (d, pdf) { return wskaznikiMPZP(d, odswiezGlobal, pdf); };
+  var odswiezGlobal = function () {};
   function mnoznik(dz) {
     if (dz.udzialy && dz.udzialy.some(function (u) { return u.symbol && u.symbol !== '?'; })) {
       var s = 0, op = [];
@@ -228,7 +247,8 @@
       var mn = mnoznik(d), wart = mediana ? mediana * d.pow * mn.m : 0;
       suma.pow += d.pow; suma.wart += wart; suma.bazowa += mediana ? mediana * d.pow : 0;
       var mp = d.udzialy === undefined ? '<span class="wczyt">…</span>' : !d.udzialy ? 'brak danych' :
-        d.udzialy.filter(function (u) { return u.symbol; }).length ? d.udzialy.map(function (u) { return (u.symbol === '?' ? 'plan (symbol nieodczytany)' : esc(u.symbol)) + (d.udzialy.length > 1 ? ' ~' + Math.round(u.udzial * 100) + '%' : ''); }).join(', ') : 'brak planu';
+        d.udzialy.filter(function (u) { return u.symbol; }).length ? d.udzialy.map(function (u) { return (u.symbol === '?' ? (d.wskMPZP && d.wskMPZP.symbol ? esc(d.wskMPZP.symbol) : 'plan obowiązuje') : esc(u.symbol)) + (d.udzialy.length > 1 ? ' ~' + Math.round(u.udzial * 100) + '%' : ''); }).join(', ')
+          + (d.mpzpInfo ? '<div style="font-size:.72rem;color:var(--sage)">' + esc([d.mpzpInfo.uchwala && 'uchwała ' + d.mpzpInfo.uchwala, d.mpzpInfo.data && d.mpzpInfo.data.slice(0, 4), d.mpzpInfo.poziom === 'rastrowy' ? 'plan rastrowy (skan)' : ''].filter(Boolean).join(' · ')) + '</div>' : '') : 'brak planu';
       var pg = d.pog === undefined ? '<span class="wczyt">…</span>' : !d.pog ? 'brak' : esc(d.pog.ozn || d.pog.kod) + (STREFY[d.pog.kod] ? ' – ' + STREFY[d.pog.kod] : '') + (d.pog.projekt ? ' <em>(projekt)</em>' : '');
       return '<tr><td data-k="#"><span class="kolor-kropka" style="background:' + KOLORY[i % KOLORY.length] + '"></span>' + (i + 1) + '</td>'
         + '<td data-k="Działka"><span class="mono" style="font-size:.78rem">' + esc(d.id) + '</span><div class="opis" style="color:var(--sage);font-size:.75rem">obręb ' + esc(d.obreb) + '</div></td>'
@@ -312,10 +332,13 @@
         odswiez();
       }).catch(function () { $('k-wart').textContent = 'brak danych'; $('k-wart-s').textContent = 'serwer cen nie odpowiedział'; });
       // przeznaczenie kazdej dzialki (po kolei - nie obciazamy uslug panstwowych)
+      // plan ogolny: dla wszystkich dzialek od razu (kazda osobno, z limitem czasu); plan miejscowy - dzialka po dzialce
+      odswiezGlobal = odswiez;
+      D.forEach(function (d) { pog(d.id, d.srodek[0], d.srodek[1]).catch(function () { return null; }).then(function (w) { d.pog = w; odswiez(); }); });
       var kolejna = function (i) {
         if (i >= D.length) return;
-        Promise.all([udzialyMPZP(D[i].rr, D[i]).catch(function () { return null; }), pog(D[i].id, D[i].srodek[0], D[i].srodek[1]).catch(function () { return null; })])
-          .then(function (w) { D[i].udzialy = w[0]; D[i].pog = w[1]; odswiez(); kolejkaAI.push(D[i]); dalejAI(); kolejna(i + 1); });
+        udzialyMPZP(D[i].rr, D[i]).catch(function () { return null; })
+          .then(function (w) { D[i].udzialy = w; odswiez(); kolejkaAI.push(D[i]); dalejAI(); kolejna(i + 1); });
       };
       // zapisy planow przez AI - po jednej dzialce naraz
       var kolejkaAI = [], pracujeAI = false;

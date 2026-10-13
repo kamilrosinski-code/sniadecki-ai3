@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <link rel="stylesheet" href="raport-style.css?v=20261009d" />
-<link rel="stylesheet" href="pro.css?v=2" />
+<link rel="stylesheet" href="pro.css?v=3" />
 </head>
 <body>
 <div class="bg-grid"></div>
@@ -53,11 +53,12 @@
         <h2 class="pro-h2">Chłonność terenu</h2>
         <label class="chl-typ-l no-print">Typ zabudowy <select id="chl-typ"></select></label>
       </div>
-      <p style="font-size:.82rem;color:var(--sage);margin:-.3rem 0 .9rem">Ile da się zbudować według wskaźników planu: powierzchnia zabudowy, PUM i liczba domów lub mieszkań. Wskaźniki odczytujemy z planu miejscowego (AI czyta uchwałę) albo ze strefy planu ogólnego – każdą wartość możesz poprawić w tabeli.</p>
-      <div class="teren-kafle" id="chl-wyniki"></div>
+      <p class="chl-lead">Ile da się zbudować według planu. Złote pola możesz zmieniać – wyniki przeliczają się od razu. Wartości z planu odczytujemy automatycznie (plan miejscowy – AI czyta uchwałę, plan ogólny – wskaźniki strefy).</p>
+      <div id="chl-kluczowe" class="kp"></div>
       <div id="chl-uwagi"></div>
+      <h3 class="chl-h3">Działki i wskaźniki z planu</h3>
       <div style="overflow-x:auto"><table class="teren-tab chl-tab">
-        <thead><tr><th>Działka / źródło</th><th>Pow. budowlana</th><th>Maks. zabudowa %</th><th>Intensywność</th><th>Wysokość m</th><th>Kondygnacje</th><th>Biol. czynna %</th><th>Min. działka m²</th><th>PUM</th></tr></thead>
+        <thead><tr><th>Działka / źródło</th><th>Pow. budowlana</th><th>Zabudowa %</th><th>Intensywność</th><th>Wysokość m</th><th>Kondygnacje</th><th>Min. działka m²</th><th>Wynik</th></tr></thead>
         <tbody id="chl-wsk"></tbody>
       </table></div>
     </section>
@@ -80,7 +81,7 @@
   </div>
 </main>
 <script src="pro-sledz.js?v=1"></script>
-<script src="teren-chlonnosc.js?v=1"></script>
-<script src="teren.js?v=3"></script>
+<script src="teren-chlonnosc.js?v=2"></script>
+<script src="teren.js?v=4"></script>
 </body>
 </html>

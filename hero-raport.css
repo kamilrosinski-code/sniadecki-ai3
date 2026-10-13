@@ -477,3 +477,68 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
   .sekcja-analiza .intro-tekst { opacity: 1 !important; transform: none !important; }
 }
 #src-visual.src-wizual { overflow: visible; }
+
+/* =====================================================================
+   O NAS: karta "doswiadczenie zespolu" + mocniej podkreslone liczby
+   ===================================================================== */
+@media (min-width: 1100px) {
+  #ekosystem > .container { max-width: 1320px; }
+  #ekosystem .eco-layout { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 3vw; }
+}
+.eco-staty { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin: 1.4rem 0 .4rem; }
+.eco-staty div { padding: .9rem 1rem; border-radius: var(--hw-r); background: var(--hw-tlo); border: 1px solid var(--hw-ramka); }
+.eco-staty b { display: block; font-family: var(--fd); font-size: clamp(1.5rem, 2.2vw, 2rem); font-weight: 500; color: var(--gold); line-height: 1.1; }
+.eco-staty span { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--m); }
+.hw-onas { width: 100%; }
+.hw-onas .hw-tyl { transform: translateZ(-180px) rotateY(-14deg) rotateX(5deg) rotateZ(-1.2deg); }
+.hw-onas:not(.hw-gra) .hw-przod, .hw-onas:not(.hw-gra) .hw-przod *, .hw-onas:not(.hw-gra) .hw-tyl, .hw-onas:not(.hw-gra) .hw-scena { animation-play-state: paused !important; }
+.hw3 { height: 500px; }
+.hw3-uklad { display: grid; grid-template-columns: 300px 1fr; gap: 14px; padding: 14px 20px 6px; }
+.hw3-mapa { position: relative; height: 290px; border-radius: 12px; background: radial-gradient(ellipse at 45% 45%, rgba(201,169,110,.08), transparent 70%), rgba(255,255,255,.02); border: 1px solid rgba(201,169,110,.14); overflow: hidden; }
+.hw3-polska { position: absolute; left: 50%; top: 50%; width: 270px; height: 260px; transform: translate(-50%, -52%); overflow: visible; }
+.hw3-obrys { fill: rgba(201,169,110,.06); stroke: rgba(223,192,144,.55); stroke-width: 1.2; stroke-linejoin: round; stroke-dasharray: 1200; stroke-dashoffset: 1200; animation: hw3Obrys 2.2s .6s ease-out forwards; }
+@keyframes hw3Obrys { to { stroke-dashoffset: 0; } }
+.hw3-linia { fill: none; stroke: rgba(223,192,144,.5); stroke-width: 1; stroke-dasharray: 3 4; opacity: 0; animation: hwFade .6s both; animation-delay: calc(1.8s + var(--i) * .15s); }
+.hw3-miasto circle { fill: var(--gold); opacity: 0; animation: hwFade .5s both; animation-delay: calc(1.6s + var(--i) * .15s); }
+.hw3-miasto text { font: 500 9.5px var(--fb); fill: rgba(242,240,235,.85); opacity: 0; animation: hwFade .5s both; animation-delay: calc(1.7s + var(--i) * .15s); }
+.hw3-miasto.glowne circle { fill: #dfc090; }
+.hw3-miasto.glowne text { font-size: 11px; fill: #f2f0eb; }
+.hw3-puls { fill: rgba(223,192,144,.18); stroke: rgba(223,192,144,.5); transform-box: fill-box; transform-origin: center; animation: hw3Puls 2.4s 1.6s ease-out infinite; opacity: 0; }
+@keyframes hw3Puls { 0% { opacity: .9; transform: scale(.3); } 100% { opacity: 0; transform: scale(1.4); } }
+.hw3-mapa-t { position: absolute; left: 10px; bottom: 9px; font-size: 9.5px; color: rgba(242,240,235,.75); background: rgba(14,15,12,.7); padding: 3px 8px; border-radius: 5px; }
+.hw3-liczby { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; }
+.hw3-l { padding: 14px 14px 12px; border-radius: 12px; background: rgba(255,255,255,.035); border: 1px solid rgba(201,169,110,.16); animation: hwKafel .6s both; }
+.hw3-l:nth-child(1) { animation-delay: .9s; } .hw3-l:nth-child(2) { animation-delay: 1.05s; } .hw3-l:nth-child(3) { animation-delay: 1.2s; } .hw3-l:nth-child(4) { animation-delay: 1.35s; }
+.hw3-l b { display: block; white-space: nowrap; font-family: var(--fd); font-size: 27px; font-weight: 500; color: #dfc090; line-height: 1; }
+.hw3-l b em { font-style: normal; }
+.hw3-l span { display: block; margin-top: 6px; font-size: 11px; line-height: 1.35; color: rgba(242,240,235,.7); }
+.hw3-chipy { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 20px 12px; }
+.hw3-chipy span { font-size: 10.5px; color: rgba(242,240,235,.55); margin-right: 2px; }
+.hw3-chipy i { font-style: normal; font-size: 11px; color: #f2f0eb; border: 1px solid rgba(201,169,110,.3); border-radius: 20px; padding: 4px 10px; animation: hwKafel .5s both; }
+.hw3-chipy i:nth-of-type(1) { animation-delay: 1.6s; } .hw3-chipy i:nth-of-type(2) { animation-delay: 1.7s; } .hw3-chipy i:nth-of-type(3) { animation-delay: 1.8s; } .hw3-chipy i:nth-of-type(4) { animation-delay: 1.9s; } .hw3-chipy i:nth-of-type(5) { animation-delay: 2s; }
+.hw3 .hw-stopka > span:first-child { font-size: 10.5px; }
+@media (max-width: 1099px) { .hw-onas .hw-tyl { display: none; } .eco-staty { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 520px) { .eco-staty { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .hw3 *, .hw3-obrys { animation: none !important; opacity: 1 !important; stroke-dashoffset: 0 !important; } }
+
+/* =====================================================================
+   CENNIK "Wybierz model...": kafelki wjezdzaja po kolei, po kazdym przechodzi blask (jak na kartach raportu)
+   ===================================================================== */
+.ofr::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2; border-radius: inherit; overflow: hidden;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.13) 45%, rgba(201,169,110,.07) 52%, transparent 60%); background-size: 250% 100%; background-position: 130% 0; }
+.ofr-badge { z-index: 3; }
+.oferty-warianty .ofr { opacity: 0; transform: translateY(28px); }
+.oferty-warianty.widoczne .ofr { animation: ofrWejscie .8s cubic-bezier(.2,.8,.2,1) forwards; }
+.oferty-warianty.widoczne .ofr:nth-child(1) { animation-delay: .1s; } .oferty-warianty.widoczne .ofr:nth-child(2) { animation-delay: .3s; } .oferty-warianty.widoczne .ofr:nth-child(3) { animation-delay: .5s; }
+@keyframes ofrWejscie { to { opacity: 1; transform: none; } }
+/* blask: po wejsciu po kolei (1 -> 2 -> 3), potem co kilkanascie sekund jeszcze raz po kolei */
+.oferty-warianty.widoczne .ofr::after { animation: ofrBlysk 14s ease-in-out infinite; }
+.oferty-warianty.widoczne .ofr:nth-child(1)::after { animation-delay: .9s; }
+.oferty-warianty.widoczne .ofr:nth-child(2)::after { animation-delay: 1.5s; }
+.oferty-warianty.widoczne .ofr:nth-child(3)::after { animation-delay: 2.1s; }
+@keyframes ofrBlysk { 0% { background-position: 130% 0; } 14% { background-position: -60% 0; } 100% { background-position: -60% 0; } }
+.oferty-warianty.widoczne .ofr:hover::after { animation: hwBlysk 1.4s ease-in-out both; }
+/* wyrozniona oferta: lekki poblysk ramki razem z blaskiem */
+.oferty-warianty.widoczne .ofr-premium { animation-name: ofrWejscie, ofrRamka; animation-duration: .8s, 14s; animation-delay: .5s, 2.1s; animation-iteration-count: 1, infinite; animation-fill-mode: forwards, none; }
+@keyframes ofrRamka { 0%, 20% { box-shadow: 0 8px 40px rgba(201,169,110,.1); } 8% { box-shadow: 0 8px 60px rgba(201,169,110,.3); } }
+@media (prefers-reduced-motion: reduce) { .oferty-warianty .ofr { opacity: 1; transform: none; animation: none !important; } .ofr::after { animation: none !important; } }

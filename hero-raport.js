@@ -98,7 +98,7 @@
     box.querySelectorAll('[data-licz]').forEach(function (el) {
       var karta = el.closest('.hwm');
       if (karta && !karta.classList.contains('aktywne')) return;   // modele: licznik rusza przy pokazaniu karty
-      licz(el, karta ? 900 : 2600, 1200);
+      licz(el, karta ? 900 : box.classList.contains('hw-onas') ? 1000 : 2600, 1200);
     });
   }
   // modele: przy przelaczeniu karty liczniki od nowa
@@ -184,5 +184,14 @@
       var ioK = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { kafelTekst.classList.add('widoczny'); ioK.disconnect(); } }, { threshold: 0.3 });
       ioK.observe(kafelTekst);
     } else kafelTekst.classList.add('widoczny');
+  }
+
+  // ---- cennik: kafelki modeli wjezdzaja i blyskaja po kolei, gdy sekcja wjedzie na ekran ----
+  var cennik = document.querySelector('.oferty-warianty');
+  if (cennik) {
+    if (window.IntersectionObserver && !malo) {
+      var ioC = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { cennik.classList.add('widoczne'); ioC.disconnect(); } }, { threshold: 0.25 });
+      ioC.observe(cennik);
+    } else cennik.classList.add('widoczne');
   }
 })();
