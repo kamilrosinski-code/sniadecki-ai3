@@ -59,8 +59,10 @@
     });
   }
   function laduj(box) {
-    var orto = box.querySelector('.hw-orto');
-    if (!orto || orto.dataset.ladowane) return; orto.dataset.ladowane = '1';
+    box.querySelectorAll('.hw-orto').forEach(function (orto) { ladujMape(box, orto); });
+  }
+  function ladujMape(box, orto) {
+    if (orto.dataset.ladowane) return; orto.dataset.ladowane = '1';
     pobierzKafle().then(function (lista) {
       return Promise.all(lista.map(function (k) { return obraz(k.src, 'hw-tile', k.x, k.y); }));
     }).then(function (imgs) {
@@ -68,8 +70,8 @@
       imgs.forEach(function (im) { orto.appendChild(im); });
       orto.classList.add('gotowe');
       obraz(orto.dataset.mpzp ? MPZP : KIEG, orto.dataset.mpzp ? 'hw-mpzp' : 'hw-granice').then(function (im) { if (im) orto.appendChild(im); });
-      var kopia = box.querySelector('.hw-orto-kopia');            // rozmyta karta w tle
-      if (kopia) imgs.forEach(function (im) { kopia.appendChild(im.cloneNode()); });
+      // kopie zdjecia: rozmyta karta w tle (hero) i miniatury "historii zdjec" (model 1) - tylko raz na karte
+      if (!box.dataset.kopie) { box.dataset.kopie = '1'; box.querySelectorAll('.hw-orto-kopia').forEach(function (kopia) { imgs.forEach(function (im) { kopia.appendChild(im.cloneNode()); }); }); }
     });
   }
 
@@ -93,8 +95,19 @@
     if (box.classList.contains('hw-gra')) return;
     box.classList.add('hw-gra');
     var pkt = box.querySelector('#hw-punkty'); if (pkt) licz(pkt, 1500, 1600);
-    box.querySelectorAll('[data-licz]').forEach(function (el) { licz(el, 2600, 1200); });
+    box.querySelectorAll('[data-licz]').forEach(function (el) {
+      var karta = el.closest('.hwm');
+      if (karta && !karta.classList.contains('aktywne')) return;   // modele: licznik rusza przy pokazaniu karty
+      licz(el, karta ? 900 : 2600, 1200);
+    });
   }
+  // modele: przy przelaczeniu karty liczniki od nowa
+  if (window.MutationObserver) document.querySelectorAll('.hwm').forEach(function (karta) {
+    new MutationObserver(function () {
+      var box = karta.closest('.hero-wizual');
+      if (karta.classList.contains('aktywne') && box && box.classList.contains('hw-gra')) karta.querySelectorAll('[data-licz]').forEach(function (el) { licz(el, 500, 1100); });
+    }).observe(karta, { attributes: true, attributeFilter: ['class'] });
+  });
   karty.forEach(function (box) {
     var wHero = hero && hero.contains(box);
     if (!window.IntersectionObserver) { laduj(box); start(box); return; }
@@ -135,8 +148,13 @@
       if (jest && !bylo) setTimeout(function () {
         var mb = document.querySelector('#step-2:not(.hidden) .map-box') || document.getElementById('search-box');
         if (!mb) return; var r = mb.getBoundingClientRect();
-        if (r.bottom > window.innerHeight - 20 || r.top < 70) window.scrollBy({ top: r.top - Math.max(90, (window.innerHeight - r.height) / 2.6), behavior: malo ? 'auto' : 'smooth' });
-      }, 120);
+        // tylko tyle, ile trzeba, zeby dol mapy byl na ekranie (raport zostaje widoczny w tle)
+        var brak = r.bottom - (window.innerHeight - 28);
+        if (brak <= 0) return;
+        var cel = window.scrollY + Math.min(brak, Math.max(0, r.top - 90));
+        if (window.__lenis && !malo) window.__lenis.scrollTo(cel, { duration: 1.6, easing: function (t) { return 1 - Math.pow(1 - t, 3); } });
+        else window.scrollTo({ top: cel, behavior: malo ? 'auto' : 'smooth' });
+      }, 1150);   // po zwinieciu opisu pod haslem
       bylo = jest;
     };
     var mo = new MutationObserver(sprawdz);

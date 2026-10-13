@@ -1047,6 +1047,9 @@
       visual.querySelectorAll('.src-panel').forEach(function (p) {
         p.classList.toggle('aktywne', p.classList.contains('src-panel-' + nr));
       });
+      visual.querySelectorAll('.hwm').forEach(function (p) {          // karty-ekrany modeli (hero-raport.css)
+        if (p.classList.contains('hwm-' + nr) !== p.classList.contains('aktywne')) p.classList.toggle('aktywne');
+      });
       karty.forEach(function (k) {
         k.classList.toggle('card-hi', k.getAttribute('data-model') === String(nr));
       });
