@@ -161,4 +161,28 @@
     mo.observe(s2, { attributes: true, attributeFilter: ['class'] }); if (s3) mo.observe(s3, { attributes: true, attributeFilter: ['class'] });
     sprawdz();
   }
+
+  // ---- sekcja "Nie dostajesz kolejnych map...": naglowek slowo po slowie, kafelek wjezdza po wjechaniu na ekran ----
+  var kafelTekst = document.querySelector('.sekcja-analiza .intro-tekst');
+  if (kafelTekst) {
+    var h2 = kafelTekst.querySelector('.h2'), nr = 0;
+    var rozbij = function (wezel) {
+      Array.prototype.slice.call(wezel.childNodes).forEach(function (n) {
+        if (n.nodeType === 3) {
+          var frag = document.createDocumentFragment();
+          n.textContent.split(/(\s+)/).forEach(function (cz) {
+            if (!cz) return;
+            if (/^\s+$/.test(cz)) { frag.appendChild(document.createTextNode(cz)); return; }
+            var sp = document.createElement('span'); sp.className = 'ia-slowo'; sp.style.setProperty('--i', nr++); sp.textContent = cz; frag.appendChild(sp);
+          });
+          n.parentNode.replaceChild(frag, n);
+        } else if (n.nodeType === 1 && n.tagName !== 'BR') rozbij(n);
+      });
+    };
+    if (h2 && !malo) rozbij(h2);
+    if (window.IntersectionObserver && !malo) {
+      var ioK = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { kafelTekst.classList.add('widoczny'); ioK.disconnect(); } }, { threshold: 0.3 });
+      ioK.observe(kafelTekst);
+    } else kafelTekst.classList.add('widoczny');
+  }
 })();

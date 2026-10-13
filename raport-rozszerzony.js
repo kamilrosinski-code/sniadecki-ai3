@@ -25,7 +25,7 @@
 (function () {
   'use strict';
 
-  var RAPORT_JS = 'raport.js?v=20261012a';
+  var RAPORT_JS = 'raport.js?v=20261013a';
 
   var URL_KIMPZP = 'https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego';
   var URL_POG = 'https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin';
@@ -535,7 +535,11 @@
       }
       if (w && (w.status === 'brak' || w.status === 'nieznany')) return { status: w.status };
       // raport.js nie zdazyl / blad - pytamy sami (tylko dane opisowe)
-      return pobierzTekst(wmsFI(URL_KIMPZP, 'plany_granice,wektor-str', s[0], s[1], 'text/html'), 20000).then(function (html) {
+      var adresFI = wmsFI(URL_KIMPZP, 'plany_granice,wektor-str', s[0], s[1], 'text/html');
+      // gdy serwer planow gminy nie odpowiada - nasz posrednik z pamiecia ostatniej udanej odpowiedzi (kimpzp.php)
+      return pobierzTekst(adresFI, 20000).catch(function () {
+        return pobierzTekst('https://sniadecki-development.pl/gruntowo-api/kimpzp.php?' + adresFI.split('?')[1], 25000);
+      }).then(function (html) {
         var tekst = tekstZHtml(html);
         if (tekst.length < 5) return { status: 'nieznany' };
         var reszta = tekst.replace(/[^:]{0,80}:\s*brak wyniku dla wskazanego obszaru/gi, ' ').trim();

@@ -1177,7 +1177,7 @@
     const s = Math.min(1, 1600 / Math.max(W, H));
     const url = 'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1'
       + '&LAYERS=Raster&STYLES=&SRS=EPSG:4326&FORMAT=image/jpeg&WIDTH=' + Math.round(W * s) + '&HEIGHT=' + Math.round(H * s) + '&BBOX=' + bb.join(',');
-    return fetchZPonowieniem(url, 2).then(function (r) {
+    return kimpzpZPamiecia(url, 1, 15000).then(function (r) {
       if ((r.headers.get('content-type') || '').indexOf('image') === -1) throw new Error('nie obraz');
       return r.blob();
     }).then(createImageBitmap).catch(function () { return null; });
@@ -1753,14 +1753,38 @@
   }
 
   // fetch z ponowieniem (Geoportal bywa zawodny): proby co 1.5 s, 4 s...
-  function fetchZPonowieniem(url, ileRazy) {
-    return fetch(url).then(function (r) {
+  // Pobranie z limitem czasu (uslugi gmin w KIMPZP potrafia "wisiec" minutami) i ponowieniem
+  function notaPamiec(w) {
+    return w && w.zPamieci ? '<p class="legenda-ru-proj">Serwer planów gminy chwilowo nie odpowiada - pokazujemy dane planu zapamiętane ' + escH(w.zPamieci) + '.</p>' : '';
+  }
+  function fetchZPonowieniem(url, ileRazy, limitMs) {
+    var ac = window.AbortController ? new AbortController() : null;
+    var t = ac ? setTimeout(function () { ac.abort(); }, limitMs || 15000) : null;
+    return fetch(url, ac ? { signal: ac.signal } : undefined).then(function (r) {
+      if (t) clearTimeout(t);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r;
     }).catch(function (e) {
+      if (t) clearTimeout(t);
       if (!ileRazy) throw e;
       return new Promise(function (ok) { setTimeout(ok, ileRazy > 1 ? 1500 : 4000); })
-        .then(function () { return fetchZPonowieniem(url, ileRazy - 1); });
+        .then(function () { return fetchZPonowieniem(url, ileRazy - 1, limitMs); });
+    });
+  }
+  // KIMPZP przez nasz serwer (kimpzp.php): gdy usluga gminy nie odpowiada, serwer oddaje ostatnia udana odpowiedz.
+  // Po udanym zapytaniu bezposrednim "rozgrzewamy" pamiec serwera w tle - na wypadek przyszlej awarii.
+  const URL_KIMPZP_POSREDNIK = 'https://sniadecki-development.pl/gruntowo-api/kimpzp.php';
+  function kimpzpPosrednik(url) { return URL_KIMPZP_POSREDNIK + '?' + String(url).split('?')[1]; }
+  function kimpzpZPamiecia(url, ileRazy, limitMs) {
+    return fetchZPonowieniem(url, ileRazy, limitMs).then(function (r) {
+      try { fetch(kimpzpPosrednik(url), { mode: 'cors', keepalive: true }).catch(function () {}); } catch (e) {}
+      return r;
+    }).catch(function () {
+      return fetchZPonowieniem(kimpzpPosrednik(url), 0, 25000).then(function (r) {
+        const z = r.headers.get('X-Gruntowo-Pamiec');
+        if (z) window.gruntowoRaport.mpzpZPamieci = z;
+        return r;
+      });
     });
   }
 
@@ -1787,7 +1811,7 @@
       + '&LAYERS=plany_granice,wektor-str&QUERY_LAYERS=plany_granice,wektor-str'
       + '&INFO_FORMAT=text/html&FEATURE_COUNT=5&X=50&Y=50';
 
-    const opis = fetchZPonowieniem(urlFI, 2).then(function (r) { return r.text(); }).catch(function () { return null; });
+    const opis = kimpzpZPamiecia(urlFI, 1, 15000).then(function (r) { return r.text(); }).catch(function () { return null; });
     const mapa = pokrycieMPZP(bbox, wkt).catch(function () { return null; });
     // 3) Rejestr Urbanistyczny - oficjalny rejestr aktow (tytul, status, data, link do uchwaly)
     const rej = ruFI('wms-mpzp', RU_MPZP_FI, c.lon, c.lat).catch(function () { return null; });
@@ -1813,11 +1837,11 @@
 
       let status;
       if (opisJest || mapaJest || ru || mesip) status = 'jest';
-      else if (html === null && pokrycie === null && w[2] === null) status = 'blad';
+      else if (html === null && pokrycie === null && !ru && !mesip) status = 'blad';   // usluga KIMPZP/gminy nie odpowiedziala - nie wiemy, czy plan jest
       else if (tekst.length >= 5 || pokrycie === 0) status = 'brak';
       else status = 'nieznany';
 
-      const wynik = { status: status, html: opisJest ? html : '', pokrycie: pokrycie, zrodlo: opisJest ? 'opis' : (mapaJest ? 'mapa' : (ru ? 'rejestr' : (mesip ? 'mesip' : ''))), ru: ru, projekt: ruProjekt, mesip: mesip };
+      const wynik = { status: status, html: opisJest ? html : '', pokrycie: pokrycie, zrodlo: opisJest ? 'opis' : (mapaJest ? 'mapa' : (ru ? 'rejestr' : (mesip ? 'mesip' : ''))), ru: ru, projekt: ruProjekt, mesip: mesip, zPamieci: window.gruntowoRaport.mpzpZPamieci || '' };
       window.gruntowoRaport.mpzp = wynik;
       oglos('gruntowo:mpzp', wynik);
       przeliczKorekteWlasna();
@@ -1843,6 +1867,13 @@
         }).catch(function () {});
       };
 
+      if (status === 'blad') {
+        znakWodny('map-mpzp', 'Usługa planów nie odpowiada', 'serwer planów gminy chwilowo nie działa - spróbuj ponownie później', 'brak');
+        box.innerHTML = '<div class="legenda-note"><strong>Nie udało się teraz sprawdzić planu miejscowego.</strong> Serwer planów tej gminy (przez Krajową Integrację MPZP) chwilowo nie odpowiada - to nie znaczy, że planu nie ma. ' +
+          'Odśwież raport za kilkanaście minut albo sprawdź plan w geoportalu gminy.' + blokProj + LINKI_MPZP + '</div>';
+        box.style.display = 'block';
+        return;
+      }
       if (status !== 'jest') {
         znakWodny('map-mpzp', ZNAK_MPZP[0], ZNAK_MPZP[1], 'brak');
         box.innerHTML = '<div class="legenda-note"><strong>Nie znaleziono planu miejscowego dla działki</strong> ani w Krajowej Integracji MPZP, ani w Rejestrze Urbanistycznym. ' +
@@ -1883,7 +1914,7 @@
           ? '<a class="legenda-link" href="' + dane.link + '" target="_blank" rel="noopener">Otwórz treść uchwały →</a>'
           : (ru ? '' : '<a class="legenda-link" href="https://rejestr-urbanistyczny.gov.pl/" target="_blank" rel="noopener">Znajdź plan i uchwałę w Rejestrze Urbanistycznym →</a>');
         h += blokRU + '</div>';
-        box.innerHTML = h;
+        box.innerHTML = h + notaPamiec(wynik);
       } else if (mesip) {
         const t0 = mesip.tereny[0], pl = mesip.plan || {};
         let h = '<div class="legenda-title">Zapisy planu dla działki</div><div class="legenda-body">';
@@ -1900,7 +1931,7 @@
           h += '<a class="legenda-link" href="' + escH(pl.link || mesip.portal) + '" target="_blank" rel="noopener">Plan w Systemie Informacji Przestrzennej Poznania →</a>';
           h += '<p class="legenda-ru-proj">Symbol terenu z SIP Poznania (GEOPOZ). Treść uchwały znajdziesz na stronie Miejskiej Pracowni Urbanistycznej.</p></div>';
         }
-        box.innerHTML = h;
+        box.innerHTML = h + notaPamiec(wynik);
       } else if (ru) {
         box.innerHTML = '<div class="legenda-title">Plan miejscowy dla działki</div><div class="legenda-body">' + blokRU +
           '<p class="legenda-ru-proj">Symbol terenu (np. 12MN) odczytaj z rysunku planu' + (pokrycie !== null ? ' - mapa powyżej' : ' w Rejestrze') + '; zapisy dla tego terenu są w uchwale.</p></div>';
@@ -1908,7 +1939,7 @@
         box.innerHTML = '<div class="legenda-note"><strong>Działka jest objęta planem miejscowym</strong>' +
           (pokrycie !== null ? ' (plan na mapie obejmuje ok. ' + Math.round(pokrycie) + '% działki)' : '') +
           '. Usługa krajowa nie udostępnia dla tej gminy numeru uchwały ani przeznaczenia w formie danych - odczytaj je z rysunku planu powyżej lub z uchwały.' +
-          LINKI_MPZP + '</div>';
+          LINKI_MPZP + notaPamiec(wynik) + '</div>';
       }
       box.style.display = 'block';
       dociagnijRU();

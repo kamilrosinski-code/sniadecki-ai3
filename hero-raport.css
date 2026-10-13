@@ -197,9 +197,10 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
   transform: none; box-shadow: 0 30px 80px rgba(0,0,0,.5); border-color: rgba(201,169,110,.45);
 }
 /* po wyborze miejscowosci ramka z mapa plynnie przesuwa sie ku srodkowi i lekko powieksza */
-.hero .search-box { position: relative; z-index: 3; transition: transform 1.3s cubic-bezier(.22,.7,.2,1), box-shadow 1.3s ease, border-color 1.3s ease; }
+.hero .search-box { position: relative; z-index: 3; width: 100%; transition: transform 1.3s cubic-bezier(.22,.7,.2,1), width 1.3s cubic-bezier(.22,.7,.2,1), box-shadow 1.3s ease, border-color 1.3s ease, background-color 1.3s ease; }
 @media (min-width: 1100px) and (hover: hover) {
-  .hero.hero-mapa .search-box { transform: translateX(5vw) scale(1.035); box-shadow: 0 40px 110px rgba(0,0,0,.6); border-color: rgba(201,169,110,.45); }
+  /* szersza ramka z mapa, wyraznie w prawo - na tle cofnietego raportu */
+  .hero.hero-mapa .search-box { width: min(840px, 60vw); max-width: none; transform: translateX(9vw); box-shadow: 0 40px 110px rgba(0,0,0,.6); border-color: rgba(201,169,110,.45); }
 }
 .hero.hero-mapa .search-box { will-change: auto; }
 @media (max-width: 1099px), (hover: none) { .hero .search-box { transform: none; box-shadow: none; } }
@@ -251,7 +252,7 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
   @keyframes hwWejscie2M { 0% { opacity: 0; transform: translate3d(0, 60px, -200px) rotateY(24deg) rotateX(10deg); } 100% { opacity: 1; transform: rotateY(9deg) rotateX(4deg) rotateZ(1deg); } }
 }
 /* animacje drugiej karty startuja dopiero, gdy karta wjedzie na ekran (hero-raport.js dodaje .hw-gra) */
-.hw-druga:not(.hw-gra) .hw-przod, .hw-druga:not(.hw-gra) .hw-przod *, .hw-druga:not(.hw-gra) .hw-podpis, .hw-druga:not(.hw-gra) .hw-scena { animation-play-state: paused !important; }
+.hw-druga:not(.hw-gra) .hw-przod, .hw-druga:not(.hw-gra) .hw-przod *, .hw-druga:not(.hw-gra) .hw-tyl, .hw-modele:not(.hw-gra) .hw-tyl, .hw-druga:not(.hw-gra) .hw-podpis, .hw-druga:not(.hw-gra) .hw-scena { animation-play-state: paused !important; }
 
 .hw2-srodek { display: grid; grid-template-columns: 240px 1fr; gap: 16px; padding: 16px 18px 12px; }
 .hw2-mapa { height: 238px; }
@@ -302,7 +303,12 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
 /* =====================================================================
    SPOJNOSC: panele z tekstem w tym samym stylu co karty raportu
    ===================================================================== */
-.hero .search-box { background: var(--hw-tlo); border: 1px solid var(--hw-ramka); border-radius: var(--hw-r); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+/* wyszukiwarka: przezroczyste, rozmyte szklo (zdjecie hero przeswituje) */
+.hero .search-box { background: linear-gradient(160deg, rgba(34,36,29,.38) 0%, rgba(16,17,14,.5) 100%); border: 1px solid rgba(201,169,110,.3); border-radius: var(--hw-r);
+  backdrop-filter: blur(20px) saturate(1.25); -webkit-backdrop-filter: blur(20px) saturate(1.25); }
+.hero.hero-mapa .search-box { background: linear-gradient(160deg, rgba(34,36,29,.5) 0%, rgba(16,17,14,.62) 100%); }
+.hero .search-box .search-row { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
+.hero .search-box .search-hint-sm, .hero .search-box .map-hint-coords { color: rgba(242,240,235,.82); text-shadow: 0 1px 8px rgba(0,0,0,.35); }
 .hero .map-box { border-radius: 10px; border-color: var(--hw-ramka); }
 .hero .search-row { border-radius: 10px; }
 .sekcja-analiza .intro-tekst { background: var(--hw-tlo) !important; border: 1px solid var(--hw-ramka) !important; border-radius: var(--hw-r) !important; box-shadow: var(--hw-cien) !important; padding: 2.4rem 2.6rem 2.2rem !important; }
@@ -431,3 +437,43 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
 .hw-przod.hwm { height: auto; min-height: 380px; }
 .hw-druga .hw-podpis { bottom: calc(-30px * var(--hw-skala)); }
 .sekcja-analiza .intro-lead-mocny + .lead { margin-top: .2rem; }
+
+/* =====================================================================
+   JASNA, ROZMYTA KARTA W TLE takze przy drugim podgladzie i przy modelach
+   ===================================================================== */
+.hw-druga .hw-tyl { left: -64px; top: 72px; transform: translateZ(-180px) rotateY(15deg) rotateX(5deg) rotateZ(1.4deg); animation-name: hwWejscieTyl2; }
+@keyframes hwWejscieTyl2 { 0% { opacity: 0; transform: translate3d(-80px, 40px, -420px) rotateY(40deg) rotateX(12deg); } 100% { opacity: .5; transform: translateZ(-180px) rotateY(15deg) rotateX(5deg) rotateZ(1.4deg); } }
+.hw-modele .hw-tyl { transform: translateZ(-180px) rotateY(-14deg) rotateX(5deg) rotateZ(-1.2deg); }
+@media (max-width: 1099px) { .hw-druga .hw-tyl, .hw-modele .hw-tyl { display: none; } }
+
+/* =====================================================================
+   SEKCJA "Nie dostajesz kolejnych map...": kafelek pod katem + ozywione napisy
+   ===================================================================== */
+@media (min-width: 1100px) and (hover: hover) {
+  .sekcja-analiza .intro-grid { perspective: 1600px; }
+  .sekcja-analiza .intro-tekst { transform: rotateY(-11deg) rotateX(3deg) rotateZ(-.8deg); transform-origin: 30% 50%;
+    transition: transform .9s cubic-bezier(.2,.7,.2,1), box-shadow .9s ease, opacity 1s ease !important; opacity: 0; }
+  .sekcja-analiza .intro-tekst.widoczny { opacity: 1; }
+  .sekcja-analiza .intro-tekst:not(.widoczny) { transform: translate3d(120px, 40px, -200px) rotateY(-32deg) rotateX(8deg); }
+  .sekcja-analiza .intro-tekst.widoczny:hover { transform: none; }
+}
+.sekcja-analiza .intro-tekst { position: relative; overflow: hidden; }
+.sekcja-analiza .intro-tekst::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.07) 45%, transparent 58%); background-size: 250% 100%; background-position: 130% 0; }
+.sekcja-analiza .intro-tekst.widoczny::after { animation: hwBlysk 2s 1.6s ease-in-out both; }
+/* slowa naglowka wjezdzaja po kolei */
+.ia-slowo { display: inline-block; opacity: 0; transform: translateY(.55em) rotateX(55deg); transform-origin: 50% 100%; }
+.widoczny .ia-slowo { animation: iaSlowo .75s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--i) * 75ms + .45s); }
+@keyframes iaSlowo { to { opacity: 1; transform: none; } }
+.sekcja-analiza .intro-tekst .tag, .sekcja-analiza .intro-tekst .lead { opacity: 0; transform: translateY(14px); }
+.sekcja-analiza .intro-tekst.widoczny .tag { animation: iaSlowo .7s .25s ease forwards; }
+.sekcja-analiza .intro-tekst.widoczny .intro-lead-mocny { animation: iaSlowo .8s 1.15s ease forwards; }
+.sekcja-analiza .intro-tekst.widoczny .lead:not(.intro-lead-mocny) { animation: iaSlowo .8s 1.45s ease forwards; }
+/* zlote podkreslenie wysuwa sie pod zdaniem */
+.sekcja-analiza .intro-lead-mocny span.ia-podkr { background: linear-gradient(90deg, rgba(201,169,110,.55), rgba(201,169,110,.15)) no-repeat 0 100% / 0% 1px; padding-bottom: 2px; }
+.sekcja-analiza .intro-tekst.widoczny .ia-podkr { animation: iaPodkr 1.4s 1.7s cubic-bezier(.3,.8,.3,1) forwards; }
+@keyframes iaPodkr { to { background-size: 100% 1px; } }
+@media (prefers-reduced-motion: reduce) {
+  .ia-slowo, .sekcja-analiza .intro-tekst .tag, .sekcja-analiza .intro-tekst .lead { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .sekcja-analiza .intro-tekst { opacity: 1 !important; transform: none !important; }
+}
+#src-visual.src-wizual { overflow: visible; }

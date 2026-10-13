@@ -75,10 +75,16 @@
     if (document.getElementById('zgody-css')) return;
     var st = document.createElement('style'); st.id = 'zgody-css';
     st.textContent =
-      '#zgody{position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;max-width:400px;margin-left:auto;background:#14160f;' +
-      'border:1px solid rgba(201,169,110,.35);border-radius:10px;box-shadow:0 16px 44px rgba(0,0,0,.45);color:#f2f0eb;' +
-      'font:300 13px/1.5 Inter,system-ui,sans-serif;padding:.85rem 1rem .9rem;opacity:0;transform:translateY(12px);transition:opacity .3s,transform .3s}' +
-      '#zgody.pokaz{opacity:1;transform:none}' +
+      // szklany panel pod katem (jak karty raportu na stronie glownej), prostuje sie po najechaniu
+      '#zgody{position:fixed;left:16px;right:16px;bottom:18px;z-index:9999;max-width:400px;margin-left:auto;' +
+      'background:linear-gradient(160deg,rgba(34,36,29,.72),rgba(16,17,14,.82));backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);' +
+      'border:1px solid rgba(201,169,110,.32);border-radius:16px;box-shadow:0 30px 70px rgba(0,0,0,.5);color:#f2f0eb;' +
+      'font:300 13px/1.5 Inter,system-ui,sans-serif;padding:.9rem 1.05rem .95rem;opacity:0;transform-origin:100% 100%;' +
+      'transform:perspective(1100px) translate3d(60px,30px,-120px) rotateY(-28deg) rotateX(8deg);' +
+      'transition:opacity .7s ease,transform 1s cubic-bezier(.2,.75,.2,1),box-shadow .8s ease}' +
+      '#zgody.pokaz{opacity:1;transform:perspective(1100px) rotateY(-11deg) rotateX(4deg) rotateZ(-.8deg)}' +
+      '#zgody.pokaz:hover,#zgody.pokaz:focus-within,#zgody.ustawienia{transform:none;box-shadow:0 24px 60px rgba(0,0,0,.55)}' +
+      '@media (max-width:760px),(hover:none),(prefers-reduced-motion:reduce){#zgody,#zgody.pokaz{transform:none}#zgody{transition:opacity .3s}}' +
       '#zgody h3{margin:0 0 .25rem;font:500 .98rem/1.3 "Cormorant Garamond",Georgia,serif;color:#c9a96e;letter-spacing:.01em}' +
       '#zgody p{margin:0 0 .7rem;color:rgba(242,240,235,.72);font-size:.74rem;line-height:1.5}' +
       '#zgody a{color:#c9a96e}' +

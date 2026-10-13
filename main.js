@@ -641,6 +641,8 @@
             ' - przesuń mapę, aby dostosować.';
         }
       };
+      // ramka z mapa zmienia szerokosc (animacja w hero-raport.css) - mapa dopasowuje sie na biezaco
+      if (window.ResizeObserver) { let rz = null; new ResizeObserver(function () { if (rz) return; rz = requestAnimationFrame(function () { rz = null; leafletMap.invalidateSize({ animate: false }); }); }).observe(mapEl); }
       leafletMap.on('move', aktualizujWsp);
       leafletMap.on('moveend', aktualizujWsp);
       aktualizujWsp();
