@@ -144,14 +144,21 @@
     var sprawdz = function () {
       var jest = !s2.classList.contains('hidden') || (s3 && !s3.classList.contains('hidden'));
       hero.classList.toggle('hero-mapa', jest);
-      // mapa ma byc w calosci widoczna - przewijamy do niej lagodnie, jesli wystaje poza ekran
+      var sb = document.getElementById('search-box');
+      // polozenie w ukladzie strony (bez transformacji) - do wysrodkowania ramki na ekranie
+      var naStronie = function (el) { var x = 0, y = 0; while (el) { x += el.offsetLeft; y += el.offsetTop; el = el.offsetParent; } return { x: x, y: y }; };
+      // poziomo: ramka z mapa srodkiem na srodku ekranu (komputer); CSS ma zapasowe 9vw
+      if (jest && sb && window.innerWidth >= 1100) {
+        var szer = Math.min(840, window.innerWidth * 0.6), lewo = naStronie(sb).x;
+        sb.style.setProperty('--sb-x', Math.round(window.innerWidth / 2 - lewo - szer / 2) + 'px');
+      } else if (sb) sb.style.removeProperty('--sb-x');
+      // pionowo: lagodnie przewijamy tak, by ramka (a gdy jest wyzsza niz ekran - sama mapa) byla na srodku ekranu
       if (jest && !bylo) setTimeout(function () {
-        var mb = document.querySelector('#step-2:not(.hidden) .map-box') || document.getElementById('search-box');
-        if (!mb) return; var r = mb.getBoundingClientRect();
-        // tylko tyle, ile trzeba, zeby dol mapy byl na ekranie (raport zostaje widoczny w tle)
-        var brak = r.bottom - (window.innerHeight - 28);
-        if (brak <= 0) return;
-        var cel = window.scrollY + Math.min(brak, Math.max(0, r.top - 90));
+        var mb = document.querySelector('#step-2:not(.hidden) .map-box');
+        if (!sb || !mb) return;
+        var vh = window.innerHeight, el = sb.offsetHeight < vh - 80 ? sb : mb, p = naStronie(el);
+        var cel = Math.max(0, Math.round(p.y + el.offsetHeight / 2 - vh / 2));
+        if (Math.abs(cel - window.scrollY) < 8) return;
         if (window.__lenis && !malo) window.__lenis.scrollTo(cel, { duration: 1.6, easing: function (t) { return 1 - Math.pow(1 - t, 3); } });
         else window.scrollTo({ top: cel, behavior: malo ? 'auto' : 'smooth' });
       }, 1150);   // po zwinieciu opisu pod haslem
@@ -184,6 +191,15 @@
       var ioK = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { kafelTekst.classList.add('widoczny'); ioK.disconnect(); } }, { threshold: 0.3 });
       ioK.observe(kafelTekst);
     } else kafelTekst.classList.add('widoczny');
+    // naglowki pozostalych sekcji (modele, cennik, o nas): slowo po slowie, gdy sekcja wjedzie na ekran
+    document.querySelectorAll('[data-naglowek-dyn]').forEach(function (blok) {
+      var h = blok.querySelector('.h2');
+      if (h && !malo) { nr = 0; rozbij(h); }
+      if (window.IntersectionObserver && !malo) {
+        var io = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { blok.classList.add('widoczny'); io.disconnect(); } }, { threshold: 0.4 });
+        io.observe(blok);
+      } else blok.classList.add('widoczny');
+    });
   }
 
   // ---- cennik: kafelki modeli wjezdzaja i blyskaja po kolei, gdy sekcja wjedzie na ekran ----

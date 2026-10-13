@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="robots" content="noindex, nofollow" />
+    <meta name="robots" content="noindex, nofollow" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>gruntowo.pl - pokaż nam swój grunt, a my powiemy Ci, co możesz z nim zrobić</title>
   <meta name="description" content="Pokaż nam swój grunt, a my powiemy Ci, co możesz z nim zrobić. Bezpłatny raport o działce: plan miejscowy, ceny transakcyjne z okolicy, media, zdjęcia lotnicze." />
@@ -27,7 +27,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <link rel="stylesheet" href="style.css?v=27" />
-  <link rel="stylesheet" href="hero-raport.css?v=6" />
+  <link rel="stylesheet" href="hero-raport.css?v=8" />
+  <link rel="stylesheet" href="publikacje.css?v=3" />
 </head>
 <body>
 
@@ -39,6 +40,7 @@
     <ul class="nav-links">
       <li><a href="#sourcing" data-cms="nav_sourcing">Jak analizujemy Twój grunt?</a></li>
       <li><a href="#oferty" data-cms="nav_oferty">Oferty i przykładowy raport</a></li>
+      <li><a href="#publikacje" data-cms="nav_publikacje">Publikacje</a></li>
       <li><a href="#ekosystem" data-cms="nav_ekosystem">O nas</a></li>
       <li><a href="pro.html" data-cms="nav_pro">PRO</a></li>
       <li><a href="#kontakt" class="nav-cta" data-cms="nav_cta">Porozmawiajmy</a></li>
@@ -52,6 +54,7 @@
     <ul>
       <li><a href="#sourcing" class="mm-link" data-cms="nav_sourcing">Jak analizujemy Twój grunt?</a></li>
       <li><a href="#oferty" class="mm-link" data-cms="nav_oferty">Oferty i przykładowy raport</a></li>
+      <li><a href="#publikacje" class="mm-link" data-cms="nav_publikacje">Publikacje</a></li>
       <li><a href="#ekosystem" class="mm-link" data-cms="nav_ekosystem">O nas</a></li>
       <li><a href="pro.html" class="mm-link" data-cms="nav_pro">gruntowo.pl PRO</a></li>
       <li><a href="#kontakt" class="mm-link" data-cms="nav_kontakt">Kontakt</a></li>
@@ -292,9 +295,11 @@
   <!-- SOURCING -->
   <section class="section" id="sourcing">
     <div class="container">
+      <div class="naglowek-dyn" data-naglowek-dyn>
       <span class="tag" data-cms="sourcing_tag">Jak analizujemy Twój grunt?</span>
       <h2 class="h2" data-cms="sourcing_title2">Zaawansowany model analityczny,<br /><em>który każdemu pozwala stać się ekspertem</em></h2>
       <p class="lead" data-cms="sourcing_lead">Zarówno dla amatorów, jak i profesjonalistów</p>
+      </div>
       <div class="sourcing-layout">
         <div class="cards">
           <div class="card src-card card-hi" data-model="1"><span class="card-n">01</span><h3 data-cms="src1_title">Model 1 · Bezpłatna analiza w kilka minut</h3><p data-cms="src1_text">Najczystsza forma prezentacji działki dostępna na rynku.</p></div>
@@ -411,8 +416,10 @@
   <!-- OFERTY -->
   <section class="section section-dark" id="oferty">
     <div class="container">
+      <div class="naglowek-dyn" data-naglowek-dyn>
       <span class="tag tag-light">Filar 02</span>
       <h2 class="h2 h2-light" data-cms="oferty_title">Wybierz model<br /><em>dopasowany do Twoich potrzeb</em></h2>
+      </div>
       <div class="oferty-warianty">
         <!-- OFERTA 1 - bezpłatna -->
         <div class="ofr">
@@ -486,15 +493,49 @@
     </div>
   </section>
 
+  <!-- PUBLIKACJE -->
+  <section class="section section-dark" id="publikacje">
+    <div class="container">
+      <div class="naglowek-dyn" data-naglowek-dyn>
+        <span class="tag tag-light" data-cms="pub_tag">Publikacje</span>
+        <h2 class="h2 h2-light" data-cms="pub_title">Rynek gruntów<br /><em>bez lania wody</em></h2>
+        <p class="lead" data-cms="pub_lead">Czytamy raporty NBP, GUS i rejestry publiczne i wyciągamy z nich to, co ma znaczenie dla właściciela działki.</p>
+      </div>
+      <div class="pub-lista">
+        <a class="pub-karta" href="publikacja-rynek-poznan-2026-2.html">
+          <img class="pub-karta-grafika" src="grafika-poznan.svg" alt="Stylizowana panorama Poznania – Ratusz, Katedra, Zamek i pinezka działki w powiecie poznańskim" loading="lazy" />
+          <span class="pub-karta-tag">Rynek · Poznań i powiat poznański · II kwartał 2026</span>
+          <h3>Poznań buduje rekordowo, ale pozwoleń ma najmniej od dekady. <em>Powiat przejmuje inicjatywę.</em></h3>
+          <p>Co najnowszy raport NBP o poznańskim rynku mieszkaniowym oznacza dla właścicieli działek, inwestorów i deweloperów – w sześciu punktach.</p>
+          <div class="pub-karta-liczby">
+            <div><b>527</b><span>pozwoleń na budowę w Poznaniu – najmniej od 10 lat</span></div>
+            <div><b>1 378</b><span>pozwoleń w powiecie – drugi kwartał z rzędu więcej niż miasto</span></div>
+            <div><b>+48%</b><span>nowych kredytów mieszkaniowych rok do roku</span></div>
+          </div>
+          <div class="pub-karta-stopka"><span>Na podstawie raportu NBP · wrzesień 2026 · 6 min czytania</span><b>Czytaj →</b></div>
+        </a>
+        <a class="pub-karta pub-karta-mala" href="publikacja-rpp-pazdziernik-2026.html">
+          <img class="pub-karta-grafika" src="grafika-stopy.svg" alt="Stopa referencyjna NBP 3,75 procent bez zmian, inflacja 4,0 procent" loading="lazy" />
+          <span class="pub-karta-tag">Polityka pieniężna · RPP · 7 października 2026</span>
+          <h3>Stopy stoją na 3,75%, inflacja skoczyła do 4%. <em>Na tani kredyt trzeba będzie poczekać.</em></h3>
+          <p>Rada nie zapowiada obniżek. Co to znaczy dla popytu na mieszkania, rachunku dewelopera i ceny, jaką dostaniesz za działkę.</p>
+          <div class="pub-karta-stopka"><span>Komunikat RPP · październik 2026 · 4 min</span><b>Czytaj →</b></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <!-- EKOSYSTEM -->
   <section class="section" id="ekosystem">
     <div class="container">
       <div class="eco-layout">
         <div>
+          <div class="naglowek-dyn" data-naglowek-dyn>
           <span class="tag" data-cms="eko_tag2">O nas · 12 lat na rynku nieruchomości</span>
           <h2 class="h2" data-cms="eko_title2">Za każdym raportem<br /><em>stoją realne transakcje</em></h2>
           <p class="lead" data-cms="eko_lead2">Jesteśmy zespołem o deweloperskich korzeniach. Kupowaliśmy grunty, sprzedawaliśmy lokale i prowadziliśmy inwestycje – to doświadczenie przełożyliśmy na model, który ocenia Twoją działkę.</p>
-          <div class="eco-staty"><div><b>12 lat</b><span>na rynku</span></div><div><b>200+</b><span>transakcji</span></div><div><b>80 mln zł</b><span>zakupionych gruntów</span></div></div>
+          <div class="eco-staty"><div><b>12 lat</b><span>na rynku</span></div><div><b>200+</b><span>transakcji</span></div><div><b>80 mln zł</b><span>zakupionych gruntów</span></div>
+          </div></div>
           <div class="eco-list">
             <div class="eco-node"><div class="eco-dot"></div><div><h4 data-cms="eko1_title">Ponad 200 transakcji na rynku nieruchomości</h4><p data-cms="eko1_text">Zespół gruntowo.pl ma na koncie ponad 200 wspólnych transakcji - sprzedaż nieruchomości lokalowych, gruntów pod zabudowę jednorodzinną oraz poszukiwaną zabudowę wielorodzinną.</p></div></div>
             <div class="eco-node"><div class="eco-dot"></div><div><h4 data-cms="eko2_title">Znajomość rynku nieruchomości</h4><p data-cms="eko2_text">Zdecydowana większość naszych transakcji to powiat poznański, ale doskonale odnajdujemy się także w rynku aparthoteli oraz inwestycjach deweloperskich na siedmiu największych rynkach w Polsce.</p></div></div>
@@ -612,10 +653,10 @@
     </div>
   </footer>
 
-  <script src="zgody.js?v=4"></script>
+  <script src="zgody.js?v=5"></script>
   <script src="haslo.js?v=20261006"></script>
   <script src="lenis.min.js?v=1"></script>
   <script src="main.js?v=70"></script>
-  <script src="hero-raport.js?v=6"></script>
+  <script src="hero-raport.js?v=8"></script>
 </body>
 </html>

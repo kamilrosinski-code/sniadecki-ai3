@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="Stopy procentowe NBP bez zmian: stopa referencyjna 3,75 procent; inflacja we wrześniu 4,0 procent">
+  <defs>
+    <linearGradient id="tlo2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1e18"/><stop offset="1" stop-color="#0d0e0b"/></linearGradient>
+    <linearGradient id="zl2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b08d3e"/><stop offset="1" stop-color="#dfc090"/></linearGradient>
+    <radialGradient id="bl2" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#c9a96e" stop-opacity=".2"/><stop offset="1" stop-color="#c9a96e" stop-opacity="0"/></radialGradient>
+    <pattern id="si2" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#c9a96e" stroke-opacity=".07"/></pattern>
+  </defs>
+  <rect width="1200" height="420" fill="url(#tlo2)"/>
+  <rect width="1200" height="420" fill="url(#si2)"/>
+  <ellipse cx="330" cy="230" rx="330" ry="200" fill="url(#bl2)"/>
+
+  <!-- zegar stop: luk 0-8% -->
+  <g transform="translate(330 250)">
+    <path d="M-190 0A190 190 0 0 1 190 0" fill="none" stroke="#dfc090" stroke-opacity=".18" stroke-width="18" stroke-linecap="round"/>
+    <!-- 3,75 z 8 = 46,9% luku -->
+    <path d="M-190 0A190 190 0 0 1 -18.6 -189.1" fill="none" stroke="url(#zl2)" stroke-width="18" stroke-linecap="round"/>
+    <g font-family="Inter, system-ui, sans-serif" font-size="12" fill="#dfc090" fill-opacity=".6" text-anchor="middle">
+      <text x="-205" y="22">0%</text><text x="0" y="-210">4%</text><text x="205" y="22">8%</text>
+    </g>
+    <!-- wskazowka -->
+    <g transform="rotate(84.4)"><circle cx="-190" r="11" fill="#14160f" stroke="#f2f0eb" stroke-width="3"/><circle cx="-190" r="4" fill="#dfc090"/></g>
+    <text y="-70" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="74" font-weight="500" fill="#f2f0eb">3,75%</text>
+    <text y="-32" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" letter-spacing="3" fill="#dfc090">STOPA REFERENCYJNA NBP</text>
+    <text y="42" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#f2f0eb" fill-opacity=".8">bez zmian · 7 października 2026</text>
+  </g>
+
+  <!-- drabinka stop -->
+  <g transform="translate(640 86)" font-family="Inter, system-ui, sans-serif" font-size="13">
+    <text x="0" y="0" fill="#dfc090" letter-spacing="3" font-size="11">STOPY NBP · 7 PAŹDZIERNIKA 2026</text>
+    <g transform="translate(0 30)">
+      <rect x="0" y="0" width="300" height="34" rx="8" fill="#c9a96e" fill-opacity=".08" stroke="#dfc090" stroke-opacity=".25"/><text x="14" y="22" fill="#f2f0eb" fill-opacity=".85">lombardowa</text><text x="286" y="22" text-anchor="end" font-family="'Cormorant Garamond', Georgia, serif" font-size="22" fill="#dfc090">4,25%</text>
+      <rect x="0" y="42" width="300" height="34" rx="8" fill="#c9a96e" fill-opacity=".08" stroke="#dfc090" stroke-opacity=".25"/><text x="14" y="64" fill="#f2f0eb" fill-opacity=".85">dyskontowa weksli</text><text x="286" y="64" text-anchor="end" font-family="'Cormorant Garamond', Georgia, serif" font-size="22" fill="#dfc090">3,85%</text>
+      <rect x="0" y="84" width="300" height="34" rx="8" fill="#c9a96e" fill-opacity=".08" stroke="#dfc090" stroke-opacity=".25"/><text x="14" y="106" fill="#f2f0eb" fill-opacity=".85">redyskontowa weksli</text><text x="286" y="106" text-anchor="end" font-family="'Cormorant Garamond', Georgia, serif" font-size="22" fill="#dfc090">3,80%</text>
+      <rect x="0" y="126" width="300" height="34" rx="8" fill="#c9a96e" fill-opacity=".22" stroke="#dfc090" stroke-opacity=".7"/><text x="14" y="148" fill="#f2f0eb" font-weight="500">referencyjna</text><text x="286" y="148" text-anchor="end" font-family="'Cormorant Garamond', Georgia, serif" font-size="22" font-weight="600" fill="#f2f0eb">3,75%</text>
+      <rect x="0" y="168" width="300" height="34" rx="8" fill="#c9a96e" fill-opacity=".08" stroke="#dfc090" stroke-opacity=".25"/><text x="14" y="190" fill="#f2f0eb" fill-opacity=".85">depozytowa</text><text x="286" y="190" text-anchor="end" font-family="'Cormorant Garamond', Georgia, serif" font-size="22" fill="#dfc090">3,25%</text>
+    </g>
+  </g>
+
+  <!-- inflacja: 3 slupki -->
+  <g transform="translate(1000 86)" font-family="Inter, system-ui, sans-serif">
+    <text x="0" y="0" fill="#dfc090" letter-spacing="3" font-size="11">INFLACJA CPI (R/R)</text>
+    <g transform="translate(0 232)">
+      <rect x="0" y="-105" width="40" height="105" rx="6" fill="#c9a96e" fill-opacity=".25" stroke="#dfc090" stroke-opacity=".4"/>
+      <rect x="56" y="-119" width="40" height="119" rx="6" fill="#c9a96e" fill-opacity=".35" stroke="#dfc090" stroke-opacity=".5"/>
+      <rect x="112" y="-140" width="40" height="140" rx="6" fill="url(#zl2)" stroke="#dfc090" stroke-opacity=".8"/>
+      <g font-size="15" fill="#f2f0eb" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-weight="500"><text x="20" y="-114">3,0</text><text x="76" y="-128">3,4</text><text x="132" y="-149">4,0%</text></g>
+      <g font-size="11" fill="#dfc090" fill-opacity=".7" text-anchor="middle"><text x="20" y="20">lipiec</text><text x="76" y="20">sierpień</text><text x="132" y="20">wrzesień</text></g>
+    </g>
+    <path d="M0 144.5h152" stroke="#dfc090" stroke-opacity=".35" stroke-dasharray="4 4"/>
+    <text x="156" y="148" font-size="10" fill="#dfc090" fill-opacity=".6">cel 2,5%</text>
+  </g>
+  <text x="600" y="392" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" letter-spacing="2" fill="#dfc090" fill-opacity=".6">ŹRÓDŁO: KOMUNIKAT RPP 7.10.2026 · SZYBKI SZACUNEK GUS</text>
+</svg>

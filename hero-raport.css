@@ -200,7 +200,7 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
 .hero .search-box { position: relative; z-index: 3; width: 100%; transition: transform 1.3s cubic-bezier(.22,.7,.2,1), width 1.3s cubic-bezier(.22,.7,.2,1), box-shadow 1.3s ease, border-color 1.3s ease, background-color 1.3s ease; }
 @media (min-width: 1100px) and (hover: hover) {
   /* szersza ramka z mapa, wyraznie w prawo - na tle cofnietego raportu */
-  .hero.hero-mapa .search-box { width: min(840px, 60vw); max-width: none; transform: translateX(9vw); box-shadow: 0 40px 110px rgba(0,0,0,.6); border-color: rgba(201,169,110,.45); }
+  .hero.hero-mapa .search-box { width: min(840px, 60vw); max-width: none; transform: translateX(var(--sb-x, 9vw)); box-shadow: 0 40px 110px rgba(0,0,0,.6); border-color: rgba(201,169,110,.45); }
 }
 .hero.hero-mapa .search-box { will-change: auto; }
 @media (max-width: 1099px), (hover: none) { .hero .search-box { transform: none; box-shadow: none; } }
@@ -542,3 +542,19 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
 .oferty-warianty.widoczne .ofr-premium { animation-name: ofrWejscie, ofrRamka; animation-duration: .8s, 14s; animation-delay: .5s, 2.1s; animation-iteration-count: 1, infinite; animation-fill-mode: forwards, none; }
 @keyframes ofrRamka { 0%, 20% { box-shadow: 0 8px 40px rgba(201,169,110,.1); } 8% { box-shadow: 0 8px 60px rgba(201,169,110,.3); } }
 @media (prefers-reduced-motion: reduce) { .oferty-warianty .ofr { opacity: 1; transform: none; animation: none !important; } .ofr::after { animation: none !important; } }
+
+/* =====================================================================
+   NAGLOWKI SEKCJI (modele, cennik, o nas): etykieta, slowa naglowka i podtytul wjezdzaja po kolei
+   ===================================================================== */
+.naglowek-dyn .tag, .naglowek-dyn .lead, .naglowek-dyn .eco-staty > div { opacity: 0; transform: translateY(14px); }
+.naglowek-dyn.widoczny .tag { animation: iaSlowo .7s .1s ease forwards; }
+.naglowek-dyn.widoczny .ia-slowo { animation-delay: calc(var(--i) * 70ms + .3s); }
+.naglowek-dyn.widoczny .lead { animation: iaSlowo .8s 1s ease forwards; }
+.naglowek-dyn.widoczny .eco-staty > div { animation: iaSlowo .7s ease forwards; }
+.naglowek-dyn.widoczny .eco-staty > div:nth-child(1) { animation-delay: 1.3s; } .naglowek-dyn.widoczny .eco-staty > div:nth-child(2) { animation-delay: 1.45s; } .naglowek-dyn.widoczny .eco-staty > div:nth-child(3) { animation-delay: 1.6s; }
+/* zlota kreska wysuwa sie pod naglowkiem */
+.naglowek-dyn .h2 { position: relative; }
+.naglowek-dyn .h2::after { content: ''; display: block; width: 0; height: 1px; margin-top: .6rem; background: linear-gradient(90deg, var(--gold), transparent); }
+.naglowek-dyn.widoczny .h2::after { animation: nagKreska 1.2s 1s cubic-bezier(.3,.8,.3,1) forwards; }
+@keyframes nagKreska { to { width: 120px; } }
+@media (prefers-reduced-motion: reduce) { .naglowek-dyn .tag, .naglowek-dyn .lead, .naglowek-dyn .eco-staty > div { opacity: 1; transform: none; animation: none !important; } .naglowek-dyn .h2::after { width: 120px; } }

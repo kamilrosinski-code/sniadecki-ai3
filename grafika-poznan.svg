@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="Stylizowana panorama Poznania: Ratusz, Katedra, Zamek i nowoczesne biurowce nad Wartą">
+  <defs>
+    <linearGradient id="niebo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1e18"/><stop offset="1" stop-color="#0d0e0b"/></linearGradient>
+    <linearGradient id="zloto" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfc090"/><stop offset="1" stop-color="#b08d3e"/></linearGradient>
+    <linearGradient id="woda" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c9a96e" stop-opacity="0"/><stop offset=".5" stop-color="#c9a96e" stop-opacity=".35"/><stop offset="1" stop-color="#c9a96e" stop-opacity="0"/></linearGradient>
+    <radialGradient id="blask" cx=".5" cy=".55" r=".6"><stop offset="0" stop-color="#c9a96e" stop-opacity=".22"/><stop offset="1" stop-color="#c9a96e" stop-opacity="0"/></radialGradient>
+    <pattern id="siatka" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#c9a96e" stroke-opacity=".07"/></pattern>
+  </defs>
+  <rect width="1200" height="420" fill="url(#niebo)"/>
+  <rect width="1200" height="420" fill="url(#siatka)"/>
+  <ellipse cx="600" cy="300" rx="560" ry="200" fill="url(#blask)"/>
+
+  <!-- gwiazdy / punkty mapy -->
+  <g fill="#dfc090" opacity=".55">
+    <circle cx="120" cy="70" r="1.6"/><circle cx="310" cy="48" r="1.2"/><circle cx="520" cy="90" r="1.4"/><circle cx="880" cy="56" r="1.6"/><circle cx="1050" cy="110" r="1.2"/><circle cx="700" cy="40" r="1"/><circle cx="960" cy="150" r="1"/><circle cx="220" cy="140" r="1"/>
+  </g>
+
+  <!-- dalekie biurowce (lewa: Bałtyk-podobna bryla; prawa: wiezowce) -->
+  <g fill="#c9a96e" fill-opacity=".14" stroke="#dfc090" stroke-opacity=".35" stroke-width="1">
+    <path d="M60 330V230l28-14 10 10v104z"/>
+    <path d="M110 330V250h30v80z"/>
+    <path d="M1040 330V200h40v130z"/>
+    <path d="M1090 330V240h26v90z"/>
+    <path d="M1126 330V215l30-12v127z"/>
+    <path d="M980 330V265h36v65z"/>
+  </g>
+  <g stroke="#dfc090" stroke-opacity=".25" stroke-width="1">
+    <path d="M1050 215h20M1050 235h20M1050 255h20M1050 275h20M1050 295h20M1050 315h20"/>
+    <path d="M1136 230h12M1136 250h12M1136 270h12M1136 290h12M1136 310h12"/>
+    <path d="M70 250h12M70 270h12M70 290h12M70 310h12"/>
+  </g>
+
+  <!-- Zamek (lewa strona) -->
+  <g fill="#c9a96e" fill-opacity=".2" stroke="url(#zloto)" stroke-width="1.4" stroke-linejoin="round">
+    <path d="M190 330V236h26v-10h8v10h8v-10h8v10h8v-10h8v10h26v94z"/>
+    <path d="M200 330V250h90v80z" fill="none" stroke-opacity=".5"/>
+    <path d="M282 330V200l10-12 10 12v130z"/>
+    <path d="M302 330V258h24v72z"/>
+    <path d="M326 330V266h40v64z"/>
+    <path d="M366 330V246h20v84z"/>
+  </g>
+  <g stroke="#dfc090" stroke-opacity=".45" stroke-width="1"><path d="M212 268h8v14h-8zM228 268h8v14h-8zM244 268h8v14h-8zM260 268h8v14h-8zM212 296h8v14h-8zM228 296h8v14h-8zM244 296h8v14h-8zM260 296h8v14h-8zM336 282h6v10h-6zM350 282h6v10h-6zM336 304h6v10h-6zM350 304h6v10h-6z"/></g>
+
+  <!-- Ratusz (srodek) -->
+  <g fill="#c9a96e" fill-opacity=".24" stroke="url(#zloto)" stroke-width="1.6" stroke-linejoin="round">
+    <!-- korpus -->
+    <path d="M500 330V222h150v108z"/>
+    <!-- attyka -->
+    <path d="M500 222V206h10v-8h10v8h10v-8h10v8h10v-8h10v8h10v-8h10v8h10v-8h10v8h10v-8h10v8h10v-8h10v8h10v-8h10v8h10v16"/>
+    <!-- loggia -->
+    <path d="M510 262h130M510 262v28M530 262v28M550 262v28M570 262v28M590 262v28M610 262v28M630 262v28M640 262v28M510 290h130" fill="none" stroke-opacity=".6"/>
+    <!-- wieza -->
+    <path d="M555 222V148h40v74"/>
+    <path d="M551 148h48v-8h-48z"/>
+    <!-- galeria i zegar -->
+    <path d="M560 140V104h30v36"/>
+    <circle cx="575" cy="122" r="7" fill="none"/>
+    <path d="M575 122v-5M575 122l3 2"/>
+    <!-- helm: dzwon, latarnia, iglica -->
+    <path d="M556 104c0-10 8-18 19-18s19 8 19 18z" fill="none"/>
+    <path d="M556 104h38"/>
+    <path d="M569 86V72h12v14"/>
+    <path d="M567 72h16"/>
+    <path d="M575 72l-6-14h12z"/>
+    <path d="M575 58V44"/>
+    <circle cx="575" cy="41" r="2.5" fill="#dfc090"/>
+  </g>
+  <!-- koziolki: dwie sylwetki naprzeciw siebie w otworze helmu -->
+  <g fill="#dfc090" opacity=".95">
+    <path d="M561 102v-7l3-3v-3h2l1 2 2-1 1 2-2 2v8h-2v-4h-2v4z"/>
+    <path d="M589 102v-7l-3-3v-3h-2l-1 2-2-1-1 2 2 2v8h2v-4h2v4z"/>
+  </g>
+  <!-- kamieniczki po bokach ratusza -->
+  <g fill="#c9a96e" fill-opacity=".12" stroke="#dfc090" stroke-opacity=".5" stroke-width="1.1" stroke-linejoin="round">
+    <path d="M430 330V250l15-18 15 18v80z"/><path d="M462 330V258l14-14 14 14v72z"/>
+    <path d="M660 330V256l14-14 14 14v74z"/><path d="M690 330V246l16-20 16 20v84z"/>
+  </g>
+  <g stroke="#dfc090" stroke-opacity=".4" stroke-width="1"><path d="M440 268h8v12h-8zM440 294h8v12h-8zM470 272h8v12h-8zM470 298h8v12h-8zM668 272h8v12h-8zM668 298h8v12h-8zM700 266h8v12h-8zM700 292h8v12h-8z"/></g>
+
+  <!-- Katedra (prawa) - dwie wieze -->
+  <g fill="#c9a96e" fill-opacity=".18" stroke="url(#zloto)" stroke-width="1.4" stroke-linejoin="round">
+    <path d="M800 330V196h26v134z"/><path d="M826 330V240h40v90z"/><path d="M866 330V196h26v134z"/>
+    <path d="M800 196l13-28 13 28zM866 196l13-28 13 28z"/>
+    <path d="M813 168V150M879 168V150"/>
+    <path d="M810 150h6M876 150h6"/>
+    <path d="M836 240l10-16 10 16" fill="none"/>
+    <path d="M838 262h16v30h-16z" fill="none" stroke-opacity=".6"/>
+    <path d="M808 220h10v16h-10zM808 250h10v16h-10zM874 220h10v16h-10zM874 250h10v16h-10z" fill="none" stroke-opacity=".55"/>
+  </g>
+
+  <!-- linia ziemi -->
+  <path d="M0 330H1200" stroke="#dfc090" stroke-opacity=".5" stroke-width="1.2"/>
+  <!-- Warta -->
+  <path d="M0 352c200-14 400 16 600 6s400-22 600-8" fill="none" stroke="url(#woda)" stroke-width="18" opacity=".9"/>
+  <path d="M0 352c200-14 400 16 600 6s400-22 600-8" fill="none" stroke="#dfc090" stroke-opacity=".35" stroke-width="1"/>
+  <path d="M0 372c220-10 420 10 620 2s380-16 580-6" fill="none" stroke="#dfc090" stroke-opacity=".18" stroke-width="1"/>
+  <!-- odbicia -->
+  <g stroke="#dfc090" stroke-opacity=".12" stroke-width="2"><path d="M575 338v24M520 338v12M630 338v12M813 338v18M879 338v18M292 338v14M1060 338v14"/></g>
+
+  <!-- pinezka dzialki -->
+  <g transform="translate(940 300)">
+    <circle r="22" fill="none" stroke="#dfc090" stroke-opacity=".35"><animate attributeName="r" values="10;26" dur="2.4s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values=".5;0" dur="2.4s" repeatCount="indefinite"/></circle>
+    <path d="M0-30c-9 0-16 7-16 16 0 12 16 30 16 30s16-18 16-30c0-9-7-16-16-16z" fill="#dfc090"/>
+    <circle cy="-14" r="5.5" fill="#14160f"/>
+  </g>
+  <text x="940" y="392" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" letter-spacing="2" fill="#dfc090" fill-opacity=".8">POWIAT POZNAŃSKI</text>
+  <text x="575" y="392" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" letter-spacing="2" fill="#dfc090" fill-opacity=".8">POZNAŃ</text>
+</svg>
