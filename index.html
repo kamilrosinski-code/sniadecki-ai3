@@ -25,9 +25,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script>
+    /* Telefon: intro w hero (najpierw podglad raportu, potem wjezdza wyszukiwarka) - klasa ustawiana przed pierwszym rysowaniem strony.
+       Raz na sesje przegladarki; przy ograniczonym ruchu albo po powrocie na strone - od razu uklad koncowy. */
+    (function () { try {
+      var m = window.matchMedia && matchMedia('(max-width: 760px)').matches;
+      if (!m) return;
+      var r = matchMedia('(prefers-reduced-motion: reduce)').matches, s = sessionStorage.getItem('gruntowo_intro');
+      document.documentElement.classList.add((r || s) ? 'm-intro-2' : 'm-intro');
+    } catch (e) {} })();
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <link rel="stylesheet" href="style.css?v=28" />
-  <link rel="stylesheet" href="hero-raport.css?v=8" />
+  <link rel="stylesheet" href="hero-raport.css?v=9" />
   <link rel="stylesheet" href="publikacje.css?v=3" />
 </head>
 <body>
@@ -67,6 +77,7 @@
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <div class="hero-tekst">
+      <p class="hero-cta-tag m-tylko" aria-hidden="true"><i></i>Sprawdź teraz swoją działkę!</p>
       <h1 class="hero-headline" data-cms="hero_haslo">Pokaż nam swój grunt,<br /><em>a my powiemy, co możesz z nim zrobić!</em></h1>
       <p class="hero-sub" data-cms="hero_sub"><span class="m-ukryj">Masz grunt? Wypełnij formularz i dowiedz się o jego potencjale całkowicie bezpłatnie! W przypadku najciekawszych nieruchomości możesz otrzymać darmową konsultację naszego eksperta.</span><span class="m-tylko">Bezpłatnie sprawdzisz, co możesz zbudować i ile jest warta Twoja działka.</span></p>
 
@@ -145,6 +156,8 @@
 
       <!-- PODGLAD RAPORTU ROZSZERZONEGO: zywy "zrzut" przykladowego raportu (dzialka 78/3 Janikowo, prawdziwe dane z raportu)
            pod skosem, z animacja wejscia; ortofotomapa wczytywana z Geoportalu (hero-raport.js) -->
+      <!-- TELEFON: podpis intro nad podgladem raportu (hero-raport.css / .m-intro) -->
+      <div class="hero-intro-podpis" aria-hidden="true"><span class="hip-tag">Raport rozszerzony · przykład</span><span class="hip-tekst">Tak wygląda analiza działki</span><span class="hip-pasek"><i></i></span></div>
       <a class="hero-wizual" id="hero-wizual" href="raport-rozszerzony.html?id=302116_5.0005.78%2F3&amp;ok=1&amp;przyklad=1" target="_blank" rel="noopener" aria-label="Zobacz przykładowy raport rozszerzony: działka 78/3, Janikowo, ocena 83 na 100">
         <div class="hw-scena">
           <div class="hw-ruch">
@@ -654,7 +667,7 @@
   <script src="haslo.js?v=20261006"></script>
   <script src="lenis.min.js?v=1"></script>
   <script src="cennik.js?v=1"></script>
-  <script src="main.js?v=72"></script>
-  <script src="hero-raport.js?v=9"></script>
+  <script src="main.js?v=73"></script>
+  <script src="hero-raport.js?v=11"></script>
 </body>
 </html>

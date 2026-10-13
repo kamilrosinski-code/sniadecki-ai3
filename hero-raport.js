@@ -153,15 +153,24 @@
         sb.style.setProperty('--sb-x', Math.round(window.innerWidth / 2 - lewo - szer / 2) + 'px');
       } else if (sb) sb.style.removeProperty('--sb-x');
       // pionowo: lagodnie przewijamy tak, by ramka (a gdy jest wyzsza niz ekran - sama mapa) byla na srodku ekranu
+      var przewin = function () {
+        var mb = document.querySelector('#step-2:not(.hidden) .map-box');
+        if (!sb) return;
+        var vh = window.innerHeight, el = (mb && sb.offsetHeight >= vh - 80) ? mb : sb, p = naStronie(el);
+        var cel = Math.max(0, Math.round(p.y + el.offsetHeight / 2 - vh / 2));
+        if (Math.abs(cel - window.scrollY) < 8) return;
+        if (window.__lenis && !malo) window.__lenis.scrollTo(cel, { duration: 1.2, easing: function (t) { return 1 - Math.pow(1 - t, 3); } });
+        else window.scrollTo({ top: cel, behavior: malo ? 'auto' : 'smooth' });
+      };
       var wysrodkuj = function (ms) {
         setTimeout(function () {
-          var mb = document.querySelector('#step-2:not(.hidden) .map-box');
-          if (!sb) return;
-          var vh = window.innerHeight, el = (mb && sb.offsetHeight >= vh - 80) ? mb : sb, p = naStronie(el);
-          var cel = Math.max(0, Math.round(p.y + el.offsetHeight / 2 - vh / 2));
-          if (Math.abs(cel - window.scrollY) < 8) return;
-          if (window.__lenis && !malo) window.__lenis.scrollTo(cel, { duration: 1.2, easing: function (t) { return 1 - Math.pow(1 - t, 3); } });
-          else window.scrollTo({ top: cel, behavior: malo ? 'auto' : 'smooth' });
+          przewin();
+          // ramka moze jeszcze urosnac (lista miejscowosci do wyboru, wczytanie mapy) - przez 4 s poprawiamy srodek
+          if (window.ResizeObserver && sb) {
+            var ro = new ResizeObserver(function () { przewin(); });
+            ro.observe(sb);
+            setTimeout(function () { ro.disconnect(); }, 4000);
+          }
         }, ms);
       };
       if (jest && !bylo) wysrodkuj(1150);   // po zwinieciu opisu pod haslem (mapa)
@@ -217,4 +226,43 @@
       ioC.observe(cennik);
     } else cennik.classList.add('widoczne');
   }
+})();
+
+/* =====================================================================
+   TELEFON: INTRO W HERO (html.m-intro -> html.m-intro-2), patrz hero-raport.css
+   Faza 1: sam podglad raportu na srodku ekranu (ok. 4 s albo do dotkniecia).
+   Faza 2: karta plynnie zmniejsza sie i odjezdza na gore (FLIP), pod nia wjezdza haslo + wyszukiwarka.
+   ===================================================================== */
+(function () {
+  'use strict';
+  var html = document.documentElement;
+  if (!html.classList.contains('m-intro')) return;
+  var hero = document.querySelector('.hero'), karta = document.getElementById('hero-wizual');
+  if (!hero || !karta) { html.classList.remove('m-intro'); html.classList.add('m-intro-2'); return; }
+  var zrobione = false;
+  function koniec() {
+    if (zrobione) return; zrobione = true;
+    try { sessionStorage.setItem('gruntowo_intro', '1'); } catch (e) {}
+    // FLIP: polozenie karty przed i po zmianie ukladu -> animujemy roznice transformacja
+    var przed = karta.getBoundingClientRect();
+    html.classList.remove('m-intro'); html.classList.add('m-intro-2', 'm-intro-wjazd');
+    var po = karta.getBoundingClientRect();
+    var sk = przed.width / po.width, dx = przed.left - po.left, dy = przed.top - po.top;
+    karta.style.transition = 'none';
+    karta.style.transformOrigin = '0 0';
+    karta.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sk + ')';
+    karta.classList.add('hw-flip');
+    // skala karty (--hw-skala) przelicza sie po zmianie szerokosci - ResizeObserver w tym samym pliku
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      karta.style.transition = '';
+      karta.style.transform = 'translate(0,0) scale(1)';
+      setTimeout(function () { karta.classList.remove('hw-flip'); karta.style.transform = ''; karta.style.transformOrigin = ''; html.classList.remove('m-intro-wjazd'); }, 1400);
+    }); });
+    window.scrollTo(0, 0);
+  }
+  // dotkniecie karty / ekranu w trakcie intro = pomin
+  karta.addEventListener('click', function (e) { if (!zrobione) { e.preventDefault(); koniec(); } });
+  hero.addEventListener('touchstart', function () { if (!zrobione) setTimeout(koniec, 150); }, { passive: true });
+  window.addEventListener('scroll', function () { if (!zrobione && window.scrollY > 40) koniec(); }, { passive: true });
+  setTimeout(koniec, 4300);
 })();

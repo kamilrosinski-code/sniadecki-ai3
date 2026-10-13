@@ -558,3 +558,54 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
 .naglowek-dyn.widoczny .h2::after { animation: nagKreska 1.2s 1s cubic-bezier(.3,.8,.3,1) forwards; }
 @keyframes nagKreska { to { width: 120px; } }
 @media (prefers-reduced-motion: reduce) { .naglowek-dyn .tag, .naglowek-dyn .lead, .naglowek-dyn .eco-staty > div { opacity: 1; transform: none; animation: none !important; } .naglowek-dyn .h2::after { width: 120px; } }
+
+
+/* =====================================================================
+   TELEFON (do 760 px): karty PROSTOKATNE (bez skosu) + INTRO w hero
+   Intro: najpierw sam podglad raportu rozszerzonego (animacje: wjazd, pinezka, licznik 83),
+   po ok. 4 s karta zmniejsza sie i odjezdza na gore, a pod nia wjezdza haslo i wyszukiwarka
+   ("Sprawdz teraz swoja dzialke!"). Stan: html.m-intro (faza 1) -> html.m-intro-2 (uklad koncowy).
+   Klasa ustawiana skryptem w <head> (index.html), FLIP karty w hero-raport.js.
+   ===================================================================== */
+@media (max-width: 760px) {
+  /* --- prostokaty --- */
+  .hw-scena { perspective: none; }
+  .hw-przod, .hw-druga .hw-przod, .hw-onas .hw-przod { transform: none; animation-name: hwWejsciePlasko; }
+  @keyframes hwWejsciePlasko { 0% { opacity: 0; transform: translate3d(0, 36px, 0) scale(.96); } 100% { opacity: 1; transform: none; } }
+  .hwm { transform: translate3d(48px, 0, 0); }
+  .hwm.aktywne { transform: none; }
+  .hw-modele:not(.hw-gra) .hwm.aktywne { transform: translate3d(0, 40px, 0); }
+  .hw-przod { left: 0; top: 0; width: 680px; }
+  .hw-karta { border-radius: 14px; }
+  .hw-scena { animation: none; }
+
+  /* --- hero: uklad koncowy (karta u gory, pod nia haslo i wyszukiwarka) --- */
+  .hero .hero-content { display: flex; flex-direction: column; padding-top: 5.6rem; }
+  .hero .hero-wizual { order: -1; width: 100%; max-width: 262px; margin: 0 auto .9rem; }
+  .hero .hero-sub { margin-bottom: 1.1rem; }
+  .hero-intro-podpis { order: -2; display: none; }
+  .hero-cta-tag { display: flex; align-items: center; gap: .55rem; margin: 0 0 .8rem; font-size: .74rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+  .hero-cta-tag i { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 0 rgba(201,169,110,.6); animation: ctaPuls 1.8s ease-out infinite; }
+  @keyframes ctaPuls { 0% { box-shadow: 0 0 0 0 rgba(201,169,110,.65); } 100% { box-shadow: 0 0 0 12px rgba(201,169,110,0); } }
+  .hero .hero-headline { font-size: clamp(2rem, 9vw, 2.6rem); }
+  /* w trybie mapy karta znika - ramka z mapa ma cale miejsce */
+  .hero.hero-mapa .hero-wizual { display: none; }
+
+  /* --- faza 1: tylko karta na srodku ekranu --- */
+  html.m-intro .hero { min-height: 100svh; }
+  html.m-intro .hero .hero-content { min-height: 100svh; justify-content: center; padding-bottom: 3rem; }
+  html.m-intro .hero-tekst, html.m-intro .hero-stats { display: none; }
+  html.m-intro .hero .hero-wizual { max-width: 100%; margin-bottom: 0; }
+  html.m-intro .hero-intro-podpis { display: flex; flex-direction: column; align-items: center; gap: .35rem; margin: 0 0 1.4rem; text-align: center; animation: fu .8s .2s ease both; }
+  .hip-tag { font-size: .68rem; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
+  .hip-tekst { font-family: var(--fd); font-size: 1.55rem; line-height: 1.15; color: var(--w); }
+  .hip-pasek { display: block; width: 120px; height: 2px; margin-top: .6rem; background: rgba(201,169,110,.2); border-radius: 2px; overflow: hidden; }
+  .hip-pasek i { display: block; height: 100%; width: 0; background: var(--gold); animation: hipPasek 3.9s .3s linear forwards; }
+  @keyframes hipPasek { to { width: 100%; } }
+
+  /* --- faza 2: karta odjezdza na gore (FLIP w JS), haslo i wyszukiwarka wjezdzaja --- */
+  html.m-intro-2 .hero-wizual.hw-flip { transition: transform 1.15s cubic-bezier(.22,.7,.2,1); transform-origin: 0 0; will-change: transform; }
+  html.m-intro-2.m-intro-wjazd .hero-tekst { animation: heroWjazd 1s .15s cubic-bezier(.22,.7,.2,1) both; }
+  @keyframes heroWjazd { from { opacity: 0; transform: translate3d(0, 70px, 0); } to { opacity: 1; transform: none; } }
+  html.m-intro-2 .hero-headline, html.m-intro-2 .hero-sub, html.m-intro-2 .search-box, html.m-intro-2 .hero-partner { animation: none; opacity: 1; transform: none; }
+}

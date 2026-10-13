@@ -586,13 +586,8 @@
       step1.classList.add('hidden');
       step2.classList.remove('hidden');
 
-      // Przewin do mapy (na telefonie klient od razu widzi mapę wyśrodkowaną)
-      const box = document.getElementById('search-box');
-      if (box) {
-        setTimeout(function () {
-          box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 200);
-      }
+      // Wyśrodkowanie ramki z mapą na ekranie robi hero-raport.js (klasa .hero-mapa) - tu już nie przewijamy,
+      // bo dwa przewijania naraz (scrollIntoView + Lenis) walczyły ze sobą i mapa lądowała przy górnej krawędzi.
 
       // Inicjalizuj mapę Leaflet (raz) i wyśrodkuj na miejscowości
       setTimeout(function () { inicjalizujMape(miasto); }, 150);
@@ -772,13 +767,7 @@
       step2.classList.add('hidden');
       step3.classList.remove('hidden');
 
-      // Przewin do ekranu potwierdzenia (na telefonie widok nie skacze poza miejsce)
-      const box = document.getElementById('search-box');
-      if (box) {
-        setTimeout(function () {
-          box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }
+      // Wyśrodkowanie kroku "Ustalamy działkę..." robi hero-raport.js
 
       // Zapisz zgłoszenie do arkusza (w tle)
       if (FORM_ENDPOINT && FORM_ENDPOINT !== 'WKLEJ_TUTAJ_LINK_APPS_SCRIPT') {
