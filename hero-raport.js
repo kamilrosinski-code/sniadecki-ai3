@@ -227,3 +227,33 @@
     } else cennik.classList.add('widoczne');
   }
 })();
+
+/* =====================================================================
+   TELEFON: sekwencja w hero (hero-raport.css, blok "SEKWENCJA")
+   Karta raportu najpierw duza i animowana; po zakonczeniu animacji (kolko 83/100) - .m-gotowe:
+   karta zmniejsza sie (FLIP, plynnie) i cofa w tlo, wyszukiwarka rosnie. Dotkniecie wyszukiwarki = od razu.
+   ===================================================================== */
+(function () {
+  'use strict';
+  if (!(window.matchMedia && matchMedia('(max-width: 760px)').matches)) return;
+  var hero = document.querySelector('.hero'), karta = document.getElementById('hero-wizual'), sb = document.getElementById('search-box');
+  if (!hero || !karta) return;
+  var malo = matchMedia('(prefers-reduced-motion: reduce)').matches, zrobione = false;
+  function gotowe() {
+    if (zrobione) return; zrobione = true;
+    if (malo) { hero.classList.add('m-gotowe'); return; }
+    var przed = karta.getBoundingClientRect();
+    hero.classList.add('m-gotowe');
+    var po = karta.getBoundingClientRect();
+    var sk = przed.width / po.width, dx = przed.left - po.left, dy = przed.top - po.top;
+    karta.style.transition = 'none'; karta.style.transformOrigin = '0 0';
+    karta.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sk + ')';
+    karta.classList.add('hw-flip');
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      karta.style.transition = ''; karta.style.transform = 'translate(0,0) scale(1)';
+      setTimeout(function () { karta.classList.remove('hw-flip'); karta.style.transform = ''; karta.style.transformOrigin = ''; }, 1300);
+    }); });
+  }
+  if (sb) { sb.addEventListener('focusin', gotowe); sb.addEventListener('touchstart', gotowe, { passive: true }); }
+  setTimeout(gotowe, malo ? 0 : 4300);   // ok. 0,6 s wjazd + 1,7 s animacja + licznik do ok. 3,8 s
+})();

@@ -8,7 +8,11 @@
 .bramka-logo{height:34px;width:auto;display:block;margin-bottom:1.5rem;}
 .bramka-tytul{font-family:var(--ff-d);font-size:1.9rem;font-weight:500;line-height:1.12;margin-bottom:.75rem;}
 .bramka-sub{font-size:.88rem;color:var(--sage);line-height:1.65;margin-bottom:1.4rem;}
-.bramka-alt{font-size:.8rem;color:var(--sage);margin-top:1.1rem;}
+.bramka-alt{font-size:.8rem;color:var(--sage);margin-top:1.1rem;text-align:center;}
+.bramka-darmowy{display:flex;justify-content:center;text-align:center;width:100%;padding:.85rem 1rem;font-size:.85rem;line-height:1.35;border:1px solid var(--gold);color:var(--gold);background:transparent;text-decoration:none;}
+.bramka-darmowy:hover{background:rgba(201,169,110,.12);}
+.haslo-row-rap.ukryta{display:none;}
+.bramka-box .haslo-row-rap{margin-top:1rem;}
 .bramka-alt a{color:var(--gold);text-decoration:underline;text-underline-offset:2px;}
 body.zablokowane .start,body.zablokowane .report{display:none!important;}
 

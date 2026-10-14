@@ -119,7 +119,7 @@
       const info = $('pm-info');
       const szukaj = function () {
         const q = $('pm-szukaj').value.trim(); if (!q) return;
-        fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pl&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'pl' } })
+        fetchPamiec('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pl&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'pl' } })
           .then(function (r) { return r.json(); })
           .then(function (w) { if (w && w.length) mapa.setView([+w[0].lat, +w[0].lon], 17); else info.textContent = 'Nie znaleźliśmy tego miejsca - spróbuj wpisać samą miejscowość.'; })
           .catch(function () { info.textContent = 'Wyszukiwarka chwilowo nie działa - przesuń i przybliż mapę ręcznie.'; });
@@ -131,7 +131,7 @@
         if (znacznik) znacznik.remove();
         znacznik = L.marker(e.latlng).addTo(mapa);
         info.textContent = 'Ustalamy numer działki…';
-        fetch(ULDK_PROXY + '?xy=' + encodeURIComponent(e.latlng.lng.toFixed(6) + ',' + e.latlng.lat.toFixed(6)))
+        fetchPamiec(ULDK_PROXY + '?xy=' + encodeURIComponent(e.latlng.lng.toFixed(6) + ',' + e.latlng.lat.toFixed(6)))
           .then(function (r) { return r.json(); })
           .then(function (d) {
             if (!d || !d.id) { info.textContent = (d && d.error) || 'W tym miejscu nie znaleźliśmy działki - kliknij dokładniej.'; return; }
@@ -267,7 +267,7 @@
 
   function pobierzDane(id) {
     $('rep-notice').innerHTML = 'Pobieranie danych z rejestru GUGiK...';
-    fetch(ULDK_PROXY + '?id=' + encodeURIComponent(id))
+    fetchPamiec(ULDK_PROXY + '?id=' + encodeURIComponent(id))
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (data.error || !data.geom_wkt) throw new Error(data.error || 'brak danych');
@@ -1490,7 +1490,7 @@
   }
   function mesipPlan(lon, lat) {
     if (!MESIP_OBSZARY.some(function (b) { return lon >= b[0] && lon <= b[2] && lat >= b[1] && lat <= b[3]; })) return Promise.resolve(null);
-    return fetch(URL_MESIP + '?lon=' + lon.toFixed(6) + '&lat=' + lat.toFixed(6)).then(function (r) { return r.json(); })
+    return fetchPamiec(URL_MESIP + '?lon=' + lon.toFixed(6) + '&lat=' + lat.toFixed(6)).then(function (r) { return r.json(); })
       .then(function (d) { return d && d.ok ? d : null; }).catch(function () { return null; });
   }
   const RU_STREFY = ['SW', 'SJ', 'SZ', 'SU', 'SH', 'SP', 'SR', 'SI', 'SN', 'SC', 'SG', 'SO', 'SK'];
@@ -1757,10 +1757,31 @@
   function notaPamiec(w) {
     return w && w.zPamieci ? '<p class="legenda-ru-proj">Serwer planów gminy chwilowo nie odpowiada - pokazujemy dane planu zapamiętane ' + escH(w.zPamieci) + '.</p>' : '';
   }
+  // PAMIEC RAPORTU (pamiec.php na LH): odpowiedzi uslug publicznych (Geoportal, GUGiK, ULDK, MESIP...) sa zapamietywane
+  // na serwerze na 30 dni - kolejne otwarcia raportu tej dzialki dostaja je od razu. Gdy serwer nie odpowie - pytamy wprost.
+  // Wylaczenie do testow: ?bezpamieci=1 w adresie raportu.
+  function przezPamiec(url) {
+    var HOSTY = ['mapy.geoportal.gov.pl', 'integracja.gugik.gov.pl', 'services.gugik.gov.pl', 'script.google.com', 'geoportal.mesip.pl',
+      'rejestr-urbanistyczny.gov.pl', 'nominatim.openstreetmap.org', 'wms2.geopoz.poznan.pl', 'www.e-mapa.net'];
+    try {
+      if (/[?&]bezpamieci=1/.test(location.search)) return null;
+      var h = new URL(url, location.href).hostname;
+      return HOSTY.indexOf(h) > -1 ? 'https://sniadecki-development.pl/gruntowo-api/pamiec.php?u=' + encodeURIComponent(url) : null;
+    } catch (e) { return null; }
+  }
+  // fetch z pamiecia: najpierw przez nasz serwer, przy jego awarii (5xx / brak polaczenia) - bezposrednio do uslugi
+  function fetchPamiec(url, opcje) {
+    var p = przezPamiec(url);
+    if (!p) return fetch(url, opcje);
+    return fetch(p, opcje).then(function (r) {
+      if (r.ok || (r.status < 500 && r.status !== 403)) return r;
+      return fetch(url, opcje);
+    }, function () { return fetch(url, opcje); });
+  }
   function fetchZPonowieniem(url, ileRazy, limitMs) {
     var ac = window.AbortController ? new AbortController() : null;
     var t = ac ? setTimeout(function () { ac.abort(); }, limitMs || 15000) : null;
-    return fetch(url, ac ? { signal: ac.signal } : undefined).then(function (r) {
+    return fetchPamiec(url, ac ? { signal: ac.signal } : undefined).then(function (r) {
       if (t) clearTimeout(t);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r;

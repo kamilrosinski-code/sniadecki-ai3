@@ -25,7 +25,7 @@
 (function () {
   'use strict';
 
-  var RAPORT_JS = 'raport.js?v=20261013b';
+  var RAPORT_JS = 'raport.js?v=20261014a';
 
   var URL_KIMPZP = 'https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego';
   var URL_POG = 'https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin';
@@ -219,15 +219,29 @@
     if (id && window.GruntowoPlatnosc && form && !form.querySelector('.bramka-kup')) {
       var kup = document.createElement('div');
       kup.className = 'bramka-kup';
-      kup.innerHTML = '<div class="bramka-albo"><span>albo</span></div>' +
-        '<button type="button" class="btn btn-gold bramka-kup-btn" data-kup-raport data-id="' + window.GruntowoPlatnosc.esc(id) + '">Kup raport dla tej działki - <span data-cena="raport">159 zł</span></button>' +
+      kup.innerHTML = '<button type="button" class="btn btn-gold bramka-kup-btn" data-kup-raport data-id="' + window.GruntowoPlatnosc.esc(id) + '">Kup raport dla tej działki - <span data-cena="raport">159 zł</span></button>' +
         '<div class="znaczek-payu">' + '<span>Płatność obsługuje</span>' + window.GruntowoPlatnosc.logoPayU() + '</div>' +
         '<p class="bramka-kup-info">Działka ' + window.GruntowoPlatnosc.esc(id) + ' · BLIK, karta, przelew</p>';
-      var alt = form.querySelector('.bramka-alt');
-      form.insertBefore(kup, alt);
+      // zakup nad "albo / bezplatny raport podstawowy"
+      var albo = form.querySelector('.bramka-albo');
+      form.insertBefore(kup, albo);
+    } else if (!id && form) {
+      var albo0 = form.querySelector('.bramka-albo'); if (albo0) albo0.style.display = 'none';   // bez identyfikatora nie ma czego kupic
     }
-    var pole = document.querySelector('#bramka-form [data-haslo-pole]');
-    if (pole) pole.focus();
+    // "Mam haslo" - pole hasla pokazuje sie dopiero po kliknieciu (haslo dostaja klienci od nas)
+    var linkH = form && form.querySelector('[data-pokaz-haslo]');
+    if (linkH && !linkH.dataset.podlaczony) {
+      linkH.dataset.podlaczony = '1';
+      linkH.addEventListener('click', function (e) {
+        e.preventDefault();
+        var row = form.querySelector('.haslo-row-rap'); if (row) row.classList.remove('ukryta');
+        linkH.parentNode.style.display = 'none';
+        var pole = form.querySelector('[data-haslo-pole]'); if (pole) pole.focus();
+      });
+    }
+    // haslo w adresie / pamieci? -> pokaz pole od razu (haslo.js moze je wypelnic)
+    var poleH = form && form.querySelector('[data-haslo-pole]');
+    if (poleH && poleH.value) { var r0 = form.querySelector('.haslo-row-rap'); if (r0) r0.classList.remove('ukryta'); }
   }
 
   // =====================================================================
@@ -277,7 +291,7 @@
     FUNKCJE = { mpzp: analizaMPZP, pog: analizaPOG, uzytki: analizaUzytki, teren: analizaTeren, otoczenie: analizaOtoczenie,
       media: analizaMedia, powodz: analizaPowodz, przyroda: analizaPrzyroda, pozwolenia: analizaPozwolenia };
     // Lekkie zapytania od razu, ciezsze obrazy z opoznieniem (raport.js laduje wtedy swoje mapy)
-    var start = { mpzp: 0, pog: 300, uzytki: 600, teren: 900, otoczenie: 1200, pozwolenia: 1800, media: 2500, powodz: 4000, przyroda: 5500 };
+    var start = { mpzp: 0, pog: 150, uzytki: 300, teren: 450, otoczenie: 650, pozwolenia: 900, media: 1300, powodz: 2000, przyroda: 2800 };   // odpowiedzi zwykle z pamieci (pamiec.php) - krotsze odstepy
     Object.keys(start).forEach(function (k) { setTimeout(function () { wykonajAnalize(k, nr, 0); }, start[k]); });
     // Ceny przychodza z raport.js; jesli backend milczy - po 45 s uznajemy brak danych
     setTimeout(function () { if (nr === przebieg && !stan.ceny) { stan.ceny = { blad: 'brak odpowiedzi' }; przelicz(); } }, 45000);
@@ -324,16 +338,42 @@
       obietnica.then(function (w) { clearTimeout(t); ok(w); }, function (e) { clearTimeout(t); nie(e); });
     });
   }
-  function pobierz(url, opcje, ms) {
+  // PAMIEC RAPORTU: zapytania do uslug publicznych ida przez nasz serwer (pamiec.php), ktory zapamietuje odpowiedzi
+  // na 30 dni - kazde kolejne otwarcie raportu tej dzialki dostaje dane od razu, bez czekania na Geoportal/GUGiK/ISOK...
+  // Gdy nasz serwer nie odpowie - zapytanie idzie bezposrednio do uslugi (jak dawniej).
+  var PAMIEC = 'https://sniadecki-development.pl/gruntowo-api/pamiec.php';
+  var PAMIEC_HOSTY = ['mapy.geoportal.gov.pl', 'integracja.gugik.gov.pl', 'services.gugik.gov.pl', 'wody.isok.gov.pl', 'sdi.gdos.gov.pl',
+    'overpass-api.de', 'overpass.kumi.systems', 'script.google.com', 'geoportal.mesip.pl', 'rejestr-urbanistyczny.gov.pl', 'nominatim.openstreetmap.org'];
+  window.GruntowoPamiec = { url: PAMIEC, hosty: PAMIEC_HOSTY, trafienia: 0, wlaczona: !/[?&]bezpamieci=1/.test(location.search) };
+  function przezPamiec(url) {
+    try {
+      if (!window.GruntowoPamiec.wlaczona) return null;
+      var h = new URL(url, location.href).hostname;
+      return PAMIEC_HOSTY.indexOf(h) > -1 ? PAMIEC + '?u=' + encodeURIComponent(url) : null;
+    } catch (e) { return null; }
+  }
+  function pobierzRaz(url, opcje, ms) {
     var ctrl = window.AbortController ? new AbortController() : null;
-    var o = opcje || {};
+    var o = {}; if (opcje) for (var k in opcje) o[k] = opcje[k];
     if (ctrl) o.signal = ctrl.signal;
     var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms || 20000);
     return fetch(url, o).then(function (r) {
       clearTimeout(t);
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
       return r;
     }, function (e) { clearTimeout(t); throw e; });
+  }
+  function pobierz(url, opcje, ms) {
+    var p = przezPamiec(url);
+    if (!p) return pobierzRaz(url, opcje, ms);
+    return pobierzRaz(p, opcje, ms).then(function (r) {
+      if ((r.headers.get('X-Gruntowo-Pamiec') || '').indexOf('hit') === 0) window.GruntowoPamiec.trafienia++;
+      return r;
+    }, function (e) {
+      // 4xx z uslugi (np. 400 zly parametr) - nie ma sensu pytac wprost; 5xx/brak polaczenia - probujemy bezposrednio
+      if (e && e.status && e.status < 500 && e.status !== 403) throw e;
+      return pobierzRaz(url, opcje, ms);
+    });
   }
   function pobierzTekst(url, ms) { return pobierz(url, null, ms).then(function (r) { return r.text(); }); }
 

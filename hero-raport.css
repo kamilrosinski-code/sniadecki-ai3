@@ -560,6 +560,9 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
 @media (prefers-reduced-motion: reduce) { .naglowek-dyn .tag, .naglowek-dyn .lead, .naglowek-dyn .eco-staty > div { opacity: 1; transform: none; animation: none !important; } .naglowek-dyn .h2::after { width: 120px; } }
 
 
+/* podpis-strzalka pod karta: tylko telefon (nizej); na komputerze ukryty */
+.hw-klik { display: none; }
+
 /* =====================================================================
    TELEFON (do 760 px): karty prostokatne (bez skosu 3D) + hero na jednym ekranie:
    haslo, wyszukiwarka i pod nia mala karta raportu (animacja). Komputer: bez zmian.
@@ -584,9 +587,22 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
   /* karta raportu zaraz pod wyszukiwarka, a "Twoje dane zostaja w..." dopiero pod karta */
   .hero .hero-content { display: flex; flex-direction: column; }
   .hero .hero-tekst { display: contents; }
-  .hero .hero-wizual { order: 1; width: 100%; max-width: 250px; margin: 1.2rem auto 0; }
-  .hero .hw-przod { animation-delay: .9s; }
-  .hero .hero-partner { order: 2; margin-top: 1.4rem; }
+  /* SEKWENCJA (kilka sekund): na poczatku wyszukiwarka lekko mniejsza i przygaszona, karta raportu duza i gra
+     animacja (wjazd, pinezka, kolko 83/100); gdy sie skonczy (hero-raport.js dodaje .m-gotowe) karta zmniejsza sie
+     i cofa w tlo, a wyszukiwarka rosnie do pelnego rozmiaru. Transformacje nie zmieniaja ukladu - nic nie skacze. */
+  .hero .hero-wizual { order: 1; width: 100%; max-width: 340px; margin: 1rem auto 0; transition: opacity 1s ease, filter 1s ease; }
+  .hero .hw-przod { animation-delay: .6s; }
+  .hero .search-box { transform: scale(.9); opacity: .78; transform-origin: 50% 0; transition: transform 1s cubic-bezier(.22,.7,.2,1), opacity 1s ease; }
+  .hero.m-gotowe .search-box { transform: none; opacity: 1; }
+  .hero.m-gotowe .hero-wizual { max-width: 250px; opacity: .82; filter: saturate(.85) brightness(.9); }
+  .hero .hero-wizual.hw-flip { transition: transform 1.1s cubic-bezier(.22,.7,.2,1), opacity 1s ease, filter 1s ease; transform-origin: 0 0; }
+  .hero .hero-wizual.hw-flip .hw-scena { transition: none; }
+  @media (prefers-reduced-motion: reduce) { .hero .search-box { transform: none; opacity: 1; } .hero .hero-wizual { max-width: 250px; } }
+  .hero .hero-partner { order: 3; margin-top: 1.3rem; }
+  /* strzalka pod karta: "kliknij, by zobaczyc przykladowy raport rozszerzony" */
+  .hero .hw-klik { order: 2; display: flex; align-items: center; justify-content: center; gap: .4rem; margin: .7rem auto 0; font-size: .7rem; letter-spacing: .06em; color: rgba(242,240,235,.72); text-decoration: none; animation: fu .8s 2.4s ease both; }
+  .hero .hw-klik svg { width: 14px; height: 14px; fill: none; stroke: var(--gold); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; animation: hwKlikStrzalka 1.6s ease-in-out infinite; }
+  @keyframes hwKlikStrzalka { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
   /* w trybie mapy karta znika - ramka z mapa ma cale miejsce */
   .hero.hero-mapa .hero-wizual { display: none; }
 }

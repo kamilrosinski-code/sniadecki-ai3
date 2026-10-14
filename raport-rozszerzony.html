@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="raport-style.css?v=20261009d" />
-<link rel="stylesheet" href="raport-rozszerzony.css?v=20261009c" />
+<link rel="stylesheet" href="raport-rozszerzony.css?v=20261014a" />
 <link rel="stylesheet" href="raport-druk.css?v=20260929" />
 </head>
 <body>
@@ -31,14 +31,17 @@
   <form class="bramka-box" id="bramka-form" data-haslo data-haslo-reczne novalidate>
     <img src="gruntowo-logo.png" alt="gruntowo.pl" class="bramka-logo" />
     <p class="eyebrow">Raport rozszerzony</p>
-    <h1 class="bramka-tytul">Wklej hasło, aby otworzyć raport rozszerzony</h1>
-    <p class="bramka-sub">Raport rozszerzony zawiera werdykt inwestycyjny, plusy i minusy działki, analizę zagrożeń powodziowych, form ochrony przyrody, mediów przy działce, ukształtowania terenu, klas gruntów i dostępu do drogi.</p>
-    <div class="haslo-row-rap">
+    <h1 class="bramka-tytul">Raport rozszerzony dla tej działki</h1>
+    <p class="bramka-sub">Werdykt inwestycyjny, plusy i minusy działki, zagrożenie powodziowe, formy ochrony przyrody, media przy działce, ukształtowanie terenu, klasy gruntów i dostęp do drogi.</p>
+    <!-- przycisk "Kup raport dla tej dzialki" dodaje raport-rozszerzony.js (gdy znamy identyfikator) -->
+    <div class="bramka-albo"><span>albo</span></div>
+    <a class="btn bramka-darmowy" href="index.html">Na razie wygeneruj bezpłatny raport podstawowy →</a>
+    <p class="bramka-alt"><a href="#" data-pokaz-haslo>Mam hasło do raportu rozszerzonego</a></p>
+    <div class="haslo-row-rap ukryta">
       <input class="id-input" type="password" data-haslo-pole placeholder="Wklej hasło" autocomplete="off" aria-label="Hasło" />
       <button type="submit" class="btn btn-gold">Otwórz raport</button>
     </div>
     <div class="haslo-msg" data-haslo-msg role="status" aria-live="polite"></div>
-    <p class="bramka-alt">Nie masz hasła? <a href="raport.html">Wygeneruj raport bezpłatny</a> albo <a href="raport.html?kup=1">kup raport rozszerzony</a>.</p>
   </form>
 </div>
 
@@ -406,7 +409,7 @@
 <script src="haslo.js?v=20261006"></script>
 <script src="cennik.js?v=1"></script>
 <script src="platnosc.js?v=20261013c"></script>
-<script src="raport-rozszerzony.js?v=20261013c"></script>
+<script src="raport-rozszerzony.js?v=20261014a"></script>
 <script src="pro-sledz.js?v=1"></script>
 </body>
 </html>
