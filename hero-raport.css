@@ -564,10 +564,10 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
 .hw-klik { display: none; }
 
 /* =====================================================================
-   TELEFON (do 760 px): karty prostokatne (bez skosu 3D) + hero na jednym ekranie:
+   TELEFON I TABLET W PIONIE / TELEFON W POZIOMIE (do 900 px): karty prostokatne (bez skosu 3D) + hero na jednym ekranie:
    haslo, wyszukiwarka i pod nia mala karta raportu (animacja). Komputer: bez zmian.
    ===================================================================== */
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   /* --- prostokaty --- */
   .hw-scena { perspective: none; animation: none; }
   .hw-przod, .hw-druga .hw-przod, .hw-onas .hw-przod { transform: none; animation-name: hwWejsciePlasko; }
@@ -579,7 +579,7 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
   .hw-karta { border-radius: 14px; }
 
   /* --- hero na jednym ekranie --- */
-  .hero .hero-content { padding-top: 5.6rem; padding-bottom: 1.5rem; }
+  .hero .hero-content { padding-top: 4.6rem; padding-bottom: 1.5rem; }
   .hero .hero-headline { font-size: clamp(1.9rem, 8.6vw, 2.5rem); margin-bottom: 1rem; }
   .hero .hero-sub { display: none; }
   .hero .search-box { padding: 1.1rem 1.1rem 1rem; }
@@ -595,9 +595,12 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
   .hero .hero-content { align-items: center; }
   .hero .hero-headline { text-align: center; }
   /* !important: style.css (do 600 px) wymusza width:100% !important, a .hero-sterowane wylacza przejscia */
-  .hero .search-box { width: 86% !important; max-width: none !important; animation: none; opacity: .72 !important; transition: width 1.2s cubic-bezier(.22,.7,.2,1), opacity 1.2s ease !important; }
-  .hero.m-gotowe .search-box, .hero.hero-mapa .search-box { width: 100% !important; opacity: 1 !important; }
-  .hero .hero-wizual { order: 1; width: 86%; max-width: none; margin: .7rem auto 0; transition: width 1.2s cubic-bezier(.22,.7,.2,1), opacity 1.2s ease, filter 1.2s ease; }
+  .hero .search-box { width: 86% !important; max-width: 560px !important; margin-left: auto !important; margin-right: auto !important; transform: none !important; animation: none !important; opacity: .72 !important; transition: width 1.2s cubic-bezier(.22,.7,.2,1), opacity 1.2s ease !important; }
+  .hero.m-gotowe .search-box, .hero.hero-mapa .search-box { width: 100% !important; max-width: 640px !important; opacity: 1 !important; }
+  /* tryb mapy na telefonie: ramka i mapa na cala szerokosc ekranu (bez marginesow), mapa od krawedzi do krawedzi */
+  .hero.hero-mapa .search-box { max-width: none !important; padding-left: .6rem !important; padding-right: .6rem !important; border-radius: 10px; }
+  .hero.hero-mapa .map-box { margin-left: -.6rem; margin-right: -.6rem; width: auto; border-radius: 0; }
+  .hero .hero-wizual { order: 1; width: 86%; max-width: 420px; margin: .7rem auto 0; transition: width 1.2s cubic-bezier(.22,.7,.2,1), opacity 1.2s ease, filter 1.2s ease; }
   .hero .hw-przod { animation-delay: .6s; }
   .hero.m-gotowe .hero-wizual { width: 54%; opacity: .78; filter: saturate(.8) brightness(.86); }
   .hero .hw-klik { transition: opacity .6s ease; }
@@ -609,4 +612,20 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
   @keyframes hwKlikStrzalka { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
   /* w trybie mapy karta znika - ramka z mapa ma cale miejsce */
   .hero.hero-mapa .hero-wizual { display: none; }
+  /* sekcja "Nie dostajesz kolejnych map": najpierw tekst, potem karta (Janikowo / MPZP) */
+  .sekcja-analiza .intro-grid { display: flex; flex-direction: column; }
+  .sekcja-analiza .intro-tekst { order: 0; }
+  .sekcja-analiza .hw-druga { order: 1; margin-top: 1.5rem; }
+}
+
+/* niskie ekrany (iPhone SE/8, telefon w poziomie): mniejsze haslo i ciasniejsza wyszukiwarka, zeby karta weszla w kadr */
+@media (max-width: 900px) and (max-height: 700px) {
+  .hero .hero-content { padding-top: 4rem; }
+  .hero .hero-headline { font-size: clamp(1.5rem, 6.8vw, 2rem); margin-bottom: .6rem; line-height: 1.08; }
+  .hero .search-box { padding: .8rem .9rem .7rem; }
+  .hero .search-hint-sm { font-size: .78rem; margin-bottom: .5rem; line-height: 1.4; }
+  .hero .search-box .search-links, .hero .search-box .search-alt { font-size: .74rem; }
+  .hero .hero-wizual { width: 72%; max-width: 360px; margin-top: .4rem; }
+  .hero.m-gotowe .hero-wizual { width: 44%; }
+  .hero .hw-klik { margin-top: .4rem; }
 }

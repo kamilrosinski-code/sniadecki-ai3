@@ -168,6 +168,8 @@ body.zablokowane .start,body.zablokowane .report{display:none!important;}
 .pp-tekst{font-size:.9rem;color:var(--cream2);line-height:1.5;}
 .pp-tekst strong{color:var(--goldl);font-weight:500;}
 .pp-akcje{display:flex;gap:.5rem;flex-wrap:wrap;}
+.pp-akcje .btn-kontur{background:transparent;color:var(--gold);border:1px solid var(--gold);}
+.pp-akcje .btn-kontur:hover{background:rgba(201,169,110,.14);}
 body.tryb-przykladu #btn-nowa{display:none!important;}
 @media(max-width:640px){.pp-akcje{width:100%;}.pp-akcje .btn{flex:1;justify-content:center;}}
 @media print{.pasek-przykladu{display:none!important;}}

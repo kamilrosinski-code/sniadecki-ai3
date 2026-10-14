@@ -235,7 +235,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  if (!(window.matchMedia && matchMedia('(max-width: 760px)').matches)) return;
+  if (!(window.matchMedia && matchMedia('(max-width: 900px)').matches)) return;
   var hero = document.querySelector('.hero'), karta = document.getElementById('hero-wizual'), sb = document.getElementById('search-box');
   if (!hero || !karta) return;
   var malo = matchMedia('(prefers-reduced-motion: reduce)').matches, zrobione = false;
@@ -243,6 +243,15 @@
     if (zrobione) return; zrobione = true;
     hero.classList.add('m-gotowe');   // reszta to przejscia CSS (szerokosc w %, bez przeskoku)
   }
-  if (sb) { sb.addEventListener('focusin', gotowe); sb.addEventListener('touchstart', gotowe, { passive: true }); }
+  if (sb) {
+    sb.addEventListener('focusin', gotowe); sb.addEventListener('touchstart', gotowe, { passive: true });
+    // po zakonczeniu zmiany szerokosci ramki mapa Leaflet musi przeliczyc swoj rozmiar (inaczej kafelki z prawej
+    // strony moga zostac niedorysowane) - Leaflet nasluchuje zdarzenia resize okna
+    sb.addEventListener('transitionend', function (e) { if (e.propertyName === 'width') { try { window.dispatchEvent(new Event('resize')); } catch (x) {} } });
+  }
+  var s2m = document.getElementById('step-2');
+  if (s2m && window.MutationObserver) new MutationObserver(function () {
+    if (!s2m.classList.contains('hidden')) [200, 900, 1600].forEach(function (ms) { setTimeout(function () { try { window.dispatchEvent(new Event('resize')); } catch (x) {} }, ms); });
+  }).observe(s2m, { attributes: true, attributeFilter: ['class'] });
   setTimeout(gotowe, malo ? 0 : 4300);   // ok. 0,6 s wjazd + 1,7 s animacja + licznik do ok. 3,8 s
 })();

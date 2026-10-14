@@ -123,9 +123,9 @@
     var pasek = document.createElement('div');
     pasek.className = 'pasek-przykladu';
     pasek.innerHTML = '<div class="pp-tekst"><strong>To jest przykładowy raport rozszerzony</strong> - dla działki w Janikowie (gm. Swarzędz). ' +
-      'Tak samo wygląda raport dla Twojej działki. <a href="raport.html?id=302116_5.0005.78%2F3&ok=1&przyklad=1">Zobacz też raport bezpłatny tej działki</a>, żeby porównać zakres.</div>' +
+      'Tak samo wygląda raport dla Twojej działki.</div>' +
       '<div class="pp-akcje"><a href="raport.html?kup=1" class="btn btn-gold">Kup raport dla swojej działki - <span data-cena="raport">159 zł</span></a>' +
-      '<a href="index.html#haslo" class="btn">Mam hasło</a></div>';
+      '<a href="index.html#szukaj" class="btn btn-gold btn-kontur">Bezpłatny raport dla Twojej działki →</a></div>';
     var hero = document.querySelector('#report .rep-hero');
     if (hero) hero.parentNode.insertBefore(pasek, hero);
     // token dla dzialki przykladowej (serwer wydaje go tylko dla niej); raport otwieramy tak czy inaczej
