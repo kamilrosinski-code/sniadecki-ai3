@@ -587,17 +587,21 @@ body.film-aktywny .hw-przod { backdrop-filter: none; -webkit-backdrop-filter: no
   /* karta raportu zaraz pod wyszukiwarka, a "Twoje dane zostaja w..." dopiero pod karta */
   .hero .hero-content { display: flex; flex-direction: column; }
   .hero .hero-tekst { display: contents; }
-  /* SEKWENCJA (kilka sekund): na poczatku wyszukiwarka lekko mniejsza i przygaszona, karta raportu duza i gra
-     animacja (wjazd, pinezka, kolko 83/100); gdy sie skonczy (hero-raport.js dodaje .m-gotowe) karta zmniejsza sie
-     i cofa w tlo, a wyszukiwarka rosnie do pelnego rozmiaru. Transformacje nie zmieniaja ukladu - nic nie skacze. */
-  .hero .hero-wizual { order: 1; width: 100%; max-width: 340px; margin: 1rem auto 0; transition: opacity 1s ease, filter 1s ease; }
+  /* SEKWENCJA (kilka sekund): haslo wysrodkowane; na starcie wyszukiwarka i karta raportu maja TE SAMA szerokosc (86%),
+     wyszukiwarka przygaszona, karta gra animacje (wjazd, pinezka, kolko 83/100). Gdy animacja sie skonczy
+     (hero-raport.js dodaje .m-gotowe) karta plynnie maleje do ok. polowy i cofa sie w tlo, a wyszukiwarka
+     rosnie do pelnej szerokosci. Animowana jest szerokosc w % (plynnie, bez przeskoku) - karta skaluje sie
+     sama (--hw-skala liczy ResizeObserver), a to, co pod nia, przesuwa sie razem z nia. */
+  .hero .hero-content { align-items: center; }
+  .hero .hero-headline { text-align: center; }
+  /* !important: style.css (do 600 px) wymusza width:100% !important, a .hero-sterowane wylacza przejscia */
+  .hero .search-box { width: 86% !important; max-width: none !important; animation: none; opacity: .72 !important; transition: width 1.2s cubic-bezier(.22,.7,.2,1), opacity 1.2s ease !important; }
+  .hero.m-gotowe .search-box, .hero.hero-mapa .search-box { width: 100% !important; opacity: 1 !important; }
+  .hero .hero-wizual { order: 1; width: 86%; max-width: none; margin: .7rem auto 0; transition: width 1.2s cubic-bezier(.22,.7,.2,1), opacity 1.2s ease, filter 1.2s ease; }
   .hero .hw-przod { animation-delay: .6s; }
-  .hero .search-box { transform: scale(.9); opacity: .78; transform-origin: 50% 0; transition: transform 1s cubic-bezier(.22,.7,.2,1), opacity 1s ease; }
-  .hero.m-gotowe .search-box { transform: none; opacity: 1; }
-  .hero.m-gotowe .hero-wizual { max-width: 250px; opacity: .82; filter: saturate(.85) brightness(.9); }
-  .hero .hero-wizual.hw-flip { transition: transform 1.1s cubic-bezier(.22,.7,.2,1), opacity 1s ease, filter 1s ease; transform-origin: 0 0; }
-  .hero .hero-wizual.hw-flip .hw-scena { transition: none; }
-  @media (prefers-reduced-motion: reduce) { .hero .search-box { transform: none; opacity: 1; } .hero .hero-wizual { max-width: 250px; } }
+  .hero.m-gotowe .hero-wizual { width: 54%; opacity: .78; filter: saturate(.8) brightness(.86); }
+  .hero .hw-klik { transition: opacity .6s ease; }
+  @media (prefers-reduced-motion: reduce) { .hero .search-box { width: 100%; opacity: 1; } .hero .hero-wizual { width: 54%; } }
   .hero .hero-partner { order: 3; margin-top: 1.3rem; }
   /* strzalka pod karta: "kliknij, by zobaczyc przykladowy raport rozszerzony" */
   .hero .hw-klik { order: 2; display: flex; align-items: center; justify-content: center; gap: .4rem; margin: .7rem auto 0; font-size: .7rem; letter-spacing: .06em; color: rgba(242,240,235,.72); text-decoration: none; animation: fu .8s 2.4s ease both; }

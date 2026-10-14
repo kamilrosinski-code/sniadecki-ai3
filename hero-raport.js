@@ -19,7 +19,7 @@
   // ---- skala kart ----
   function skaluj(box) {
     var w = box.clientWidth || box.parentNode.clientWidth;
-    box.style.setProperty('--hw-skala', Math.max(0.42, Math.min(1, w / 690)).toFixed(4));
+    box.style.setProperty('--hw-skala', Math.max(0.28, Math.min(1, w / 690)).toFixed(4));   // 0.28: mala karta w tle na telefonie
   }
   karty.forEach(function (box) {
     skaluj(box);
@@ -241,18 +241,7 @@
   var malo = matchMedia('(prefers-reduced-motion: reduce)').matches, zrobione = false;
   function gotowe() {
     if (zrobione) return; zrobione = true;
-    if (malo) { hero.classList.add('m-gotowe'); return; }
-    var przed = karta.getBoundingClientRect();
-    hero.classList.add('m-gotowe');
-    var po = karta.getBoundingClientRect();
-    var sk = przed.width / po.width, dx = przed.left - po.left, dy = przed.top - po.top;
-    karta.style.transition = 'none'; karta.style.transformOrigin = '0 0';
-    karta.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sk + ')';
-    karta.classList.add('hw-flip');
-    requestAnimationFrame(function () { requestAnimationFrame(function () {
-      karta.style.transition = ''; karta.style.transform = 'translate(0,0) scale(1)';
-      setTimeout(function () { karta.classList.remove('hw-flip'); karta.style.transform = ''; karta.style.transformOrigin = ''; }, 1300);
-    }); });
+    hero.classList.add('m-gotowe');   // reszta to przejscia CSS (szerokosc w %, bez przeskoku)
   }
   if (sb) { sb.addEventListener('focusin', gotowe); sb.addEventListener('touchstart', gotowe, { passive: true }); }
   setTimeout(gotowe, malo ? 0 : 4300);   // ok. 0,6 s wjazd + 1,7 s animacja + licznik do ok. 3,8 s
